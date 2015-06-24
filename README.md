@@ -28,4 +28,12 @@ desired module files, in the following way:
     . $NWPCONFBINDIR/nwpconf.sh
 
 
+The conf/ directory in the source tree contains a sample configuration
+tree, run the `testenv.sh` script from within that directory to try
+it.
 
+The documentation can be built with the help of
+[Doxygen](http://www.stack.nl/~dimitri/doxygen/index.html) and the
+additional `doxygen-bash.sed` script for extracting documentation from
+shell scripts, available from the [bash-doxygen
+project](https://github.com/Anvil/bash-doxygen).

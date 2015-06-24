@@ -76,7 +76,7 @@
 # Add current file to the list of loaded modules and check for
 # optional dependencies
 # $* optional list of modules (without .sh suffix) on which this module depends
-check_dep() {
+#check_dep() {
 #    set|grep nwpconf
 #    NWPCONFLIST="$NWPCONFLIST `basename $0 .sh`"
 # $0 does not work, try ${BASH_SOURCE[0]}?
@@ -84,7 +84,7 @@ check_dep() {
 #    local dep
 #    for dep in $@; do
 #	if
-}
+#}
 
 # Check if a list of variables is defined
 check_defined() {
