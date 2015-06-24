@@ -20,36 +20,58 @@
 ## @file
 ## @brief Main entry point for the NWPconf bash library.
 ## @details The file nwpconf.sh is the main entry point for the whole
-## package, it has to be compulsorily sourced by the user script and
+## package, it has to be sourced by the user script and
 ## other optional modules of this package have to be sourced after
 ## this.
-##
-## This module provides tools for managing sets of configuration
-## files, date and time computations and other utilities.
-##
-## Configuration files are managed in a hierarchical way, the user
-## defines a directory tree rooted at `$NWPCONFDIR` and containing 3
-## level of subdirectories defined by the environmental variables
-## exportd in the main shell script, as
-## `$NWPCONFDIR/$PROFILE/$PROCESS/$PHASE`. Each of these directory may
-## contain a shel script file `conf.sh`; upon sourcing of the current
-## module, the configuration tree for the requested configuration is
-## scanned and all the `conf.sh` scripts encountered are sourced
-## starting from the root in the following order:
-##
-##     $NWPCONFDIR/conf.sh
-##     $NWPCONFDIR/$PROFILE/conf.sh
-##     $NWPCONFDIR/$PROFILE/$PROCESS/conf.sh
-##     $NWPCONFDIR/$PROFILE/$PROCESS/$PHASE/conf.sh
-##
-## Thus environmental variable assignments made in following levels
-## will override those made in the previous ones. The scripts should
-## mainly contain variable assignments although regular shell code in
-## them will be executed as well. If a directory level does not
-## contain such a script, it will be skipped without errors. All the
-## scripts in the configuration tree are sourced in automatic export
-## mode, thus all variable assignments are exported even without the
-## `export keyword`.
+## 
+## This module provides tools for managing multiple configurations and
+## generating configuration files from templates, tools for date and
+## time computations and other utilities.
+## 
+## ### Managing multiple configurations
+## 
+## Configurations in nwpconf are managed in a hierarchical way, the
+## user defines a directory tree rooted at `$NWPCONFDIR` and
+## containing three more levels of subdirectories defined by the
+## environmental variables exported in the main shell script, in order
+## of growing priority:
+## 
+##     $NWPCONFDIR/
+##     $NWPCONFDIR/$PROFILE/
+##     $NWPCONFDIR/$PROFILE/$PROCESS/
+##     $NWPCONFDIR/$PROFILE/$PROCESS/$PHASE/
+## 
+## ### Defining the configuration and importing it in the environment
+## 
+## Each of these directory levels may contain a shell script file
+## `conf.sh`; upon sourcing of the current module, the configuration
+## tree for the requested configuration is scanned and _all_ the
+## `conf.sh` scripts encountered are sourced in order of growing
+## priority. In this way, environment variable assignments made in
+## following levels will override the ones made in the previous
+## levels. The `conf.sh` files should mainly contain assignments of
+## variable with shell syntax, however any arbitrary shell code in
+## them will be regularly executed. If a directory level does not
+## contain such a file, it will be skipped without errors. All the
+## configuration files in the tree are sourced in automatic export
+## mode, so that all variable assignments are exported even without
+## the explicit `export` keyword. Thus, after sourcing the present
+## script, the user environment will contain all the variable
+## assignments according to the requested configurations.
+## 
+## ### Generating configuration files from templates
+## 
+## The configuration tree described above can also contain template
+## files named `<filename>.in`. By means of the function
+## conf_template(), the file `<filename>` will be generated in the
+## current directory starting from the template file `<filename>.in`
+## found in the configuration tree; unlike the case for `conf.sh`, if
+## more than one matching template file is found in the tree, _only_
+## the one contained in the directory with the highest priority is
+## used. Any occurrence of `@<string>@` in the template file will be
+## replaced by the current value of `$<string>` environment variable
+## in the destination file.
+
 
 # Add current file to the list of loaded modules and check for
 # optional dependencies
@@ -89,10 +111,12 @@ _confdirlist_add() {
 ## @fn conf_init()
 ## @brief Create a list of configuration directories for current configuration
 ## @details This function is implicitly called when sourcing the
-## present module, it creates the list of directory to search for
-## configuration files for current PROFILE/PROCESS/PHASE ordered from
-## lower to higher priority. It requires the variables `$PROFILE`
-## `$PROCESS` `$PHASE` to be defined.
+## present module, so it is unlikely for it to be called directly by
+## the user; it creates the list of directories to search for
+## configuration files in, according to the user selected
+## PROFILE/PROCESS/PHASE, ordered from lower to higher priority. It
+## requires the variables `$PROFILE` `$PROCESS` `$PHASE` to be
+## defined.
 conf_init() {
     confdirlist=''
     _confdirlist_add $NWPCONFDIR
@@ -129,11 +153,16 @@ conf_getfile() {
     echo $conffile
 }
 
-# Generate one or more files from the corresponding template according
-# to current configuration. A template file with the same name and
-# additional suffix .in must exist in the configuration tree, it will
-# be used for generating the file in the current directory.
-# $* a list of files to be generated
+## @fn conf_template()
+## @brief Generate file from template.
+
+## @details This function generates one or more files from the
+## corresponding template according to the current
+## PROFILE/PROCESS/PHASE configuration. A template file with the same
+## name and additional suffix `.in` must exist in the configuration
+## tree, it will be used for generating the file in the current
+## directory.
+## @param $* list of files to be generated
 conf_template() {
     for file in $*; do
 	template=`conf_getfile $file.in`
@@ -145,33 +174,74 @@ conf_template() {
 
 # Setup date functions
 date_init() {
-    [ -n "$DATECOM" ] || DATECOM=date
+    [ -n "$DATECOM" ] || DATECOM="date -u"
 }
 
-# functions for returning on stdout date or time of day (hours) or
-# both incremented or decremented by the requested amount of hours
-# arguments are date (YYYYMMDD), time (HH) and increment in hours
-
+## @fn date_add()
+## @brief Add the requested number of hours to a date and return the date.
+## @details This function takes in input a date and time string, adds
+## to it an integer number of hours and prints to standard output only
+## the recomputed date in the format `YYYYMMDD`. All the computations
+## are performed in UTC unless the variable `$DATECOM` is changed from
+## its default value `date -u`.
+## @param $1 initial date in the format `YYYYMMDD`
+## @param $2 initial time in the format `HH`
+## @param $3 number of hours to add, integer with __no leading zeroes__, negative values accepted
 date_add() {
     $DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%Y%m%d'
 }
 
+## @fn time_add()
+## @brief Add the requested number of hours to a date and return the time.
+## @details This function works as date_add() but it prints to
+## standard output only the recomputed time in the format `HH`.
+## @param $1 initial date in the format `YYYYMMDD`
+## @param $2 initial time in the format `HH`
+## @param $3 number of hours to add, integer with __no leading zeroes__, negative values accepted
 time_add() {
     $DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%H'
 }
 
+## @fn datetime_add()
+## @brief Add the requested number of hours to a date and return date and time.
+## @details This function works as date_add() but it prints to
+## standard output the recomputed date and time in the format `YYYYMMDDHH`.
+## @param $1 initial date in the format `YYYYMMDD`
+## @param $2 initial time in the format `HH`
+## @param $3 number of hours to add, integer with __no leading zeroes__, negative values accepted
 datetime_add() {
     $DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%Y%m%d%H'
 }
 
+## @fn date_sub()
+## @brief Subtract the requested number of hours to a date and return the date.
+## @details This function works as date_add() but it subtracts hours
+## rather then adding them.
+## @param $1 initial date in the format `YYYYMMDD`
+## @param $2 initial time in the format `HH`
+## @param $3 number of hours to subtract, integer with __no leading zeroes__, negative values accepted
 date_sub() {
     $DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%Y%m%d'
 }
 
+## @fn time_sub()
+## @brief Subtract the requested number of hours to a date and return the time.
+## @details This function works as time_add() but it subtracts hours
+## rather then adding them.
+## @param $1 initial date in the format `YYYYMMDD`
+## @param $2 initial time in the format `HH`
+## @param $3 number of hours to subtract, integer with __no leading zeroes__, negative values accepted
 time_sub() {
     $DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%H'
 }
 
+## @fn datetime_sub()
+## @brief Subtract the requested number of hours to a date and return date and time.
+## @details This function works as datetime_add() but it subtracts hours
+## rather then adding them.
+## @param $1 initial date in the format `YYYYMMDD`
+## @param $2 initial time in the format `HH`
+## @param $3 number of hours to subtract, integer with __no leading zeroes__, negative values accepted
 datetime_sub() {
     $DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%Y%m%d%H'
 }
@@ -215,7 +285,6 @@ timedelta_cosmo() {
 ## @details This function computes the maximum between the two integer
 ## numerical arguments provided and prints it to stdout, thus it
 ## should tipically be used as: ``M=`max $H1 $H2```.
-##
 ## @param $1 the first numerical argument
 ## @param $2 the second numerical argument
 max() {
