@@ -19,20 +19,24 @@
 # not running within the SMS environment, it will timeout after 10
 # seconds.
 # $1 the name of the meter
-# $1 the optional initial value to be set, 0 if not provided
+# $2 the optional initial value to be set, 0 if not provided
 sms_meter_init() {
 
-    SMSMETER=$1
-    if [ -n "$2" ]; then
-        SMSMETER_COUNT=$2
-    else
-        SMSMETER_COUNT=0
+    if [ -n "$SMSNAME" ]; then # running in sms
+	export SMSMETER=$1
+	if [ -n "$2" ]; then
+            export SMSMETER_COUNT=$2
+	else
+            export SMSMETER_COUNT=0
+	fi
+	timeout_exec 10 smsmeter $SMSMETER $SMSMETER_COUNT || true
     fi
-    timeout_exec 10 smsmeter $SMSMETER $SMSMETER_COUNT || true
  
 }
 
-# Increment by one the main SMS/ECFlow meter for the current process.
+# Increment by one the main SMS/ECFlow meter for the current
+# process. The sms_meter_init() function must have been called
+# previously.
 sms_meter_increment() {
 
     if [ -n "$SMSMETER" ]; then
@@ -43,3 +47,8 @@ sms_meter_increment() {
 
 }
 
+set -a
+# checks
+check_dep sms_tools nwpconf
+# stop exporting all assignments
+set +a

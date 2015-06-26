@@ -75,18 +75,23 @@
 
 # Add current file to the list of loaded modules and check for
 # optional dependencies
+# $1 name of current module (file without .sh, hard to extract automatically whem sourced)
 # $* optional list of modules (without .sh suffix) on which this module depends
-#check_dep() {
-#    set|grep nwpconf
-#    NWPCONFLIST="$NWPCONFLIST `basename $0 .sh`"
-# $0 does not work, try ${BASH_SOURCE[0]}?
-# check if each of $@ are in list
-#    local dep
-#    for dep in $@; do
-#	if
-#}
+check_dep() {
+    eval export ${1}_LOADED=1
+    shift
+    local err=0 loaded
+    for dep in $@; do
+	loaded=`eval echo '$'${dep}_LOADED`
+	if [ -z "$loaded" ]; then
+	    echo "Error: module $dep.sh must be loaded before sourcing current module"
+	    err=1
+        fi
+    done
+    return $err
+}
 
-# Check if a list of variables is defined
+# Check whether a list of variables is defined
 check_defined() {
     local var
     local val
@@ -94,7 +99,7 @@ check_defined() {
     for var in $@; do
         val=`eval echo '$'$var`
         if [ -z "$val" ]; then
-	    echo "Variable \$$var must be defined"
+	    echo "Error: variable \$$var must be defined before sourcing current module"
 	    err=1
         fi
     done
@@ -262,24 +267,6 @@ minus_signedhour_to_date() {
     fi
 }
 
-# The date and time as requested by reftime arki-query key
-datetime_arki() {
-    $DATECOM --date "$1 $2:00" '+%Y-%m-%d %H:00'
-}
-
-# Delta time to be used in COSMO grib file names, input forecast time
-# in h, output ddhh0000
-timedelta_cosmo() {
-    local d=0
-    local h=$1
-    while [ "$h" -ge 24 ]; do
-	d=$(($d+1))
-	h=$(($h-24))
-    done
-    printf "%02d%02d0000\n" $d $h
-    
-}
-
 ## @fn max()
 ## @brief Compute the maximum between two numerical arguments.
 ## @details This function computes the maximum between the two integer
@@ -301,27 +288,6 @@ min() {
     else
 	echo $2
     fi
-}
-
-
-# logsim wait function
-wait_logsim() {
-
-    while true; do
-# \\pset format unaligned \\\\
-	if [ -n "$1" ]; then
-	    n=`echo "SELECT count(*) FROM imports i, entities e WHERE i.entity_id = e.id AND message = '$1' AND reftime = timestamp with time zone '$2:00+00' AND name = '$3';" \
-		| psql -h log.metarpa -d simclogdb -U simclog -A -F ',' -n -q -t`
-	else
-	    n=`echo "SELECT count(*) FROM imports i, entities e WHERE i.entity_id = e.id AND reftime = timestamp with time zone '$2:00+00' AND name = '$3';" \
-		| psql -h log.metarpa -d simclogdb -U simclog -A -F ',' -n -q -t`
-	fi
-	if [ "$n" -ge 1 ]; then
-	    return 0
-	fi
-	sleep 60
-    done
-# password in ~/.pgpass
 }
 
 ## @fn timeout_exec()
@@ -359,7 +325,7 @@ timeout_exec() {
 # start exporting all assignments
 set -a
 # checks
-# check_dep
+check_dep nwpconf
 check_defined NWPCONFDIR NWPCONFBINDIR PROFILE PROCESS PHASE
 # create confdirlist
 conf_init

@@ -13,76 +13,76 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-timeloop_init() {
+nwptime_init() {
 # start of NWP run
-    D1=`date_sub $DATE $TIME $NWP_BACK`
-    T1=`time_sub $DATE $TIME $NWP_BACK`
+    D1=`date_sub $DATE $TIME $MODEL_BACK`
+    T1=`time_sub $DATE $TIME $MODEL_BACK`
     D2=$D1
     T2=$T1
-# NWP_DELTABD is difference (hours) between $DATE$TIME (end of
+# MODEL_DELTABD is difference (hours) between $DATE$TIME (end of
 # assimilation window / start of forecast) and start of last available
 # input forecast providing BC (for BCANA=N)
-    if [ "$NWP_BCANA" = "Y" ]; then
-	export NWP_FREQ_INPUT=$NWP_FREQANA_INPUT
-	NWP_DELTABD=0
+    if [ "$MODEL_BCANA" = "Y" ]; then
+	export MODEL_FREQ_INPUT=$MODEL_FREQANA_INPUT
+	MODEL_DELTABD=0
     else
-	export NWP_FREQ_INPUT=$NWP_FREQFC_INPUT
+	export MODEL_FREQ_INPUT=$MODEL_FREQFC_INPUT
     fi
     DELTABD=0
-    # DELTABD=$(($NWP_DELTABD-$NWP_BACK))
+    # DELTABD=$(($MODEL_DELTABD-$MODEL_BACK))
     # while [ $DELTABD -lt 0 ]; do
-    # 	DELTABD=$(($DELTABD+$NWP_FREQANA_INPUT))
+    # 	DELTABD=$(($DELTABD+$MODEL_FREQANA_INPUT))
     # done
     # DELTABDLOCAL=$DELTABD
 }
 
-int2lm_loop_init() {
-    NWP_FULL_STOP=$NWP_STOP
-    NWP_STOP=0
+nwpbctimeloop_init() {
+    MODEL_FULL_STOP=$MODEL_STOP
+    MODEL_STOP=0
 # DELTABD is difference between start of assimilation and start of
 # input forecast suitable for providing BC
-    if [ "$NWP_BCANA" != "Y" ]; then
-	DELTABD=$(($NWP_DELTABD-$NWP_BACK))
+    if [ "$MODEL_BCANA" != "Y" ]; then
+	DELTABD=$(($MODEL_DELTABD-$MODEL_BACK))
 	while [ $DELTABD -lt 0 ]; do
-	    DELTABD=$(($DELTABD+$NWP_FREQINI_INPUT))
+	    DELTABD=$(($DELTABD+$MODEL_FREQINI_INPUT))
 	done
-	D3=`date_sub $DATE $TIME $NWP_DELTABD`
-	T3=`time_sub $DATE $TIME $NWP_DELTABD`
+	D3=`date_sub $DATE $TIME $MODEL_DELTABD`
+	T3=`time_sub $DATE $TIME $MODEL_DELTABD`
     fi
     DELTABDLOCAL=$DELTABD
 }
 
 
-int2lm_loop() {
-    [ $NWP_STOP -lt $NWP_FULL_STOP ] || return 1
+nwpbctimeloop_loop() {
+    [ $MODEL_STOP -lt $MODEL_FULL_STOP ] || return 1
     DELTABD=$DELTABDLOCAL
     D2=`date_sub $D1 $T1 $DELTABD`
     T2=`time_sub $D1 $T1 $DELTABD`
 
-    NWP_START=`max 0 $((-$DELTABD))`
-    if [ "$NWP_BCANA" = "Y" ]; then
-	NWP_STOP=$NWP_START
+    MODEL_START=`max 0 $((-$DELTABD))`
+    if [ "$MODEL_BCANA" = "Y" ]; then
+	MODEL_STOP=$MODEL_START
 # prepare for next loop, update DELTABDLOCAL so that DELTABD can be
 # used outside
-	DELTABDLOCAL=$(($DELTABD-$NWP_FREQANA_INPUT))
+	DELTABDLOCAL=$(($DELTABD-$MODEL_FREQANA_INPUT))
     else
 # test whether this is the last possible loop
-	DT=`date_add $D2 $T2 $NWP_FREQINI_INPUT`
-	TT=`time_add $D2 $T2 $NWP_FREQINI_INPUT`
+	DT=`date_add $D2 $T2 $MODEL_FREQINI_INPUT`
+	TT=`time_add $D2 $T2 $MODEL_FREQINI_INPUT`
 	if [ $DT$TT -gt $D3$T3 ]; then
-	    NWP_STOP=$NWP_FULL_STOP
+	    MODEL_STOP=$MODEL_FULL_STOP
 	else
-	    NWP_STOP=`min $NWP_FULL_STOP $(($NWP_FREQINI_INPUT-$DELTABD-$NWP_FREQFC_INPUT))`
+	    MODEL_STOP=`min $MODEL_FULL_STOP $(($MODEL_FREQINI_INPUT-$DELTABD-$MODEL_FREQFC_INPUT))`
 	fi
 # prepare for next loop, update DELTABDLOCAL so that DELTABD can be
 # used outside
-	DELTABDLOCAL=$(($DELTABD-$NWP_FREQINI_INPUT))
+	DELTABDLOCAL=$(($DELTABD-$MODEL_FREQINI_INPUT))
     fi
 
-    if [ $NWP_START -eq 0 ]; then
-	NWP_LANA=.TRUE.
+    if [ $MODEL_START -eq 0 ]; then
+	MODEL_LANA=.TRUE.
     else
-	NWP_LANA=.FALSE.
+	MODEL_LANA=.FALSE.
     fi
 
     return 0
@@ -91,11 +91,10 @@ int2lm_loop() {
 
 # start exporting all assignments
 set -a
-# checks
-# check_dep
-check_defined DATE TIME NWP_BACK NWP_DELTABD NWP_FREQINI_INPUT NWP_STOP
+check_dep nwptimeloop
+check_defined DATE TIME MODEL_BACK MODEL_DELTABD MODEL_STOP
 # init timeloop
-timeloop_init
+nwptime_init
 # stop exporting all assignments
 set +a
 
