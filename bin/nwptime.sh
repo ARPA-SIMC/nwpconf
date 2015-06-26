@@ -13,6 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+## @fn nwptime_init()
+## @brief Initialise the time-related environment for a NWP run.
+## @details This function is implicitly called when the module is
+## sourced, it computes the variables `$D1`, `$T1`, `$D2`, `$T2`
+## useful for managing boundary conditions in assimilation runs.
 nwptime_init() {
 # start of NWP run
     D1=`date_sub $DATE $TIME $MODEL_BACK`
@@ -36,6 +41,14 @@ nwptime_init() {
     # DELTABDLOCAL=$DELTABD
 }
 
+
+## @fn nwpbctimeloop_init()
+## @brief Initialise a loop on the model runs providing input boundary conditions for a NWP run.
+## @details This function has to be called for initialising a loop
+## over the model runs that provide the boundary conditions to an
+## assimilation run. The most common cases are taken into account,
+## like using analysed or forecast BC's, possibly with a shift in time
+## and with specified frequency of availability.
 nwpbctimeloop_init() {
     MODEL_FULL_STOP=$MODEL_STOP
     MODEL_STOP=0
@@ -53,6 +66,19 @@ nwpbctimeloop_init() {
 }
 
 
+## @fn nwpbctimeloop_loop()
+## @brief Advance a loop on the model runs providing input boundary conditions for a NWP run.
+## @details This function has to be called for advancing a loop over
+## the model runs that provide the boundary conditions to an
+## assimilation run. The function sets the variables `$D2`, `$T2`,
+## `$MODEL_START`, `$MODEL_STOP`, `$DELTABD` The return value is 1
+## (true) if the loop is not finished or 0 (false) if the loop is
+## finished, thus it should be used in the following way:
+## 
+##     nwpbctimeloop_init
+##     while nwpbctimeloop_loop; do
+##         performoperationsintheloop
+##     done
 nwpbctimeloop_loop() {
     [ $MODEL_STOP -lt $MODEL_FULL_STOP ] || return 1
     DELTABD=$DELTABDLOCAL
@@ -91,7 +117,7 @@ nwpbctimeloop_loop() {
 
 # start exporting all assignments
 set -a
-check_dep nwptimeloop
+check_dep nwptime
 check_defined DATE TIME MODEL_BACK MODEL_DELTABD MODEL_STOP
 # init timeloop
 nwptime_init

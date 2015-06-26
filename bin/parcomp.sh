@@ -19,7 +19,7 @@
 ## performing operations related to parallel comuting, such as
 ## defining a Cartesian topology and starting parallel MPI executables
 ## in an MPI implementation- and scheduler-independent way. It is an
-## optional module and it has to be sourced aftyer the main
+## optional module and it has to be sourced after the main
 ## _nwpconf.sh_ module.
 
 ## @fn parcomp_computetopo()
