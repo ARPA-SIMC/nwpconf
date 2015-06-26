@@ -15,20 +15,13 @@
 
 ## @file
 ## @brief Modules with functions for extracting observations and initial/boundary conditions from arkimet archive.
-## @details Thism module provides functions for extracting
-## observations in BUFR format and initial/boundary conditions from
-## the desired dataset of an [Arkimet
+## @details This module provides functions for extracting observations
+## in BUFR format and initial/boundary conditions, tipically in GRIB
+## format, from the desired dataset of an [Arkimet
 ## archive](http://arkimet.sourceforge.net/).
 ## 
 ## It is an optional module and it has to be sourced after the
 ## _nwptime.sh_ module.
-
-
- The file nwpconf.sh is the main entry point for the whole
-## package, it has to be sourced by the user script and
-## other optional modules of this package have to be sourced after
-## this.
-## 
 
 ## @fn getarki_obsbufr()
 ## @brief Retrieve observations in BUFR format from arkimet archive.
@@ -53,7 +46,7 @@ getarki_obsbufr() {
     t=`time_add $DATE $TIME $dt`
     de=`datetime_arki $d $t`
 
-    [ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h
+    [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
 
     arki-query --data -o $1 \
 	"origin: BUFR; reftime:>=$ds,<=$de;" $ARKI_BUFR_DS
@@ -94,14 +87,14 @@ getarki_icbc() {
 	    hinput=$(($h+$DELTABD))
 	    timerange="timerange:Timedef,${hinput}h,254"
 	fi
-	echo arki-query --data -o `inputmodel_name $h` \
+	arki-query --data -o `inputmodel_name $h` \
 	    "reftime:=$reftime;$timerange" $ARKI_ICBC_DS
 #	[ "$h" -eq "0" -a ] or [ "$h" -eq "$MODEL_START" ] ?
 	if [ "$h" -eq "0" ]; then
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
 	fi
-	increment_sms_meter
+	sms_meter_increment
     done
 
 }
