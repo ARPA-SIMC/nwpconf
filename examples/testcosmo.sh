@@ -15,10 +15,18 @@ export PHASE=forecast
 . $NWPCONFBINDIR/nwptime.sh
 . $NWPCONFBINDIR/getarki.sh
 . $NWPCONFBINDIR/cosmo_model.sh
+. $NWPCONFBINDIR/putarki.sh
 # end of setup
 
-nwpbctimeloop_init
-while nwpbctimeloop_loop; do
-    echo $D1 $T1 $D2 $T2 $MODEL_START $MODEL_STOP
-    getarki_icbc
-done
+#nwpbctimeloop_init
+#while nwpbctimeloop_loop; do
+#    echo $D1 $T1 $D2 $T2 $MODEL_START $MODEL_STOP
+#    getarki_icbc
+#done
+
+mkdir -p /tmp/postpctest/impdir
+cd /tmp/postpctest
+set -e
+set -x
+putarki_model_output 2 -w
+

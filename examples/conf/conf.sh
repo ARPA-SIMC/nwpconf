@@ -10,3 +10,8 @@ MODEL_BCANA=N
 MODEL_FREQANA_INPUT=6
 MODEL_FREQFC_INPUT=3
 MODEL_FREQINI_INPUT=12
+
+# Arkimet and file processing
+ARKI_SCAN_METHOD=arki_importer
+ARKI_IMPDIR=/tmp/postpctest/impdir
+ARKI_USE_INOTIFY=Y

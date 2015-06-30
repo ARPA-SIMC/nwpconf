@@ -70,6 +70,20 @@ inputmodel_name() {
 
 }
 
+## @fn model_readyfiletoname()
+## @brief Output the filename(s) corresponding to a ready-file.
+## @details This function takes the name of a ready-file and prints to
+## stdout a shell pattern (possibly just a single name) representing
+## the output files that can be generated correspondingly to the
+## specified ready-file, for the current model.
+model_readyfiletoname() {
+
+# extract time from the ready file
+    local curtime=${1#LM[ABF]_}
+    echo l??{t,f,c,}${curtime}{,c,p,z,s}
+
+}
+
 
 # extract from arkimet archive the observations in bufr format
 # required for the data assimilation in the proper time interval and
@@ -145,4 +159,11 @@ make_ncdf_link() {
         fi
     done
 }
+
+# start exporting all assignments
+set -a
+check_dep cosmo_model
+READYFILE_PATTERN="LM[ABF]_*"
+# stop exporting all assignments
+set +a
 
