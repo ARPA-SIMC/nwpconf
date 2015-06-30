@@ -21,9 +21,7 @@ desired module files, in the following way:
     # Export main variables (customize)
     export NWPCONFDIR=$HOME/conf
     export NWPCONFBINDIR=$HOME/nwpconf/bin
-    export PROFILE=production
-    export PROCESS=dailymodelrun
-    export PHASE=forecast
+    export NWPCONF=production/dailymodelrun/forecast
     # source the main libary file
     . $NWPCONFBINDIR/nwpconf.sh
 

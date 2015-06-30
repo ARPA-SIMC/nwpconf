@@ -31,15 +31,13 @@
 ## ### Managing multiple configurations
 ## 
 ## Configurations in nwpconf are managed in a hierarchical way, the
-## user defines a directory tree rooted at `$NWPCONFDIR` and
-## containing three more levels of subdirectories defined by the
-## environmental variables exported in the main shell script, in order
-## of growing priority:
-## 
-##     $NWPCONFDIR/
-##     $NWPCONFDIR/$PROFILE/
-##     $NWPCONFDIR/$PROFILE/$PROCESS/
-##     $NWPCONFDIR/$PROFILE/$PROCESS/$PHASE/
+## user defines a common directory tree rooted at `$NWPCONFDIR`
+## containing different branches for different processes to be
+## configured. The configuration for the current process is defined by
+## the `$NWPCONF` variable, thus all the directory levels between
+## `$NWPCONFDIR` and `$NWPCONFDIR/$NPWCONF` define the configuration
+## for the current process, with growing priority from `$NWPCONFDIR`
+## to `$NWPCONFDIR/$NPWCONF`.
 ## 
 ## ### Defining the configuration and importing it in the environment
 ## 
@@ -71,7 +69,12 @@
 ## used. Any occurrence of `@<string>@` in the template file will be
 ## replaced by the current value of `$<string>` environment variable
 ## in the destination file.
-
+## 
+## ### Picking different variants of a generic file
+## 
+## The configuration tree can also contain generic files redy for use,
+## at different configuration levels, the function conf_getfile() helps
+## in choosing the one with highest priority in these cases.
 
 # Add current file to the list of loaded modules and check for
 # optional dependencies
@@ -108,8 +111,12 @@ check_defined() {
 
 # internal function
 _confdirlist_add() {
-    if [ -d $1 ]; then
-	confdirlist="$confdirlist $1"
+    curdir="$curdir${curdir:+/}$1"
+    if [ -d "$curdir" ]; then
+	confdirlist="$confdirlist${confdirlist:+ }$curdir"
+    else
+	echo "configuration directory $curdir does not exist"
+	return 1
     fi
 }
 
@@ -119,20 +126,19 @@ _confdirlist_add() {
 ## present module, so it is unlikely for it to be called directly by
 ## the user; it creates the list of directories to search for
 ## configuration files in, according to the user selected
-## PROFILE/PROCESS/PHASE, ordered from lower to higher priority. It
-## requires the variables `$PROFILE` `$PROCESS` `$PHASE` to be
-## defined.
+## configuration `$NWPCONF` and the configuration root `$NWPCONFDIR`,
+## ordered from lower to higher priority.
 conf_init() {
+    local curdir=''
     confdirlist=''
     _confdirlist_add $NWPCONFDIR
-    for prof in $PROFILE; do
-	_confdirlist_add $NWPCONFDIR/$prof
-	if [ -n "$PROCESS" ]; then
-	    _confdirlist_add $NWPCONFDIR/$prof/$PROCESS
-	    if [ -n "$PHASE" ]; then
-		_confdirlist_add $NWPCONFDIR/$prof/$PROCESS/$PHASE
-	    fi
-	fi
+
+    local save_IFS=$IFS
+    IFS=/
+    local conf=($NWPCONF)
+    IFS=$save_IFS
+    for dir in ${conf[*]}; do
+	_confdirlist_add $dir
     done
 }
 
@@ -145,9 +151,15 @@ conf_source() {
     done
 }
 
-# Output on stdout the path of the requested file according to current
-# configuration.
-# $1 the name of the requested file
+## @fn conf_getfile()
+## @brief Return the path of the requested file according to current configuration
+## @details This functions prints on stdout the name of the requested
+## configuration file contained in the configuration tree defined by
+## `$NWPCONFDIR` and `$NWPCONF`. If more than one file with the
+## requested name is found, only the one with highest priority is
+## returned, if no files are found the function returns with an error
+## code.
+## @param $1 the name of the requested file
 conf_getfile() {
     local conffile=''
     for dir in $confdirlist; do
@@ -155,18 +167,22 @@ conf_getfile() {
 	    conffile="$dir/$1"
 	fi
     done
-    echo $conffile
+    if [ -n "$conffile" ]; then
+	echo $conffile
+    else
+	return 1
+    fi
 }
 
 ## @fn conf_template()
 ## @brief Generate file from template.
-
 ## @details This function generates one or more files from the
-## corresponding template according to the current
-## PROFILE/PROCESS/PHASE configuration. A template file with the same
-## name and additional suffix `.in` must exist in the configuration
-## tree, it will be used for generating the file in the current
-## directory.
+## corresponding template according to the current configuration tree
+## `$NWPCONF`. One or more template files with the same name and
+## additional suffix `.in` must exist in the configuration tree, the
+## one with highest priority will be used for generating the file in
+## the current directory, if no template file is found the function
+## returns with an error code.
 ## @param $* list of files to be generated
 conf_template() {
     for file in $*; do
@@ -326,7 +342,7 @@ timeout_exec() {
 set -a
 # checks
 check_dep nwpconf
-check_defined NWPCONFDIR NWPCONFBINDIR PROFILE PROCESS PHASE
+check_defined NWPCONFDIR NWPCONFBINDIR NWPCONF
 # create confdirlist
 conf_init
 # import configuration
