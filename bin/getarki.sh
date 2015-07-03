@@ -14,8 +14,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## @file
-## @brief Modules with functions for extracting observations and initial/boundary conditions from arkimet archive.
-## @details This module provides functions for extracting observations
+## @brief Modules with functions for retrieving observations and initial/boundary conditions from arkimet archive.
+## @details This module provides functions for retrieving observations
 ## in BUFR format and initial/boundary conditions, tipically in GRIB
 ## format, from the desired dataset of an [Arkimet
 ## archive](http://arkimet.sourceforge.net/).
@@ -41,10 +41,10 @@ getarki_obsbufr() {
     dt=${2:-3}
     d=`date_sub $D1 $T1 $dt`
     t=`time_sub $D1 $T1 $dt`
-    ds=`datetime_arki $d $t`
+    ds=`getarki_datetime $d $t`
     d=`date_add $DATE $TIME $dt`
     t=`time_add $DATE $TIME $dt`
-    de=`datetime_arki $d $t`
+    de=`getarki_datetime $d $t`
 
     [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
 
@@ -56,16 +56,16 @@ getarki_obsbufr() {
 
 ## @fn getarki_icbc()
 ## @brief Retrieve gridded initial and/or boundary conditions from arkimet archive.
-
-## @details This function retrieves gridded fields to be used as
-## initial and/or boundary conditions, tipically in GRIB format, from
-## the arkimet dataset(s) specified in the configuration variable
-## `$ARKI_ICBC_DS`, for the model run interval specified in the
-## configuration. A specific model system module must have been loaded
-## in order to provide the function inputmodel_name() for renaming the
-## files. It should be called after having loaded the module
-## nwptime.sh for setting up the time-related environment variables
-## and within a time loop on input models, such as:
+## @details This function retrieves gridded fields, tipically in GRIB
+## format, to be used as initial and/or boundary conditions, possibly
+## through an interpolation process, from the arkimet dataset(s)
+## specified in the configuration variable `$ARKI_ICBC_DS`, for the
+## model run interval specified in the configuration. A specific model
+## system module must have been loaded in order to provide the
+## function inputmodel_name() for renaming the files. It should be
+## called after having loaded the module nwptime.sh for setting up the
+## time-related environment variables and within a time loop on input
+## models, such as:
 ## 
 ##     nwpbctimeloop_init
 ##     while nwpbctimeloop_loop; do
@@ -80,10 +80,10 @@ getarki_icbc() {
 	if [ "$MODEL_BCANA" = "Y" ]; then
 	    d2h=`date_add $D2 $T2 $h`
 	    t2h=`time_add $D2 $T2 $h`
-	    reftime=`datetime_arki $d2h $t2h`
+	    reftime=`getarki_datetime $d2h $t2h`
 	    timerange="timerange:Timedef,0h,254"
 	else
-	    reftime=`datetime_arki $D2 $T2`
+	    reftime=`getarki_datetime $D2 $T2`
 	    hinput=$(($h+$DELTABD))
 	    timerange="timerange:Timedef,${hinput}h,254"
 	fi
@@ -100,7 +100,7 @@ getarki_icbc() {
 }
 
 # The date and time as requested by reftime arki-query key
-datetime_arki() {
+getarki_datetime() {
     $DATECOM --date "$1 $2:00" '+%Y-%m-%d %H:00'
 }
 
