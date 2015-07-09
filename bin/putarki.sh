@@ -81,7 +81,9 @@ putarki_archive_and_wait() {
 ## When using the arki_importer approach, the function prints to
 ## stdout the list of temporary files created in `$ARKI_IMPDIR` that
 ## are being imported and whose deletion indicates that the archiving
-## has finished.
+## has finished. Regardless of the archiving method, it is safe to
+## remove the original file at function return since a copy (or hard
+## link if possible) is made in case of asynchronous archiving.
 ## @param $* the files to be archived
 putarki_archive() {
 

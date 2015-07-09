@@ -6,7 +6,7 @@
 export NWPCONFDIR=$PWD/conf
 export NWPCONFBINDIR=$PWD/../bin
 export NWPCONF=production/dailymodelrun/forecast
-# source the main libary file
+# source the main library module
 set -e
 . $NWPCONFBINDIR/nwpconf.sh
 # end of setup

@@ -1,13 +1,11 @@
-!/bin/bash
+#!/bin/bash
 # sample script for testing the basic features of nwpconf package
 
 # setup common to user scripts
 # basic variables
 export NWPCONFDIR=$PWD/conf
 export NWPCONFBINDIR=$PWD/../bin
-export PROFILE=production
-export PROCESS=dailymodelrun
-export PHASE=forecast
+export NWPCONF=production/dailymodelrun/forecast
 # source the main library module
 . $NWPCONFBINDIR/nwpconf.sh
 # source other optional modules
