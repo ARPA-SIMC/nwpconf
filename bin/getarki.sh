@@ -72,7 +72,7 @@ getarki_obsbufr() {
 ##         getarki_icbc
 ##     done
 getarki_icbc() {
-    local h hinput timerange ana
+    local h hinput timerange ana d2h t2h
 
     for h in `seq $MODEL_START $MODEL_FREQ_INPUT $MODEL_STOP`; do
 	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h

@@ -88,13 +88,20 @@ simc_send_logevent() {
 # @param $1 optional start date and time (`+%Y%m%d%H%M`, UTC), if not passed it is read from file
 # @param $2 optional end date and time (`+%Y%m%d%H%M`, UTC), if not passed it is the current system time
 simc_create_radar_grib() {
-    local model_template defaultdate fromdate todate ncmosaico gribmosaico
+    local model_template defaultdate fromdate todate date_file ncmosaico gribmosaico
 
 # get grib template on the model grid
     model_template=`conf_getfile model_radar_template.grb`
     if [ -z "$model_template" ]; then
 	echo "Error: grib template model_radar_template.grib for radar precipitation gridding not found in configuration directories"
 	return 1
+    fi
+# get date-update file
+    date_file=`conf_getfile model_radar_date.txt`
+    if [ -z "$date_file" ]; then
+	echo "Warning: date file model_radar_date.txt not found in configuration directories"
+	echo "Creating default file $NWPCONFDIR/$NWPCONF/model_radar_date.txt"
+	date_file=$NWPCONFDIR/$NWPCONF/model_radar_date.txt
     fi
 
 # set starting date from argument if passed or from previous run if
@@ -103,7 +110,7 @@ simc_create_radar_grib() {
 	fromdate=$1
     else
 	defaultdate=`date -u --date '1 day ago' '+%Y%m%d1200'`
-	fromdate=`cat $RADAR_LHNDIR/lastdate.txt` || fromdate=$defaultdate
+	fromdate=`cat $date_file` || fromdate=$defaultdate
 # limit fromdate in case of repeated failures
 	[ "$fromdate" -lt "$defaultdate" ] && fromdate=$defaultdate
     fi
@@ -119,26 +126,26 @@ simc_create_radar_grib() {
 # compute filenames for current date
 	ncmosaico=COMP_$fromdate.nc
 	gribmosaico=radar_SRI_$fromdate.grib1
-	echo "faccio $fromdate"
 
 # create mosaico in netcdf format ($ncmosaico) from SIMC archives
 	$RADAR_MOSAICODIR/Mosaico.sh $RADAR_MOSAICODIR/mosaico.config -dn $fromdate -C $RADAR_MOSAICOCONF>/dev/null 2>&1
-	echo "fatto mosaico $fromdate"
 
 	if [ -f $ncmosaico ]; then 
 	    rm -f $gribmosaico
 # create precipitation grib file ($gribmosaico) from netcdf
 # ($ncmosaico) for current date and archive
 	    $RADAR_LHNDIR/netcdf2grib1_SIMC $ncmosaico $model_template>/dev/null 2>&1
-	    echo "fatto grib $fromdate"
 	    if [ -f $gribmosaico ]; then
-		echo "trovato grib $fromdate"
-#		putarki_archive $gribmosaico
+		if [ -n "$RADAR_LHN_GP" ]; then
+		    grib_set -s generatingProcessIdentifier=$RADAR_LHN_GP \
+			$gribmosaico $gribmosaico.gp
+		    mv -f $gribmosaico.gp $gribmosaico
+		fi
+		putarki_archive $gribmosaico
 	    fi
-#	    rm -f $ncmosaico $gribmosaico
-	    rm -f $ncmosaico
+	    rm -f $ncmosaico $gribmosaico
 # store current date
-	    echo $fromdate > $RADAR_LHNDIR/lastdate.txt
+	    echo $fromdate > $date_file
 	fi
 
 # increment date
