@@ -152,3 +152,32 @@ simc_create_radar_grib() {
 	fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
     done
 }
+
+
+simc_get_radar_lhn() {
+
+    local startdate enddate curdate nextdate
+# when using data every 15' for some unperscrutable reason COSMO
+# requires also the file for the previous hour
+
+    startdate=`datetime_sub $D1 $T1 1`
+    if [ "$DATE$TIME" = "$D1$T1" ]; then # probably forecast
+	enddate=`datetime_add $DATE $TIME 3`
+    else # assimilation
+	enddate=`datetime_add $DATE $TIME 1`
+    fi
+
+    echo "$startdate:$enddate"
+    curdate=$startdate
+    while [ "$curdate" -le "$enddate" ]; do
+
+	nextdate=`datetime_add $curdate 1`
+	echo "$nextdate"
+	filename=${curdate:2}.grib1 # 2-digit year
+	arki-query --data -o $filename "Reftime:>=`getarki_datetime $curdate` <`getarki_datetime $nextdate`" $ARKI_LHN_DS
+	 [ -f $filename ] || touch $filename
+
+	curdate=$nextdate
+    done
+
+}

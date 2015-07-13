@@ -101,7 +101,11 @@ getarki_icbc() {
 
 # The date and time as requested by reftime arki-query key
 getarki_datetime() {
-    $DATECOM --date "$1 $2:00" '+%Y-%m-%d %H:00'
+    if [ "${#1}" -gt 8 ]; then
+	$DATECOM --date "${1:0:8} ${1:8:4}" '+%Y-%m-%d %H:00'
+    else
+	$DATECOM --date "$1 $2:00" '+%Y-%m-%d %H:00'
+    fi
 }
 
 # start exporting all assignments

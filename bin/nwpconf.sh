@@ -209,7 +209,11 @@ date_init() {
 ## @param $2 initial time in the format `HH`
 ## @param $3 number of hours to add, integer with __no leading zeroes__, negative values accepted
 date_add() {
-    $DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%Y%m%d'
+    if [ "${#1}" -gt 8 ]; then
+	$DATECOM --date "${1:0:8} ${1:8:4} `signedhour_to_date $2`" '+%Y%m%d'
+    else
+	$DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%Y%m%d'
+    fi
 }
 
 ## @fn time_add()
@@ -220,7 +224,11 @@ date_add() {
 ## @param $2 initial time in the format `HH`
 ## @param $3 number of hours to add, integer with __no leading zeroes__, negative values accepted
 time_add() {
-    $DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%H'
+    if [ "${#1}" -gt 8 ]; then
+	$DATECOM --date "${1:0:8} ${1:8:4} `signedhour_to_date $2`" '+%H'
+    else
+	$DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%H'
+    fi
 }
 
 ## @fn datetime_add()
@@ -231,7 +239,11 @@ time_add() {
 ## @param $2 initial time in the format `HH`
 ## @param $3 number of hours to add, integer with __no leading zeroes__, negative values accepted
 datetime_add() {
-    $DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%Y%m%d%H'
+    if [ "${#1}" -gt 8 ]; then
+	$DATECOM --date "${1:0:8} ${1:8:4} `signedhour_to_date $2`" '+%Y%m%d%H'
+    else
+	$DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%Y%m%d%H'
+    fi
 }
 
 ## @fn date_sub()
@@ -242,7 +254,11 @@ datetime_add() {
 ## @param $2 initial time in the format `HH`
 ## @param $3 number of hours to subtract, integer with __no leading zeroes__, negative values accepted
 date_sub() {
-    $DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%Y%m%d'
+    if [ "${#1}" -gt 8 ]; then
+	$DATECOM --date "${1:0:8} ${1:8:4} `minus_signedhour_to_date $2`" '+%Y%m%d'
+    else
+	$DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%Y%m%d'
+    fi
 }
 
 ## @fn time_sub()
@@ -253,7 +269,11 @@ date_sub() {
 ## @param $2 initial time in the format `HH`
 ## @param $3 number of hours to subtract, integer with __no leading zeroes__, negative values accepted
 time_sub() {
-    $DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%H'
+    if [ "${#1}" -gt 8 ]; then
+	$DATECOM --date "${1:0:8} ${1:8:4} `minus_signedhour_to_date $2`" '+%H'
+    else
+	$DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%H'
+    fi
 }
 
 ## @fn datetime_sub()
@@ -264,7 +284,11 @@ time_sub() {
 ## @param $2 initial time in the format `HH`
 ## @param $3 number of hours to subtract, integer with __no leading zeroes__, negative values accepted
 datetime_sub() {
-    $DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%Y%m%d%H'
+    if [ "${#1}" -gt 8 ]; then
+	$DATECOM --date "${1:0:8} ${1:8:4} `minus_signedhour_to_date $2`" '+%Y%m%d%H'
+    else
+	$DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%Y%m%d%H'
+    fi
 }
 
 signedhour_to_date() {
