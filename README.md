@@ -22,7 +22,7 @@ desired module files, in the following way:
     export NWPCONFDIR=$HOME/conf
     export NWPCONFBINDIR=$HOME/nwpconf/bin
     export NWPCONF=production/dailymodelrun/forecast
-    # source the main libary file
+    # source the main library file
     . $NWPCONFBINDIR/nwpconf.sh
     # source other optional modules
     . $NWPCONFBINDIR/nwptime.sh

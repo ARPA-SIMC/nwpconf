@@ -72,7 +72,7 @@
 ## 
 ## ### Picking different variants of a generic file
 ## 
-## The configuration tree can also contain generic files redy for use,
+## The configuration tree can also contain generic files ready for use,
 ## at different configuration levels, the function conf_getfile() helps
 ## in choosing the one with highest priority in these cases.
 

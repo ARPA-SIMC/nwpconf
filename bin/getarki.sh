@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## @file
-## @brief Modules with functions for retrieving observations and initial/boundary conditions from arkimet archive.
+## @brief Module with functions for retrieving observations and initial/boundary conditions from arkimet archive.
 ## @details This module provides functions for retrieving observations
 ## in BUFR format and initial/boundary conditions, tipically in GRIB
 ## format, from the desired dataset of an [Arkimet
@@ -74,7 +74,7 @@ getarki_obsbufr() {
 getarki_icbc() {
     local h hinput timerange ana d2h t2h
 
-    for h in `seq $MODEL_START $MODEL_FREQ_INPUT $MODEL_STOP`; do
+    for h in `seq $MODEL_START_SLICE $MODEL_FREQ_SLICE $MODEL_STOP_SLICE`; do
 	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h
 
 	if [ "$MODEL_BCANA" = "Y" ]; then
@@ -84,12 +84,12 @@ getarki_icbc() {
 	    timerange="timerange:Timedef,0h,254"
 	else
 	    reftime=`getarki_datetime $D2 $T2`
-	    hinput=$(($h+$DELTABD))
+	    hinput=$(($h+$DELTABD_SLICE))
 	    timerange="timerange:Timedef,${hinput}h,254"
 	fi
 	arki-query --data -o `inputmodel_name $h` \
 	    "reftime:=$reftime;$timerange" $ARKI_ICBC_DS
-#	[ "$h" -eq "0" -a ] or [ "$h" -eq "$MODEL_START" ] ?
+#	[ "$h" -eq "0" -a ] or [ "$h" -eq "$MODEL_START_SLICE" ] ?
 	if [ "$h" -eq "0" ]; then
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
@@ -112,6 +112,6 @@ getarki_datetime() {
 set -a
 # checks
 check_dep getarki nwptime
-#check_defined DATE TIME D1 T1 D2 T2 MODEL_START MODEL_FREQ_INPUT MODEL_STOP MODEL_BCANA
+#check_defined DATE TIME D1 T1 D2 T2 MODEL_START_SLICE MODEL_FREQ_SLICE MODEL_STOP_SLICE MODEL_BCANA
 # stop exporting all assignments
 set +a
