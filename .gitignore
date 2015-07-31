@@ -1,0 +1,11 @@
+*~
+configure
+config.log
+Makefile
+Makefile.in
+Doxyfile
+aclocal.m4
+autom4te.cache
+install-sh
+missing
+config.status
