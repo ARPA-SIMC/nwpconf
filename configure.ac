@@ -23,6 +23,7 @@ pkgdocdir='${datadir}/doc/${PACKAGE}'
 AC_SUBST(pkgdocdir)
 
 AC_CONFIG_FILES([
+confprofile
 Makefile
 bin/Makefile
 doc/Doxyfile

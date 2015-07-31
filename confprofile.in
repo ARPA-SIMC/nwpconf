@@ -1,0 +1,5 @@
+# common setup
+# basic variables
+export NWPCONFDIR=@prefix@/conf
+export NWPCONFBINDIR=@prefix@/libexec/@PACKAGE@
+
