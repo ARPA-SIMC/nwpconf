@@ -47,6 +47,7 @@
 ## the configured dataset and waits until the files have been
 ## archived. It combines the putarki_archive() function for archiving
 ## and the putarki_wait_for_deletion() function for waiting.
+## @param $1 the type of file being archived, either `grib` or `bufr`
 ## @param $* the files to be archived
 putarki_archive_and_wait() {
     putarki_wait_for_deletion `putarki_archive $@`
@@ -70,13 +71,14 @@ putarki_archive_and_wait() {
 ## - `arki_importer`: assuming that a consumer process is active, the
 ##   files are copied to the directory `$ARKI_IMPDIR` configured in
 ##   the consumer, the function exits suddendly without waiting for
-##   the termination of the archiving, this method is advantageous
-##   because it allows the archiving of data coming from concurrent
-##   processes without blocking the archive
+##   the termination of the archiving; this method is advantageous
+##   because it allows concurrent processes to simultaneously send
+##   data to the same dataset
 ## - `arki-scan`: an arki-scan is performed with configuration file
-##   `$ARKI_CONF`, in this case the function exits when the archiving
-##   has finished, but different concurrent archiving by different
-##   processes may block the archive.
+##   `$ARKI_CONF`, in this case the function exits when the archival
+##   has finished; this approach does not require a consumer process,
+##   but concurrent attempts to archive in the same dataset may fail
+##   because of locking issues.
 ## 
 ## When using the arki_importer approach, the function prints to
 ## stdout the list of temporary files created in `$ARKI_IMPDIR` that
@@ -84,10 +86,14 @@ putarki_archive_and_wait() {
 ## has finished. Regardless of the archiving method, it is safe to
 ## remove the original file at function return since a copy (or hard
 ## link if possible) is made in case of asynchronous archiving.
+## @param $1 the type of file being archived, either `grib` or `bufr`
 ## @param $* the files to be archived
 putarki_archive() {
 
     local file
+    local tf
+    tf=$1
+    shift
     for file in $@; do
     case "$ARKI_SCAN_METHOD" in
         arki_importer)
@@ -97,7 +103,7 @@ putarki_archive() {
 # method, in order to be sure that the file has been completely
 # imported, archive_and_wait_grib1 function has to be used instead
             cd $ARKI_IMPDIR
-            dest=`mktemp .XXXXXXXX`
+            dest=`mktemp .XXXXXXXX.$tf`
             cd - 1>/dev/null
             ddest=${dest#.}
 # try with a hard link, avoiding copy
@@ -108,7 +114,7 @@ putarki_archive() {
         arki-scan)
 # do a simple, local, file-based arki-scan, the user must deal with
 # concurrency problems; synchronous method
-            arki-scan --dispatch=$ARKI_CONF grib1:$file > /dev/null;;
+            arki-scan --dispatch=$ARKI_CONF $tf:$file > /dev/null;;
     esac
     done
 }

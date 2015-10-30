@@ -302,7 +302,7 @@ date_now() {
 
 ## @fn time_now()
 ## @brief Return the current time.
-## @details This function works as date_now() but it prints the time
+## @details This function works as date_now() but it prints the current time
 ## in the format `HH`.
 time_now() {
     $DATECOM '+%H'
@@ -310,7 +310,7 @@ time_now() {
 
 ## @fn datetime_now()
 ## @brief Return the current time.
-## @details This function works as date_now() but it prints the date
+## @details This function works as date_now() but it prints the current date
 ## and time in the format `YYYYMMDDHH`.
 datetime_now() {
     $DATECOM '+%Y%m%d%H'
