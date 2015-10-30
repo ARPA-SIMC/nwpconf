@@ -141,7 +141,7 @@ simc_create_radar_grib() {
 			$gribmosaico $gribmosaico.gp
 		    mv -f $gribmosaico.gp $gribmosaico
 		fi
-		putarki_archive $gribmosaico
+		putarki_archive grib $gribmosaico
 	    fi
 	    rm -f $ncmosaico $gribmosaico
 # store current date

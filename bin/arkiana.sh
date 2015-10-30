@@ -47,7 +47,7 @@ arkiana_archive() {
 	# parent model (FROM_PARENT) through int2lm and archive it
 	query="$reftime;$MODEL_ARKI_FROM_PARENT"
 	arki-query --data -o $parentclim "$query" $parentana.arkimet
-	putarki_archive_and_wait $parentclim
+	putarki_archive_and_wait grib $parentclim
 	rm -f $parentclim
     else
 	parentana=
@@ -70,7 +70,7 @@ arkiana_archive() {
 		grib_set -s dataDate=$D1,dataTime=${T1}00 \
 		    $parentslow $parentslow.update
 		mv $parentslow.update $parentslow
-		putarki_archive_and_wait $parentslow
+		putarki_archive_and_wait grib $parentslow
             fi
 	    break
 	fi

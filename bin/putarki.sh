@@ -165,7 +165,7 @@ remote_check_file() {
 
 ## @fn putarki_model_output()
 ## @brief Archive the output of a model run while it is being produced.
-## @details This functions wait for the appearing of model ouput files
+## @details This function waits for the appearing of model ouput files
 ## and archives them as soon as possible in the configured Arkimet
 ## dataset with the putarki_archive() function. It relies on the
 ## creation, in the current directory, of ready-files with name
@@ -206,7 +206,7 @@ putarki_model_output() {
 # process all grib files related to $rfile
 		for gfile in `model_readyfiletoname $rfile`; do
 		    echo $gfile
-		    waitlist[${#waitlist[*]}]=`putarki_archive $gfile`
+		    waitlist[${#waitlist[*]}]=`putarki_archive grib $gfile`
 		done
 # update status for $rfile
 		statuslist[$rfile]="DONE"
