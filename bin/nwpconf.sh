@@ -388,6 +388,44 @@ timeout_exec() {
     exec "$@"
 }
 
+## @fn save_state()
+## @brief Save the state of a script on a file.
+## @details This functions saves the state (the contents of the
+## specified variables) in a file within the configuration tree. The
+## full path name of the file where to save the state is determined
+## with the conf_getfile() function, if it does not exist it is
+## created at the deepest level of the configuration tree. The state
+## can be restored in the environment with the restore_state()
+## function.
+## @param $1 name of the file (only name, without path) where to save the state
+## @param $* the names of the environmental variables to be saved
+save_state() {
+    [ -z "$1" ] && return 1
+ 
+    local state_file
+    state_file=`conf_getfile $1`
+    [ -z "$state_file" ] && state_file=$NWPCONFDIR/$NWPCONF/$1
+    shift
+    > $state_file
+    for var in $*; do
+	echo "$var=`eval echo '$'$var`" >> $state_file
+    done
+}
+
+## @fn restore_state()
+## @brief Restore the state of a script from a file.
+## @details This functions restores the state which had been
+## previously saved in a file within the configuration tree with the
+## save_state() function. The full path name of the file where to save
+## the state is determined with the conf_getfile() function.
+## @param $1 name of the file (only name, without path) from where to restore the state
+restore_state() {
+    [ -z "$1" ] && return 1
+ 
+    local state_file
+    state_file=`conf_getfile $1`
+    [ -n "$state_file" ] && . $state_file
+}
 
 # start exporting all assignments
 set -a

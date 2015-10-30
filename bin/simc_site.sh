@@ -85,41 +85,21 @@ simc_send_logevent() {
 # RADAR_MOSAICOCONF=$RADAR_MOSAICODIR/configurazioni/DPC.CONF
 # RADAR_LHNDIR=$HOME/prelhn/bufr2grib-RUC
 # 
-# @param $1 optional start date and time (`+%Y%m%d%H%M`, UTC), if not passed it is read from file
-# @param $2 optional end date and time (`+%Y%m%d%H%M`, UTC), if not passed it is the current system time
+# @param $1 optional start date and time (`+%Y%m%d%H%M`, UTC)
+# @param $2 optional end date and time (`+%Y%m%d%H%M`, UTC)
 simc_create_radar_grib() {
-    local model_template defaultdate fromdate todate date_file ncmosaico gribmosaico
+    local model_template defaultdate fromdate todate succdate ncmosaico gribmosaico
 
+    succdate=""
 # get grib template on the model grid
     model_template=`conf_getfile model_radar_template.grb`
     if [ -z "$model_template" ]; then
 	echo "Error: grib template model_radar_template.grib for radar precipitation gridding not found in configuration directories"
 	return 1
     fi
-# get date-update file
-    date_file=`conf_getfile model_radar_date.txt`
-    if [ -z "$date_file" ]; then
-	echo "Warning: date file model_radar_date.txt not found in configuration directories"
-	echo "Creating default file $NWPCONFDIR/$NWPCONF/model_radar_date.txt"
-	date_file=$NWPCONFDIR/$NWPCONF/model_radar_date.txt
-    fi
 
-# set starting date from argument if passed or from previous run if
-# found, otherwise yesterday at 12
-    if [ -n "$1" ]; then
-	fromdate=$1
-    else
-	defaultdate=`date -u --date '1 day ago' '+%Y%m%d1200'`
-	fromdate=`cat $date_file` || fromdate=$defaultdate
-# limit fromdate in case of repeated failures
-	[ "$fromdate" -lt "$defaultdate" ] && fromdate=$defaultdate
-    fi
-# set final date
-    if [ -n "$2" ]; then
-	todate=$2
-    else
-	todate=`date -u '+%Y%m%d%H%M'`
-    fi
+    fromdate=$1
+    todate=$2
    
 # loop over radar-precipitation-rate time levels
     while [ "$fromdate" -le "$todate" ]; do
@@ -144,13 +124,15 @@ simc_create_radar_grib() {
 		putarki_archive grib $gribmosaico
 	    fi
 	    rm -f $ncmosaico $gribmosaico
-# store current date
-	    echo $fromdate > $date_file
+# store successful date
+	    succdate=$fromdate
 	fi
 
 # increment date
 	fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
     done
+    # output last processed date
+    echo $succdate
 }
 
 
