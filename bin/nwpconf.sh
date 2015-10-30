@@ -291,6 +291,33 @@ datetime_sub() {
     fi
 }
 
+## @fn date_now()
+## @brief Return the current date.
+## @details This function prints on stdout the current date in the
+## format `YYYYMMDD`; the date is expressed in UTC unless the variable
+## `$DATECOM` is changed from its default value `date -u`.
+date_now() {
+    $DATECOM '+%Y%m%d'
+}
+
+## @fn time_now()
+## @brief Return the current time.
+## @details This function works as date_now() but it prints the time
+## in the format `HH`.
+time_now() {
+    $DATECOM '+%H'
+}
+
+## @fn datetime_now()
+## @brief Return the current time.
+## @details This function works as date_now() but it prints the date
+## and time in the format `YYYYMMDDHH`.
+datetime_now() {
+    $DATECOM '+%Y%m%d%H'
+}
+
+
+
 signedhour_to_date() {
     if [ "$1" -lt 0 ]; then
 	echo "$((-$1)) hours ago"
