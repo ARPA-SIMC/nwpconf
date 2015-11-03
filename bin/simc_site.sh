@@ -85,12 +85,13 @@ simc_send_logevent() {
 # RADAR_MOSAICOCONF=$RADAR_MOSAICODIR/configurazioni/DPC.CONF
 # RADAR_LHNDIR=$HOME/prelhn/bufr2grib-RUC
 # 
-# @param $1 optional start date and time (`+%Y%m%d%H%M`, UTC)
-# @param $2 optional end date and time (`+%Y%m%d%H%M`, UTC)
+# @param $1 previous end date and time (`+%Y%m%d%H%M`, UTC)
+# @param $2 end date and time (`+%Y%m%d%H%M`, UTC)
 simc_create_radar_grib() {
-    local model_template defaultdate fromdate todate succdate ncmosaico gribmosaico
+    local model_template defaultdate fromdate todate succdate ncmosaico gribmosaico waitfor
 
-    succdate=""
+    succdate=
+    waitfor=
 # get grib template on the model grid
     model_template=`conf_getfile model_radar_template.grb`
     if [ -z "$model_template" ]; then
@@ -100,7 +101,8 @@ simc_create_radar_grib() {
 
     fromdate=$1
     todate=$2
-   
+   # increment date
+    fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
 # loop over radar-precipitation-rate time levels
     while [ "$fromdate" -le "$todate" ]; do
 # compute filenames for current date
@@ -121,7 +123,8 @@ simc_create_radar_grib() {
 			$gribmosaico $gribmosaico.gp
 		    mv -f $gribmosaico.gp $gribmosaico
 		fi
-		putarki_archive grib $gribmosaico
+# archive and remember for final waiting
+		waitfor="$waitfor `putarki_archive grib $gribmosaico`"
 	    fi
 	    rm -f $ncmosaico $gribmosaico
 # store successful date
@@ -131,35 +134,9 @@ simc_create_radar_grib() {
 # increment date
 	fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
     done
-    # output last processed date
+# wait once for all to avoid useless pauses
+    [ -n "$waitfor" ] && putarki_wait_for_deletion $waitfor
+# output last processed date
     echo $succdate
 }
 
-
-simc_get_radar_lhn() {
-
-    local startdate enddate curdate nextdate
-# when using data every 15' for some unperscrutable reason COSMO
-# requires also the file for the previous hour
-
-    startdate=`datetime_sub $D1 $T1 1`
-    if [ "$DATE$TIME" = "$D1$T1" ]; then # probably forecast
-	enddate=`datetime_add $DATE $TIME 3`
-    else # assimilation
-	enddate=`datetime_add $DATE $TIME 1`
-    fi
-
-    echo "$startdate:$enddate"
-    curdate=$startdate
-    while [ "$curdate" -le "$enddate" ]; do
-
-	nextdate=`datetime_add $curdate 1`
-	echo "$nextdate"
-	filename=${curdate:2}.grib1 # 2-digit year
-	arki-query --data -o $filename "Reftime:>=`getarki_datetime $curdate` <`getarki_datetime $nextdate`" $ARKI_LHN_DS
-	 [ -f $filename ] || touch $filename
-
-	curdate=$nextdate
-    done
-
-}

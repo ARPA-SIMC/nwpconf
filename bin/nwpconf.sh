@@ -371,10 +371,8 @@ timeout_exec() {
     shift
 
     (
-	for t in $timeout $delay
-	do
-	    while (( $t > $interval ))
-	    do
+	for t in $timeout $delay; do
+	    while [ "$t" -gt "$interval" ]; do
 		sleep $interval
 		kill -0 $$ || exit
 		t=$(( $t - $interval ))
@@ -402,8 +400,7 @@ timeout_exec() {
 save_state() {
     [ -z "$1" ] && return 1
  
-    local state_file
-    state_file=`conf_getfile $1`
+    local state_file=`conf_getfile $1`
     [ -z "$state_file" ] && state_file=$NWPCONFDIR/$NWPCONF/$1
     shift
     > $state_file

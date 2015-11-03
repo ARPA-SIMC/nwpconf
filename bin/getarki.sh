@@ -18,7 +18,7 @@
 ## @details This module provides functions for retrieving observations
 ## in BUFR format and initial/boundary conditions, tipically in GRIB
 ## format, from the desired dataset of an [Arkimet
-## archive](http://arkimet.sourceforge.net/).
+## archive](https://github.com/ARPA-SIMC/arkimet).
 ## 
 ## It is an optional module and it has to be sourced after the
 ## _nwptime.sh_ module.

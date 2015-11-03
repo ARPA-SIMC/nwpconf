@@ -160,6 +160,44 @@ make_ncdf_link() {
     done
 }
 
+
+## @fn cosmo_get_radar_lhn()
+## @brief Retrieve precipitation files for LHN.
+## @details This function retrieves from the configured from arkimet
+## dataset the grib files with observed gridded precipitation
+## (typically derived from radar data) required by COSMO for the
+## latent heat nudging procedure. The time interval of data retrieved
+## is computed on the basis of the environment variables defining
+## assimilation and forecast time. The files are placed in the current
+## directory with the name required by the model.
+cosmo_get_radar_lhn() {
+
+    local startdate enddate curdate nextdate
+# when using data every 15' for some unperscrutable reason COSMO
+# requires also the file for the previous hour
+
+    startdate=`datetime_sub $D1 $T1 1`
+    if [ "$DATE$TIME" = "$D1$T1" ]; then # probably forecast
+	enddate=`datetime_add $DATE $TIME 3`
+    else # assimilation
+	enddate=`datetime_add $DATE $TIME 1`
+    fi
+
+    echo "$startdate:$enddate"
+    curdate=$startdate
+    while [ "$curdate" -le "$enddate" ]; do
+
+	nextdate=`datetime_add $curdate 1`
+	echo "$nextdate"
+	filename=${curdate:2}.grib1 # 2-digit year
+	arki-query --data -o $filename "Reftime:>=`getarki_datetime $curdate` <`getarki_datetime $nextdate`" $ARKI_LHN_DS
+	 [ -f $filename ] || touch $filename
+
+	curdate=$nextdate
+    done
+
+}
+
 # start exporting all assignments
 set -a
 check_dep cosmo_model
