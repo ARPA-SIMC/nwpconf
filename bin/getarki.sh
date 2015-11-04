@@ -39,8 +39,8 @@ getarki_obsbufr() {
 
     local d t ds de dt
     dt=${2:-3}
-    d=`date_sub $D1 $T1 $dt`
-    t=`time_sub $D1 $T1 $dt`
+    d=`date_sub $DATES $TIMES $dt`
+    t=`time_sub $DATES $TIMES $dt`
     ds=`getarki_datetime $d $t`
     d=`date_add $DATE $TIME $dt`
     t=`time_add $DATE $TIME $dt`
@@ -78,12 +78,12 @@ getarki_icbc() {
 	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h
 
 	if [ "$MODEL_BCANA" = "Y" ]; then
-	    d2h=`date_add $D2 $T2 $h`
-	    t2h=`time_add $D2 $T2 $h`
+	    d2h=`date_add $DATES_SLICE $TIMES_SLICE $h`
+	    t2h=`time_add $DATES_SLICE $TIMES_SLICE $h`
 	    reftime=`getarki_datetime $d2h $t2h`
 	    timerange="timerange:Timedef,0h,254"
 	else
-	    reftime=`getarki_datetime $D2 $T2`
+	    reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
 	    hinput=$(($h+$DELTABD_SLICE))
 	    timerange="timerange:Timedef,${hinput}h,254"
 	fi
@@ -112,6 +112,6 @@ getarki_datetime() {
 set -a
 # checks
 check_dep getarki nwptime
-#check_defined DATE TIME D1 T1 D2 T2 MODEL_START_SLICE MODEL_FREQ_SLICE MODEL_STOP_SLICE MODEL_BCANA
+#check_defined DATE TIME DATES TIMES DATES_SLICE TIMES_SLICE MODEL_START_SLICE MODEL_FREQ_SLICE MODEL_STOP_SLICE MODEL_BCANA
 # stop exporting all assignments
 set +a

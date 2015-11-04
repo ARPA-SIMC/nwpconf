@@ -1,7 +1,7 @@
 # variables that must be set:
 #
-# D1
-# T1
+# DATES
+# TIMES
 # COSMO_INT2LMOUTDIR
 # COSMO_STOP
 # ARKI_SCAN_METHOD
@@ -38,7 +38,7 @@ arkiana_archive() {
 
     # at this point interpolated analysis must have already been renamed
     # to *_parent
-    reftime="reftime:="`getarki_datetime $D1 $T1`
+    reftime="reftime:="`getarki_datetime $DATES $TIMES`
     if [ -f $parentana ]; then
 	# index the complete interpolated analysis
 	arki-scan grib1:$parentana > $parentana.arkimet
@@ -57,8 +57,8 @@ arkiana_archive() {
     # interval in the past (FROM_ANA_SLOW)
     slow_back=0
     while [ $slow_back -le "$MODEL_SLOW_PAST_H" ]; do
-	slow_date=`date_sub $D1 $T1 $slow_back`
-	slow_time=`time_sub $D1 $T1 $slow_back`
+	slow_date=`date_sub $DATES $TIMES $slow_back`
+	slow_time=`time_sub $DATES $TIMES $slow_back`
 	slow_reftime="reftime:="`getarki_datetime $slow_date $slow_time`
 	query="$slow_reftime; $MODEL_ARKI_TIMERANGE_ASSIM $MODEL_ARKI_FROM_ASSIM_SLOW"
 	arki-query --data -o $parentslow "$query" $ARKI_DS_ASSIM
@@ -67,7 +67,7 @@ arkiana_archive() {
 	    # found something
             if [ $slow_back -gt 0 ]; then
 		# move forward the date and rearchive
-		grib_set -s dataDate=$D1,dataTime=${T1}00 \
+		grib_set -s dataDate=$DATES,dataTime=${TIMES}00 \
 		    $parentslow $parentslow.update
 		mv $parentslow.update $parentslow
 		putarki_archive_and_wait grib $parentslow
@@ -141,7 +141,7 @@ arkiana_retrieve() {
     if [ ! -f $parentana.arkimet ]; then
 	parentana=
     fi
-    arki_date=`getarki_datetime $D1 $T1`
+    arki_date=`getarki_datetime $DATES $TIMES`
 
     # retrieve climatological fields from parent model in archive
     timerange:GRIB1,0,0;

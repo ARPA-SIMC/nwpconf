@@ -43,7 +43,7 @@ inputmodel_name() {
         case "$INPUTMODEL" in
 	COSMO*)
 	    pref=laf
-	    suff=$D1$T1;;
+	    suff=$DATES$TIMES;;
 	GME*)
 	    pref=giff
 	    suff=00000000;;
@@ -52,10 +52,10 @@ inputmodel_name() {
 	    suff=00000000;;
 	IFS*)
 	    pref=eas
-	    suff=$D1$T1;;
+	    suff=$DATES$TIMES;;
 	*)
 	    pref=laf
-	    suff=$D1$T1;;
+	    suff=$DATES$TIMES;;
 	esac
     else
         case "$INPUTMODEL" in
@@ -186,8 +186,8 @@ cosmo_get_radar_lhn() {
 # when using data every 15' for some unperscrutable reason COSMO
 # requires also the file for the previous hour
 
-    startdate=`datetime_sub $D1 $T1 1`
-    if [ "$DATE$TIME" = "$D1$T1" ]; then # probably forecast
+    startdate=`datetime_sub $DATES $TIMES 1`
+    if [ "$DATE$TIME" = "$DATES$TIMES" ]; then # probably forecast
 	enddate=`datetime_add $DATE $TIME 3`
     else # assimilation
 	enddate=`datetime_add $DATE $TIME 1`

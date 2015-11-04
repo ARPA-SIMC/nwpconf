@@ -63,14 +63,25 @@
 ## @fn nwptime_init()
 ## @brief Initialise the time-related environment for a NWP run.
 ## @details This function is implicitly called when the module is
-## sourced, it computes the variables `$D1`, `$T1`, `$D2`, `$T2`
+## sourced, it sets the following variables:
+##
+## - `$DATES` and `$TIMES` absolute date and time of start of model
+##   run, either assimilation or forecast, based on `$DATE`, `$TIME`
+##   and `$MODEL_BACK`
+##
+## - `$DATES_SLICE` and `$TIMES_SLICE` date and time of start of first
+##   slice of input model providing BCs
+##
+## - `$MODEL_FREQ_SLICE` interval in h between available BCs from
+##   first slice providing BC (actually equal for every slice)
+##
 ## useful for managing boundary conditions in assimilation runs.
 nwptime_init() {
 # start of NWP run
-    D1=`date_sub $DATE $TIME $MODEL_BACK`
-    T1=`time_sub $DATE $TIME $MODEL_BACK`
-    D2=$D1
-    T2=$T1
+    DATES=`date_sub $DATE $TIME $MODEL_BACK`
+    TIMES=`time_sub $DATE $TIME $MODEL_BACK`
+    DATES_SLICE=$DATES
+    TIMES_SLICE=$TIMES
 # MODEL_DELTABD is difference (hours) between $DATE$TIME (end of
 # assimilation window / start of forecast) and start of last available
 # input forecast providing BC (for BCANA=N)
@@ -112,10 +123,24 @@ nwpbctimeloop_init() {
 ## @fn nwpbctimeloop_loop()
 ## @brief Advance a loop on the model runs providing input boundary conditions for a NWP run.
 ## @details This function has to be called for advancing a loop over
-## the model runs that provide the boundary conditions to an
-## assimilation or forecast run. The function sets the variables
-## `$D2`, `$T2`, `$MODEL_START_SLICE`, `$MODEL_STOP_SLICE`,
-## `$MODEL_FREQ_SLICE`, `$DELTABD_SLICE`. The return value is 1 (true)
+## the model runs (called "slices") that provide the boundary
+## conditions to an assimilation or forecast run. The function sets
+## the variables:
+##
+## - `$DATES_SLICE` and `$TIMES_SLICE` date and time of start of current
+##   slice of input model providing BCs
+##
+## - `$MODEL_START_SLICE` and `$MODEL_STOP_SLICE` indicate start and
+##   stop in h of the useful data from current slice with respect to
+##   `$DATES` and `$TIMES`
+##
+## - `$DELTABD_SLICE` difference in h between start of assimilation
+##    and start of current slice of input model providing BC.
+##
+## - `$MODEL_INI_SLICE` whether current slice of input model may provide
+##   also initial data (`.TRUE.`) or only boundary data (`.FALSE.`)
+##
+## The return value is 1 (true)
 ## if the loop is not terminated, or 0 (false) if the loop is
 ## terminated, thus it should be used in the following way:
 ## 
@@ -126,8 +151,8 @@ nwpbctimeloop_init() {
 nwpbctimeloop_loop() {
     [ $MODEL_STOP_SLICE -lt $MODEL_STOP ] || return 1
     DELTABD_SLICE=$DELTABD_SAVE
-    D2=`date_sub $D1 $T1 $DELTABD_SLICE`
-    T2=`time_sub $D1 $T1 $DELTABD_SLICE`
+    DATES_SLICE=`date_sub $DATES $TIMES $DELTABD_SLICE`
+    TIMES_SLICE=`time_sub $DATES $TIMES $DELTABD_SLICE`
 
     MODEL_START_SLICE=`max 0 $((-$DELTABD_SLICE))`
     if [ "$MODEL_BCANA" = "Y" ]; then
@@ -137,8 +162,8 @@ nwpbctimeloop_loop() {
 	DELTABD_SAVE=$(($DELTABD_SLICE-$MODEL_FREQANA_INPUT))
     else
 # test whether this is the last possible loop
-	DT=`date_add $D2 $T2 $MODEL_FREQINI_INPUT`
-	TT=`time_add $D2 $T2 $MODEL_FREQINI_INPUT`
+	DT=`date_add $DATES_SLICE $TIMES_SLICE $MODEL_FREQINI_INPUT`
+	TT=`time_add $DATES_SLICE $TIMES_SLICE $MODEL_FREQINI_INPUT`
 	if [ $DT$TT -gt $D3$T3 ]; then
 	    MODEL_STOP_SLICE=$MODEL_STOP
 	else
@@ -151,9 +176,9 @@ nwpbctimeloop_loop() {
 
 # is this used anywhere? erase 
     if [ $MODEL_START_SLICE -eq 0 ]; then
-	MODEL_LANA=.TRUE.
+	MODEL_INI_SLICE=.TRUE.
     else
-	MODEL_LANA=.FALSE.
+	MODEL_INI_SLICE=.FALSE.
     fi
 
     return 0
