@@ -16,7 +16,7 @@
 
 # Delta time to be used in COSMO grib file names, input forecast time
 # in h, output ddhh0000
-timedelta_cosmo() {
+cosmo_timedelta() {
     local d=0
     local h=$1
     while [ "$h" -ge 24 ]; do
@@ -27,7 +27,15 @@ timedelta_cosmo() {
     
 }
 
-# $1 a=analysis numeric=boundary condition for hour n
+## @fn inputmodel_name()
+## @brief Output the filename corresponding to an input model analysis
+## or boundary condition file.
+## @details This function computes the filename of the input model
+## analysis or boundary file according to the model convention, on
+## the basis of `$INPUTMODEL` environment variable and all the
+## variables related to the timing of the run. It a model-specific
+## function for COSMO model, required by the getarki.sh module.
+## @param $1 a=analysis numeric=boundary condition for the corresponding hour
 inputmodel_name() {
 
     local pref suff
@@ -48,7 +56,7 @@ inputmodel_name() {
 	*)
 	    pref=laf
 	    suff=$D1$T1;;
-    esac
+	esac
     else
         case "$INPUTMODEL" in
 	COSMO*)
@@ -61,9 +69,8 @@ inputmodel_name() {
 	    pref=efsf;;
 	*)
 	    pref=lfff;;
-    esac
-    suff=`timedelta_cosmo $1`
-
+	esac
+	suff=`cosmo_timedelta $1`
     fi
 
     echo $pref$suff
@@ -75,7 +82,10 @@ inputmodel_name() {
 ## @details This function takes the name of a ready-file and prints to
 ## stdout a shell pattern (possibly just a single name) representing
 ## the output files that can be generated correspondingly to the
-## specified ready-file, for the current model.
+## specified ready-file, according to the model convention. It a
+## model-specific function for COSMO model, required by the putarki.sh
+## module.
+## @param $1 name of the ready-file
 model_readyfiletoname() {
 
 # extract time from the ready file
@@ -90,7 +100,7 @@ model_readyfiletoname() {
 # convert them into COSMO-netcdf format, arguments are:
 # $1 (optional) name of the logsim event to wait for, if empty it does
 # not wait
-getarki_obsncdf() {
+cosmo_getarki_obsncdf() {
 
 # optional wait
     [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
