@@ -101,7 +101,7 @@ simc_create_radar_grib() {
 
     fromdate=$1
     todate=$2
-   # increment date
+# increment date
     fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
 # loop over radar-precipitation-rate time levels
     while [ "$fromdate" -le "$todate" ]; do

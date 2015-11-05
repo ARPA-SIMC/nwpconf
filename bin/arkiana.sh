@@ -212,7 +212,6 @@ arkiana_retrieve() {
 	MODEL_FAST_ANA=Y
     fi
 
-
     # glue all together
     cat $parentclim $parentslow $parentfast > $2
     rm -f $parentclim $parentslow $parentfast

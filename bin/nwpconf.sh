@@ -403,10 +403,9 @@ save_state() {
     local state_file=`conf_getfile $1`
     [ -z "$state_file" ] && state_file=$NWPCONFDIR/$NWPCONF/$1
     shift
-    > $state_file
     for var in $*; do
-	echo "$var=`eval echo '$'$var`" >> $state_file
-    done
+	echo "$var=`eval echo '$'$var`"
+    done > $state_file
 }
 
 ## @fn restore_state()

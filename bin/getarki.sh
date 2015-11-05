@@ -84,12 +84,11 @@ getarki_icbc() {
 	    timerange="timerange:Timedef,0h,254"
 	else
 	    reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
-	    hinput=$(($h+$DELTABD_SLICE))
+	    hinput=$(($h+$MODEL_DELTABD_SLICE))
 	    timerange="timerange:Timedef,${hinput}h,254"
 	fi
 	arki-query --data -o `inputmodel_name $h` \
 	    "reftime:=$reftime;$timerange" $ARKI_ICBC_DS
-#	[ "$h" -eq "0" -a ] or [ "$h" -eq "$MODEL_START_SLICE" ] ?
 	if [ "$h" -eq "0" ]; then
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
@@ -112,6 +111,5 @@ getarki_datetime() {
 set -a
 # checks
 check_dep getarki nwptime
-#check_defined DATE TIME DATES TIMES DATES_SLICE TIMES_SLICE MODEL_START_SLICE MODEL_FREQ_SLICE MODEL_STOP_SLICE MODEL_BCANA
 # stop exporting all assignments
 set +a
