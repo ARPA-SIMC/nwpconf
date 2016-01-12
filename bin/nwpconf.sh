@@ -386,9 +386,40 @@ timeout_exec() {
     exec "$@"
 }
 
+
+## @safe_rm_rf()
+## @brief Remove recursively directory tree(s) with some security checks.
+## @details This functions removes the requested directories and all
+## their content recursively (`rm -rf`) performing some preliminary
+## checks to prevent removing undesired files due, e.g., to wrong
+## environmental variable assignment. Each argument provided must
+## match the following conditions:
+## 
+##  * being non null
+##  * being not be equal to /
+##  * being a directory
+##  * being owned by the user
+## 
+## otherwise the remove processof the current argument is canceled and
+## it continues with the following argument.
+## 
+## @param $* directories to be removed
+safe_rm_rf() {
+    for dir in "$@"; do
+	if [ -n "$dir" -a "$dir" != "/" ]; then
+	    if [ -d "$dir" ]; then
+		if [ -O "$dir" ]; then
+		    rm -rf "$dir"
+		fi
+	    fi
+	fi
+    done
+
+}
+
 ## @fn save_state()
 ## @brief Save the state of a script on a file.
-## @details This functions saves the state (the contents of the
+## @details This function saves the state (the contents of the
 ## specified variables) in a file within the configuration tree. The
 ## full path name of the file where to save the state is determined
 ## with the conf_getfile() function, if it does not exist it is

@@ -16,19 +16,50 @@
 ## @file
 ## @brief Module with utilities for parallel computing.
 ## @details This module provides some functions that help in
-## performing operations related to parallel comuting, such as
+## performing operations related to parallel computing, such as
 ## defining a Cartesian topology and starting parallel MPI executables
 ## in an MPI implementation- and scheduler-independent way. It is an
 ## optional module and it has to be sourced after the main
 ## _nwpconf.sh_ module.
 
+## @fn parcomp_init()
+## @brief Setup the environment for parallel computing.
+## @details This functions is implicitly called when the module is
+## sourced, it sets up the environment for parallel computing from the
+## HPC scheduling environment of the process, if available (Slurm, PBS
+## and LoadLeveler supported). If no scheduling environment is
+## available, the environmental variable $NPTOTAL is used as number of
+## desired parallel tasks. If set in input, the variable $NPIO
+## indicates the number of tasks dedicated to I/O, not involved in
+## Cartesian computation. The parcomp_computetopo() function is
+## implicitly called by this function with the proper mumber of
+## computational tasks.  On output, the variables `$NPX`, `$NPY`,
+## `$NPIO` (if not set on input) and `$NP` (total numebr of parallel
+## tasks including I/O tasks) are set.
+parcomp_init() {
+    [ -n "$NPIO" ] || NPIO=0
+    if [ -n "$SLURM_NTASKS" ]; then # slurm
+	parcomp_computetopo $(($SLURM_NTASKS - $NPIO))
+    elif [ -n "$PBS_NODEFILE" -a -f "$PBS_NODEFILE" ]; then # pbs
+	parcomp_computetopo `wc -l "$PBS_NODEFILE"`
+    elif [ -n "$LOADL_TOTAL_TASKS" ]; then # LoadLeveler
+	parcomp_computetopo $(($LOADL_TOTAL_TASKS - $NPIO))
+    elif [ -n "$NPTOTAL" ]; then # generic
+	parcomp_computetopo $(($NPTOTAL - $NPIO))
+    else
+	parcomp_computetopo 1
+    fi
+    NP=$(($NPX*$NPY+$NPIO))
+}
+
 ## @fn parcomp_computetopo()
-## @brief Compute a 2-D processor topology from the total number of tasks.
+## @brief Compute a 2-D processor topology from the total number of
+## tasks.
 ## @details This function computes a reasonable 2-D task (processor)
 ## Cartesian topology for parallel computing given the total number of
-## tasks. The topology is set in the `$NPX` `$NPY` environment
-## variables.
-## @param $1 the number of tasks requested
+## computational tasks. The topology is set in the `$NPX` `$NPY`
+## environment variables.
+## @param $1 the number of computational tasks requested
 parcomp_computetopo() {
     if [ "$1" -ge 128 ]; then
 	NPX=8
@@ -109,35 +140,6 @@ parcomp_computetopo() {
 	NPX=1
 	NPY=1
     fi
-}
-
-## @fn parcomp_init()
-## @brief Setup the environment for parallel computing
-## @details This functions sets up the environment for parallel
-## computing from the HPC scheduling environment of the process, if
-## available (Slurm, PBS and LoadLeveler supported). If no scheduling
-## environment is available, the environmental variable $NPTOTAL is
-## used as number of desired parallel tasks. If set in input, the
-## variable $NPIO indicates the number of tasks dedicated to I/O, not
-## involved in Cartesian computation. The parcomp_computetopo()
-## function is implicitly called by this function with the proper
-## mumber of computational tasks.  On output, the variables `$NPX`,
-## `$NPY`, `$NPIO` (if not set on input) and `$NP` (total numebr of
-## parallel tasks including I/O tasks) are set.
-parcomp_init() {
-    [ -n "$NPIO" ] || NPIO=0
-    if [ -n "$SLURM_NTASKS" ]; then # slurm
-	parcomp_computetopo $(($SLURM_NTASKS - $NPIO))
-    elif [ -n "$PBS_NODEFILE" -a -f "$PBS_NODEFILE" ]; then # pbs
-	parcomp_computetopo `wc -l "$PBS_NODEFILE"`
-    elif [ -n "$LOADL_TOTAL_TASKS" ]; then # LoadLeveler
-	parcomp_computetopo $(($LOADL_TOTAL_TASKS - $NPIO))
-    elif [ -n "$NPTOTAL" ]; then # generic
-	parcomp_computetopo $(($NPTOTAL - $NPIO))
-    else
-	parcomp_computetopo 1
-    fi
-    NP=$(($NPX*$NPY+$NPIO))
 }
 
 ## @fn parcomp_mpirun()
