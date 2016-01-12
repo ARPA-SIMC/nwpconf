@@ -34,7 +34,7 @@
 ## Cartesian computation. The parcomp_computetopo() function is
 ## implicitly called by this function with the proper mumber of
 ## computational tasks.  On output, the variables `$NPX`, `$NPY`,
-## `$NPIO` (if not set on input) and `$NP` (total numebr of parallel
+## `$NPIO` (if not set on input) and `$NP` (total number of parallel
 ## tasks including I/O tasks) are set.
 parcomp_init() {
     [ -n "$NPIO" ] || NPIO=0
@@ -146,7 +146,7 @@ parcomp_computetopo() {
 ## @brief Run a parallel MPI process starting the required number of tasks.
 ## @details This function runs a parallel MPI process starting the
 ## required number of tasks, in a scheduler-independent and MPI
-## implementation-independet way (not yet implemented).
+## implementation-independent way (not yet implemented).
 ## @param $* additional arguments to mpirun, parallel executable and its optional arguments
 parcomp_mpirun() {
 # adapt to mpi/queuing system used
