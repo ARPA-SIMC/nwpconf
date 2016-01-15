@@ -18,7 +18,7 @@
 ## and interpolated from a parent model.
 
 ## @fn arkiana_archive()
-## @brief Retrieve analysis from the cofigured sources for starting a model run.
+## @brief Retrieve analysis from the configured sources for starting a model run.
 ## @details This function retrieves the gridded analysis data for
 ## starting a model run from the configured arkimet datasets trying
 ## different sources for climatological, slow and fast data.

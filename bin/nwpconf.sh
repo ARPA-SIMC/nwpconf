@@ -387,7 +387,7 @@ timeout_exec() {
 }
 
 
-## @safe_rm_rf()
+## @fn safe_rm_rf()
 ## @brief Remove recursively directory tree(s) with some security checks.
 ## @details This functions removes the requested directories and all
 ## their content recursively (`rm -rf`) performing some preliminary
