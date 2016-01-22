@@ -78,7 +78,6 @@ arkiana_archive() {
     done
     rm -f $parentslow
 
-    MODEL_ARKI_SURFT='level:GRIB1,111,0 or GRIB1,1;product:GRIB1,,201,197 or GRIB1,,2,85;'
     #if [ ... -a "$MODEL_REPLACE_SST" = Y ]; then
     if [ -n "$parentana" -a "$MODEL_SOIL_PARENT" = N ]; then
 	# replace archived soil/surface temperature on sea with temperature
@@ -106,7 +105,7 @@ arkiana_archive() {
 	    # merge in a single field and archive
 	    vg6d_transform --trans-type=none --dup-mode=1 \
 		$tmp1 $tmp2 $anasurft
-	    archive_and_wait_grib1 $anasurft
+	    putarki_archive_and_wait grib $anasurft
 	    rm -f $anasurft $parentsurft $parentlsm $tmp1 $tmp2
 	fi # else print warning?
 
@@ -116,7 +115,7 @@ arkiana_archive() {
 		"$reftime;$MODEL_ARKI_BBC" $parentana.arkimet
 	    # set timerange indicator as for nudging?
 	    #    grib_set -s timeRangeIndicator=13 $parentsurft
-	    archive_and_wait_grib1 $parentbbc
+	    putarki_archive_and_wait grib $parentbbc
 	    rm -f $parentbbc
 	fi
 
@@ -218,5 +217,10 @@ arkiana_retrieve() {
 
 }
 
-
-
+# start exporting all assignments
+set -a
+# checks
+check_dep arkiana getarki putarki
+check_defined MODEL_SLOW_PAST_H
+# stop exporting all assignments
+set +a
