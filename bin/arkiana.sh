@@ -1,16 +1,3 @@
-# variables that must be set:
-#
-# DATES
-# TIMES
-# COSMO_INT2LMOUTDIR
-# COSMO_STOP
-# ARKI_SCAN_METHOD
-# ARKI_IMPDIR
-# ARKI_USE_INOTIFY
-# WAITTOTAL
-
-# COSMO_FREQANA
-
 ## @file
 ## @brief Module with functions for processing analysis fields in a continuous assimilation cycle.
 ## @details This module provides functions for merging and archiving
@@ -64,7 +51,7 @@ arkiana_archive() {
 	    "$slow_reftime;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ASSIM_SLOW;" \
 	    $ARKI_DS_ASSIM
 	n=`grib_count $parentslow` || n=0
-	if [ $n -ge $MODEL_N_ANA_SLOW ]; then
+	if [ $n -ge $MODEL_N_ASSIM_SLOW ]; then
 	    # found something
             if [ $slow_back -gt 0 ]; then
 		# move forward the date and rearchive
@@ -164,22 +151,22 @@ arkiana_retrieve() {
     rm -f $parentslow
     [ -f "./soil_coldstart" ] || \
 	arki-query --data -o $parentslow \
-	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ANA_SLOW;" $ARKI_DS_ASSIM
+	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ASSIM_SLOW;" $ARKI_DS_ASSIM
     n=`grib_count $parentslow` || n=0
 
-    if [ $n -lt "$MODEL_N_ANA_SLOW" ]; then
+    if [ $n -lt "$MODEL_N_ASSIM_SLOW" ]; then
 	# in case of failure get them from parent model in file
 	echo "slow fields not found in archive, trying to get them from parent model"
 	if [ -n "$parentana" ]; then
 	    arki-query --data -o $parentslow \
-		"$MODEL_ARKI_FROM_ANA_SLOW;" $parentana.arkimet
-	    MODEL_SLOW_ANA=N
+		"$MODEL_ARKI_FROM_ASSIM_SLOW;" $parentana.arkimet
+	    MODEL_SLOW_ASSIM=N
 	else
 	    echo "but parent model did not provide an analysis"
 	    exit 1
 	fi
     else
-	MODEL_SLOW_ANA=Y
+	MODEL_SLOW_ASSIM=Y
     fi
     # if [ "$MODEL_SLOW" = Y ]; then
     #     export COSMO_SLOW_NML=.FALSE.
@@ -191,23 +178,23 @@ arkiana_retrieve() {
     rm -f $parentfast
     [ -f "./atm_coldstart" ] || \
 	arki-query --data -o $parentfast \
-	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ANA_FAST" \
+	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ASSIM_FAST" \
 	$ARKI_DS_ASSIM
     n=`grib_count $parentfast` || n=0
 
-    if [ $n -le "$MODEL_N_ANA_FAST" ]; then
+    if [ $n -le "$MODEL_N_ASSIM_FAST" ]; then
 	# in case of failure get them from parent model in file
 	echo "fast fields not found in arkimet, trying to get them from parent model"
 	if [ -n "$parentana" ]; then
 	    arki-query --data -o $parentfast \
-		"$MODEL_ARKI_FROM_ANA_FAST;" $parentana.arkimet
-	    MODEL_FAST_ANA=N
+		"$MODEL_ARKI_FROM_ASSIM_FAST;" $parentana.arkimet
+	    MODEL_FAST_ASSIM=N
 	else
 	    echo "but parent model did not provide an analysis"
 	    exit 1
 	fi
     else
-	MODEL_FAST_ANA=Y
+	MODEL_FAST_ASSIM=Y
     fi
 
     # glue all together
