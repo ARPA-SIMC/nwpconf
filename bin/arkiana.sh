@@ -2,13 +2,58 @@
 ## @brief Module with functions for processing analysis fields in a continuous assimilation cycle.
 ## @details This module provides functions for merging and archiving
 ## analysis fields coming from a continuous model assimilation cycle
-## and interpolated from a parent model.
+## and interpolated from a parent model. It requores definition of the
+## following environmental variables (explanation to be added):
+##
+## - `$MODEL_ARKI_FROM_PARENT`
+##
+## - `$MODEL_N_PARENT`
+##
+## - `$MODEL_SOIL_PARENT`
+##
+## - `$MODEL_ARKI_FROM_ASSIM_SLOW`
+##
+## - `$MODEL_N_ASSIM_SLOW`
+##
+## - `$MODEL_ARKI_FROM_ASSIM_FAST`
+##
+## - `$MODEL_N_ASSIM_FAST`
+##
+## - `$MODEL_ARKI_TIMERANGE_ASSIM`
+##
+## - `$MODEL_ARKI_TIMERANGE_FCAST`
+##
+## - `$ARKI_DS_ASSIM`
+##
+## - `$ARKI_DS_FCAST`
+##
+## - `$ARKI_DS_INTER`
+##
+## - `$MODEL_ASSIM_GP`
+##
+## - `$MODEL_FCAST_GP`
+##
+## - `$MODEL_INTER_GP`
+##
+## - `$MODEL_ARKI_SURFT`
+##
+## - `$MODEL_ARKI_LSM`
+##
+## - `$MODEL_ARKI_BBC`
 
 ## @fn arkiana_archive()
-## @brief Retrieve analysis from the configured sources for starting a model run.
-## @details This function retrieves the gridded analysis data for
-## starting a model run from the configured arkimet datasets trying
-## different sources for climatological, slow and fast data.
+## @brief Archive interpolated analysis and merge surface fields with the ones available from assimilation.
+## @details This function selects, from an interpolated analysis file,
+## only those fields that should come from parent model as selected by
+## the variable `$MODEL_ARKI_FROM_PARENT` and archives them for being
+## used in the successive model run. It also merges parent model sea
+## surface temperature with soil surface temperature from analysis, if
+## necessary and available, and archives it. It also checks for
+## availability of so-called "slow" fields in the analysis, as
+## selected by the variable `$MODEL_ARKI_FROM_ASSIM_SLOW`, and if
+## found within an interval of `$MODEL_SLOW_PAST_H` hours in the past,
+## it refreshes the date in grib fields and rearchives them for
+## successive use.
 ## @param $1 the name of the file containing parent model interpolated analysis
 arkiana_archive() {
     local parentana=$1
