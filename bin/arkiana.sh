@@ -90,12 +90,14 @@ arkiana_archive() {
 	    vg6d_transform --trans-type=metamorphosis --sub-type=maskvalid \
 		--maskbounds=0.5,1.5 --coord-file=$parentlsm --coord-format=grib_api \
 		$anasurft $tmp2
-	    # merge in a single field and archive
-	    vg6d_transform --trans-type=none --dup-mode=1 \
-		$tmp1 $tmp2 $anasurft
-	    putarki_archive_and_wait grib $anasurft
+	    # merge in a single field
+	    vg6d_transform --trans-type=none --dup-mode=1 $tmp1 $tmp2 $anasurft
+	    # set generating process as if they came from assimilation
+	    grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP \
+		$anasurft $anasurft.gp
+	    putarki_archive_and_wait grib $anasurft.gp
 	fi # else print warning?
-	rm -f $anasurft $parentsurft $parentlsm $tmp1 $tmp2
+	rm -f $anasurft $parentsurft $parentlsm $tmp1 $tmp2 $anasurft.gp
 
 	if [ -n "$MODEL_ARKI_BBC" ]; then
 	    # replace archived lowest soil layer with corresponding field from parent model
@@ -103,8 +105,11 @@ arkiana_archive() {
 		$parentana.arkimet
 	    # set timerange indicator as for nudging?
 	    #    grib_set -s timeRangeIndicator=13 $parentbbc
-	    putarki_archive_and_wait grib $parentbbc
-	    rm -f $parentbbc
+	    # set generating process as if they came from assimilation
+	    grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP \
+		$parentbbc $parentbbc.gp
+	    putarki_archive_and_wait grib $parentbbc.gp
+	    rm -f $parentbbc $parentbbc.gp
 	fi
 
     fi
@@ -134,11 +139,11 @@ arkiana_retrieve() {
     # retrieve climatological fields from parent model in archive
     arki-query --data -o $parentclim \
 	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_FCAST;$MODEL_ARKI_FROM_PARENT;" \
-	$ARKI_DS_FCAST
+	$ARKI_DS_INTER
     n=`grib_count $parentclim` || n=0
     if [ $n -lt "$MODEL_N_PARENT" ]; then
 	# in case of failure get them from analysis in archive
-	echo "climatological fields from parent model not found in arkimet, trying to get them from model analysis"
+	echo "climatological fields from parent model not found in archive, trying to get them from model analysis"
 	arki-query --data -o $parentclim \
 	    "reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_PARENT;" \
 	    $ARKI_DS_ASSIM
@@ -151,7 +156,8 @@ arkiana_retrieve() {
     rm -f $parentslow
     [ -f "./soil_coldstart" ] || \
 	arki-query --data -o $parentslow \
-	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ASSIM_SLOW;" $ARKI_DS_ASSIM
+	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ASSIM_SLOW;" \
+	$ARKI_DS_ASSIM
     n=`grib_count $parentslow` || n=0
 
     if [ $n -lt "$MODEL_N_ASSIM_SLOW" ]; then
