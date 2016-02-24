@@ -181,39 +181,48 @@ arkiana_retrieve() {
     fi
     arki_date=`getarki_datetime $DATES $TIMES`
 
-    # retrieve climatological fields from parent model in archive
+    # retrieve climatological (and possibly other) fields from parent
+    # model in archive
     arki-query --data -o $parentclim \
 	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_FCAST;$MODEL_ARKI_FROM_PARENT;" \
 	$ARKI_DS_INTER
     n=`grib_count $parentclim` || n=0
     if [ $n -lt "$MODEL_N_PARENT" ]; then
 	# in case of failure get them from analysis in archive
-	echo "climatological fields from parent model not found in archive, trying to get them from model analysis"
+	echo "climatological fields not found in parent model archive, trying to get them from analysis archive"
 	arki-query --data -o $parentclim \
 	    "reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_PARENT;" \
 	    $ARKI_DS_ASSIM
 	MODEL_CLIM_PARENT=N
+	n=`grib_count $parentclim` || n=0
+	if [ $n -lt "$MODEL_N_PARENT" ]; then
+	    echo "climatological fields not found neither in analysis archive"
+	    exit 1
+	fi
     else
 	MODEL_CLIM_PARENT=Y
     fi
 
-    # extract "slow" (~soil) fields from analysis in archive
+    # retriev "slow" (~soil) fields from analysis in archive
     rm -f $parentslow
     [ -f "./soil_coldstart" ] || \
 	arki-query --data -o $parentslow \
 	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ASSIM_SLOW;" \
 	$ARKI_DS_ASSIM
     n=`grib_count $parentslow` || n=0
-
     if [ $n -lt "$MODEL_N_ASSIM_SLOW" ]; then
+	MODEL_SLOW_ASSIM=N
 	# in case of failure get them from parent model in file
-	echo "slow fields not found in archive, trying to get them from parent model"
+	echo "slow fields not found in analysis archive, trying to get them from parent model output"
 	if [ -n "$parentana" ]; then
 	    arki-query --data -o $parentslow \
 		"$MODEL_ARKI_FROM_ASSIM_SLOW;" $parentana.arkimet
-	    MODEL_SLOW_ASSIM=N
+	    n=`grib_count $parentslow` || n=0
+	    if [ $n -lt "$MODEL_N_ASSIM_SLOW" ]; then
+		echo "slow fields not found neither in parent model output"
+	    fi
 	else
-	    echo "but parent model did not provide an analysis"
+	    echo "parent model output not available"
 	    exit 1
 	fi
     else
@@ -225,23 +234,26 @@ arkiana_retrieve() {
     #     export COSMO_SLOW_NML=.TRUE.
     # fi
 
-    # extract "fast" (~atmosphere) fields from analysis in archive
+    # retrieve "fast" (~atmosphere) fields from analysis in archive
     rm -f $parentfast
     [ -f "./atm_coldstart" ] || \
 	arki-query --data -o $parentfast \
 	"reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_ASSIM_FAST" \
 	$ARKI_DS_ASSIM
     n=`grib_count $parentfast` || n=0
-
     if [ $n -le "$MODEL_N_ASSIM_FAST" ]; then
+	MODEL_FAST_ASSIM=N
 	# in case of failure get them from parent model in file
-	echo "fast fields not found in arkimet, trying to get them from parent model"
+	echo "fast fields not found in analysis archive, trying to get them from parent model output"
 	if [ -n "$parentana" ]; then
 	    arki-query --data -o $parentfast \
 		"$MODEL_ARKI_FROM_ASSIM_FAST;" $parentana.arkimet
-	    MODEL_FAST_ASSIM=N
+	    n=`grib_count $parentfast` || n=0
+	    if [ $n -lt "$MODEL_N_ASSIM_FAST" ]; then
+		echo "fast fields not found neither in parent model output"
+	    fi
 	else
-	    echo "but parent model did not provide an analysis"
+	    echo "parent model output not available"
 	    exit 1
 	fi
     else
