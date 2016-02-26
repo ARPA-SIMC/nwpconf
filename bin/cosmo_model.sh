@@ -76,6 +76,11 @@ $MODEL_SNOW_PRODUCT"
     MODEL_ARKI_FROM_ASSIM_FAST="level:GRIB1,109 or GRIB1,110;"
     MODEL_N_ASSIM_FAST=$(($MODEL_NLEV*4))
 
+# for setting sst and soil bottom boundary condition from parent
+    MODEL_ARKI_SURFT="level:GRIB1,111,0 or GRIB1,1;product:GRIB1,,201,197 or GRIB1,,2,85"
+    MODEL_ARKI_LSM="level:GRIB1,1; product:GRIB1,,2,81"
+    MODEL_ARKI_BBC="level:GRIB1,111,1458"
+
 }
 
 # Delta time to be used in COSMO grib file names, input forecast time
