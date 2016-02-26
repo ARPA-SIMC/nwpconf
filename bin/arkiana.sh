@@ -138,7 +138,9 @@ arkiana_archive() {
 		--maskbounds=0.5,1.5 --coord-file=$parentlsm --coord-format=grib_api \
 		$anasurft $tmp2
 	    # merge in a single field
-	    vg6d_transform --trans-type=none --dup-mode=1 $tmp1 $tmp2 $anasurft
+	    cat $tmp2 >> $tmp1
+	    rm -f $anasurft
+	    vg6d_transform --trans-type=none --dup-mode=1 $tmp1 $anasurft
 	    # set generating process as if they came from assimilation
 	    grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP \
 		$anasurft $anasurft.gp
