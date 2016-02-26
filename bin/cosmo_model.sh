@@ -14,6 +14,70 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+
+## @fn cosmo_model_init()
+## @brief Setup the environment for COSMO model.
+## @details This functions is implicitly called when the module is
+## sourced, it sets up the environment for COSMO model with reasonable
+## defaults.
+cosmo_model_init() {
+    READYFILE_PATTERN="LM[ABF]_*"
+
+# configuration for continuous run
+    MODEL_SOIL_PRODUCT="GRIB1,,201,197 or GRIB1,,201,198 or GRIB1,,2,85 or GRIB1,,2,51 or GRIB1,,201,200"
+# T_SO,W_SO,T_S,QV_S,W_I
+    MODEL_SNOW_PRODUCT="GRIB1,,2,65 or GRIB1,,201,203 or GRIB1,,201,129 or GRIB1,,201,133"
+# W_SNOW,T_SNOW,FRESHSNW,RHO_SNOW
+
+# definition of fields from parent model
+    MODEL_ARKI_FROM_PARENT="
+level:GRIB1,111 or GRIB1,1;
+product:GRIB1,,2,8 or GRIB1,,2,81 or GRIB1,,2,83 or GRIB1,,2,87 or \
+GRIB1,,202,46 or GRIB1,,202,47 or GRIB1,,202,48 or GRIB1,,202,49 or \
+GRIB1,,202,61 or GRIB1,,202,62 or GRIB1,,202,64 or GRIB1,,202,65 or \
+GRIB1,,202,75 or GRIB1,,202,76 or GRIB1,,202,57 or \
+GRIB1,,202,84 or GRIB1,,202,86 or GRIB1,,202,91 or GRIB1,,202,92 or GRIB1,,202,93"
+# HSURF,FR_LAND,Z0,PLCOV
+# SSO_*4
+# LAI,ROOTDP,HMO3,VIO3
+# FOR_E,FOR_D,SOILTYP
+# AER_*5
+# soil and surface T and W moved here???
+    MODEL_N_PARENT=10
+    if [ "$MODEL_SOIL_PARENT" = Y ]; then
+	MODEL_ARKI_FROM_PARENT="$MODEL_ARKI_FROM_PARENT or \
+$MODEL_SOIL_PRODUCT"
+	MODEL_N_PARENT=$(($MODEL_N_PARENT+8*2))
+    fi
+    if [ "$MODEL_SNOW_PARENT" = Y ]; then
+	MODEL_ARKI_FROM_PARENT="$MODEL_ARKI_FROM_PARENT or \
+$MODEL_SNOW_PRODUCT"
+	MODEL_N_PARENT=$(($MODEL_N_PARENT+4))
+    fi
+
+# definition of slow fields from analysis
+    MODEL_ARKI_FROM_ASSIM_SLOW="
+level:GRIB1,111 or GRIB1,1;
+product:GRIB1,,2,92 or GRIB1,,201,215"
+# H_ICE,T_ICE
+    MODEL_N_ASSIM_SLOW=2
+    if [ "$MODEL_SOIL_PARENT" != Y ]; then
+	MODEL_ARKI_FROM_ASSIM_SLOW="$MODEL_ARKI_FROM_ASSIM_SLOW or \
+$MODEL_SOIL_PRODUCT"
+	MODEL_N_ASSIM_SLOW=$(($MODEL_N_ASSIM_SLOW+8*2))
+    fi
+    if [ "$MODEL_SNOW_PARENT" != Y ]; then
+	MODEL_ARKI_FROM_ASSIM_SLOW="$MODEL_ARKI_FROM_ASSIM_SLOW or \
+$MODEL_SNOW_PRODUCT"
+	MODEL_N_ASSIM_SLOW=$(($MODEL_N_ASSIM_SLOW+4))
+    fi
+
+# definition of fast fields from analysis
+    MODEL_ARKI_FROM_ASSIM_FAST="level:GRIB1,109 or GRIB1,110;"
+    MODEL_N_ASSIM_FAST=$(($MODEL_NLEV*4))
+
+}
+
 # Delta time to be used in COSMO grib file names, input forecast time
 # in h, output ddhh0000
 cosmo_timedelta() {
@@ -32,7 +96,7 @@ cosmo_timedelta() {
 ## or boundary condition file.
 ## @details This function computes the filename of the input model
 ## analysis or boundary file according to the model convention, on
-## the basis of `$INPUTMODEL` environment variable and all the
+## the basis of `$PARENTMODEL` environment variable and all the
 ## variables related to the timing of the run. It a model-specific
 ## function for COSMO model, required by the getarki.sh module.
 ## @param $1 a=analysis numeric=boundary condition for the corresponding hour
@@ -40,7 +104,7 @@ inputmodel_name() {
 
     local pref suff
     if [ "$1" = "a" ]; then
-        case "$INPUTMODEL" in
+        case "$PARENTMODEL" in
 	COSMO*)
 	    pref=laf
 	    suff=$DATES$TIMES;;
@@ -58,7 +122,7 @@ inputmodel_name() {
 	    suff=$DATES$TIMES;;
 	esac
     else
-        case "$INPUTMODEL" in
+        case "$PARENTMODEL" in
 	COSMO*)
 	    pref=lfff;;
 	GME*)
@@ -211,7 +275,8 @@ cosmo_get_radar_lhn() {
 # start exporting all assignments
 set -a
 check_dep cosmo_model
-READYFILE_PATTERN="LM[ABF]_*"
+# init module
+cosmo_model_init
 # stop exporting all assignments
 set +a
 

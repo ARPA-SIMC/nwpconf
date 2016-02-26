@@ -15,6 +15,8 @@
 ##
 ## - `$MODEL_N_ASSIM_SLOW`
 ##
+## - `MODEL_SOIL_PARENT`
+##
 ## - `$MODEL_ARKI_FROM_ASSIM_FAST`
 ##
 ## - `$MODEL_N_ASSIM_FAST`
@@ -31,9 +33,9 @@
 ##
 ## - `$MODEL_ASSIM_GP`
 ##
-## - `$MODEL_FCAST_GP`
+## - `$MODEL_FCAST_GP` (no?)
 ##
-## - `$MODEL_INTER_GP`
+## - `$MODEL_INTER_GP` (no?)
 ##
 ## - `$MODEL_ARKI_SURFT`
 ##
