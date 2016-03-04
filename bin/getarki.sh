@@ -59,7 +59,7 @@ getarki_obsbufr() {
 ## @details This function retrieves gridded fields, tipically in GRIB
 ## format, to be used as initial and/or boundary conditions, possibly
 ## through an interpolation process, from the arkimet dataset(s)
-## specified in the configuration variable `$ARKI_INPUTMODEL_DS`, for the
+## specified in the configuration variable `$ARKI_PARENTMODEL_DS`, for the
 ## model run interval specified in the configuration. A specific model
 ## system module must have been loaded in order to provide the
 ## function inputmodel_name() for renaming the files. It should be
@@ -88,7 +88,7 @@ getarki_icbc() {
 	    timerange="timerange:Timedef,${hinput}h,254"
 	fi
 	arki-query --data -o `inputmodel_name $h` \
-	    "reftime:=$reftime;$timerange" $ARKI_INPUTMODEL_DS
+	    "reftime:=$reftime;$timerange" $ARKI_PARENTMODEL_DS
 	if [ "$h" -eq "0" ]; then
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
