@@ -44,17 +44,17 @@
 ##   `$DATE$TIME` and the initialisation time of last available input
 ##   model forecast, it is ignored if `$MODEL_BCANA == Y`
 ## 
-## - `$MODEL_FREQANA_INPUT` indicates the interval in hours between
+## - `$INPUTMODEL_FREQANA` indicates the interval in hours between
 ##   available analysis data from the driving model, used in the case
 ##   of `$MODEL_BCANA == Y`, it is assumed that analyses are produced
-##   at 00 UTC and successively every `$MODEL_FREQANA_INPUT` hours
+##   at 00 UTC and successively every `$INPUTMODEL_FREQANA` hours
 ## 
-## - `$MODEL_FREQINI_INPUT` indicates the interval in hours between
+## - `$INPUTMODEL_FREQINI` indicates the interval in hours between
 ##   initialisation of successive driving model forecasts, it is
 ##   assumed that forecasts are initialised at 00 UTC and successively
-##   every `$MODEL_FREQINI_INPUT` hours
+##   every `$INPUTMODEL_FREQINI` hours
 ## 
-## - `$MODEL_FREQFC_INPUT` indicates the interval in hours between
+## - `$INPUTMODEL_FREQFC` indicates the interval in hours between
 ##   successive driving model forecast steps of a single forecast run
 ## 
 ## It is an optional module and it has to be sourced after the main
@@ -103,13 +103,13 @@ nwpbctimeloop_init() {
     if [ "$MODEL_BCANA" != "Y" ]; then
 	MODEL_DELTABD_SLICE=$(($MODEL_DELTABD-$MODEL_BACK))
 	while [ $MODEL_DELTABD_SLICE -lt 0 ]; do
-	    MODEL_DELTABD_SLICE=$(($MODEL_DELTABD_SLICE+$MODEL_FREQINI_INPUT))
+	    MODEL_DELTABD_SLICE=$(($MODEL_DELTABD_SLICE+$INPUTMODEL_FREQINI))
 	done
 	D3=`date_sub $DATE $TIME $MODEL_DELTABD`
 	T3=`time_sub $DATE $TIME $MODEL_DELTABD`
-	export MODEL_FREQ_SLICE=$MODEL_FREQFC_INPUT
+	export MODEL_FREQ_SLICE=$INPUTMODEL_FREQFC
     else
-	export MODEL_FREQ_SLICE=$MODEL_FREQANA_INPUT
+	export MODEL_FREQ_SLICE=$INPUTMODEL_FREQANA
 	MODEL_DELTABD_SLICE=0
     fi
     DELTABD_SAVE=$MODEL_DELTABD_SLICE
@@ -155,19 +155,19 @@ nwpbctimeloop_loop() {
 	MODEL_STOP_SLICE=$MODEL_START_SLICE
 # prepare for next loop, update DELTABD_SAVE so that MODEL_DELTABD_SLICE can be
 # used outside
-	DELTABD_SAVE=$(($MODEL_DELTABD_SLICE-$MODEL_FREQANA_INPUT))
+	DELTABD_SAVE=$(($MODEL_DELTABD_SLICE-$INPUTMODEL_FREQANA))
     else
 # test whether this is the last possible loop
-	DT=`date_add $DATES_SLICE $TIMES_SLICE $MODEL_FREQINI_INPUT`
-	TT=`time_add $DATES_SLICE $TIMES_SLICE $MODEL_FREQINI_INPUT`
+	DT=`date_add $DATES_SLICE $TIMES_SLICE $INPUTMODEL_FREQINI`
+	TT=`time_add $DATES_SLICE $TIMES_SLICE $INPUTMODEL_FREQINI`
 	if [ $DT$TT -gt $D3$T3 ]; then
 	    MODEL_STOP_SLICE=$MODEL_STOP
 	else
-	    MODEL_STOP_SLICE=`min $MODEL_STOP $(($MODEL_FREQINI_INPUT-$MODEL_DELTABD_SLICE-$MODEL_FREQFC_INPUT))`
+	    MODEL_STOP_SLICE=`min $MODEL_STOP $(($INPUTMODEL_FREQINI-$MODEL_DELTABD_SLICE-$INPUTMODEL_FREQFC))`
 	fi
 # prepare for next loop, update DELTABD_SAVE so that MODEL_DELTABD_SLICE can be
 # used outside
-	DELTABD_SAVE=$(($MODEL_DELTABD_SLICE-$MODEL_FREQINI_INPUT))
+	DELTABD_SAVE=$(($MODEL_DELTABD_SLICE-$INPUTMODEL_FREQINI))
     fi
 
 # used in COSMO namelist linitial
