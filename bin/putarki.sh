@@ -210,8 +210,8 @@ putarki_model_output() {
 		done
 # update status for $rfile
 		statuslist[$rfile]="DONE"
-# update sms meter if present
-		sms_meter_increment
+# if defined, increment progress meter
+		type meter_increment > /dev/null && meter_increment
 		found=Y
 	    fi
 	done

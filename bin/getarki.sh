@@ -93,7 +93,8 @@ getarki_icbc() {
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
 	fi
-	sms_meter_increment
+# if defined, increment progress meter
+	type meter_increment > /dev/null && meter_increment
     done
 
 }

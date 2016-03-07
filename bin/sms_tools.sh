@@ -20,7 +20,7 @@
 # seconds.
 # $1 the name of the meter
 # $2 the optional initial value to be set, 0 if not provided
-sms_meter_init() {
+meter_init() {
 
     if [ -n "$SMSNAME" ]; then # running in sms
 	export SMSMETER=$1
@@ -37,7 +37,7 @@ sms_meter_init() {
 # Increment by one the main SMS/ECFlow meter for the current
 # process. The sms_meter_init() function must have been called
 # previously.
-sms_meter_increment() {
+meter_increment() {
 
     if [ -n "$SMSMETER" ]; then
         [ -z "$SMSMETER_COUNT" ] && SMSMETER_COUNT=0
