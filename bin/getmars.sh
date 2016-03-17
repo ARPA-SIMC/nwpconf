@@ -108,7 +108,7 @@ getmars_icbc() {
 	if [ "$MODEL_BCANA" = "Y" ]; then
 	    d2h=`date_add $DATES_SLICE $TIMES_SLICE $h`
 	    t2h=`time_add $DATES_SLICE $TIMES_SLICE $h`
-	    _getmars_generic_icbc_ $d2h $t2h 0 `[ "$h" -eq "0" ] && echo Y` $outfile
+	    _getmars_generic_icbc_ $d2h $t2h 0 `[ "$h" -eq "0" ] && echo Y || echo N` $outfile
 
 #	    mars $tmpfile1
 #	    rm -f $tmpfile1.grib
@@ -116,7 +116,7 @@ getmars_icbc() {
 	else
 	    # reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
 	    hinput=$(($h+$MODEL_DELTABD_SLICE))
-	    _getmars_generic_icbc_ $DATES_SLICE $TIMES_SLICE $h `[ "$h" -eq "0" ] && echo Y` $outfile
+	    _getmars_generic_icbc_ $DATES_SLICE $TIMES_SLICE $h `[ "$h" -eq "0" ] && echo Y || echo N` $outfile > marsreq_$h
 
 	fi
 
