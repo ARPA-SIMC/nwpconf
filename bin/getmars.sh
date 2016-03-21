@@ -26,40 +26,17 @@
 _getmars_generic_icbc_(){
 
     echo "retrieve,
-$GETMARS_BASEREQ
+$MODEL_MARS_BASE
 date = $1,
 time = $2,
 step = $3,
-target = \"$5\""
+target = \"$5\",
+$MODEL_MARS_PARAM"
 
-# upper-air fields
-    echo "levelist = all,
-levtype = ml,
-param = u/v/w/t/q/clwc/ciwc/lnsp"
 
-# control geopotential at pressure level
-    echo "retrieve,
-levtype = pl,
-levelist = 200,
-param = z"
-
-# surface fields
-    echo "retrieve,
-levtype = sfc,
-param = skt/tsn/sd/src/stl1/stl2/stl3/stl4/swvl1/swvl2/swvl3/swvl4/ci/istl1"
-
+# constant fields
     if [ "$4" = "Y" ]; then
-# constant fields
-	echo "retrieve,
-levtype = ml,
-levelist = 1,
-param = z"
-
-# constant fields
-	echo "retrieve,
-levtype = sfc,
-param = z/lsm/slt"
-
+	echo "$MODEL_MARS_CONST"
     fi
 
 }
@@ -71,7 +48,7 @@ param = z/lsm/slt"
 ## through an interpolation process, from the ECMWF MARS archive for
 ## the model run interval specified in the configuration.  The basic
 ## keywords of the MARS query are specified in the configuration
-## variable `$GETMARS_BASEREQ`, while the more specific keywords, such
+## variable `$MODEL_MARS_BASE`, while the more specific keywords, such
 ## as list of variables, levels, timerange and reference time are
 ## automatically added to the basic query by the function.  A specific
 ## model system module must have been loaded in order to provide the
@@ -88,17 +65,6 @@ getmars_icbc() {
     local h hinput timerange ana d2h t2h
     tmpfile1=marstmp1_$$
     tmpfile2=marstmp2_$$
-
-#basereq = {
-#    'class'   : "ei",
-#    'dataset' : "interim",
-#    'expver'  : "1",
-##    'stream'  : "oper", # mnth/moda
-#    'step'    : "0",
-#    'origin'  : "all",
-#    'type'    : "an",
-#    'area'    : "57/-32/24/50",
-#    'grid'    : "0.5/0.5",
 
     for h in `seq $MODEL_START_SLICE $MODEL_FREQ_SLICE $MODEL_STOP_SLICE`; do
 #	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h

@@ -81,6 +81,35 @@ $MODEL_SNOW_PRODUCT"
     MODEL_ARKI_LSM="level:GRIB1,1; product:GRIB1,,2,81"
     MODEL_ARKI_BBC="level:GRIB1,111,1458"
 
+# for retrieving data from MARS (predefined area, open ERA-interim dataset)
+# base request (must not start with retrieve)
+    MODEL_MARS_BASE=" dataset = interim,
+ origin = all,
+ type = an,
+ area = 57/-32/24/50,
+ grid = 0.5/0.5,"
+
+# parameters request (must not start with retrieve)
+    MODEL_MARS_PARAM=" levelist = all,
+ levtype = ml,
+ param = u/v/w/t/q/clwc/ciwc/lnsp
+retrieve,
+ levtype = pl,
+ levelist = 200,
+ param = z
+retrieve,
+ levtype = sfc,
+ param = skt/tsn/sd/src/stl1/stl2/stl3/stl4/swvl1/swvl2/swvl3/swvl4/ci/istl1"
+
+# constant parameters request (must start with retrieve)
+    MODEL_MARS_CONST="retrieve,
+ levtype = ml,
+ levelist = 1,
+ param = z
+retrieve,
+ levtype = sfc,
+ param = z/lsm/slt"
+
 }
 
 # Delta time to be used in COSMO grib file names, input forecast time
