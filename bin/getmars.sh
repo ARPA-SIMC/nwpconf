@@ -63,26 +63,19 @@ $MODEL_MARS_PARAM"
 ##     done
 getmars_icbc() {
     local h hinput timerange ana d2h t2h
-    tmpfile1=marstmp1_$$
-    tmpfile2=marstmp2_$$
 
     for h in `seq $MODEL_START_SLICE $MODEL_FREQ_SLICE $MODEL_STOP_SLICE`; do
-#	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h
 	outfile=`inputmodel_name $h`
 	rm -f $outfile
 
 	if [ "$MODEL_BCANA" = "Y" ]; then
 	    d2h=`date_add $DATES_SLICE $TIMES_SLICE $h`
 	    t2h=`time_add $DATES_SLICE $TIMES_SLICE $h`
-	    _getmars_generic_icbc_ $d2h $t2h 0 `[ "$h" -eq "0" ] && echo Y || echo N` $outfile
-
-#	    mars $tmpfile1
-#	    rm -f $tmpfile1.grib
+	    _getmars_generic_icbc_ $d2h $t2h 0 `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | unmarsify.py
 
 	else
-	    # reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
 	    hinput=$(($h+$MODEL_DELTABD_SLICE))
-	    _getmars_generic_icbc_ $DATES_SLICE $TIMES_SLICE $h `[ "$h" -eq "0" ] && echo Y || echo N` $outfile > marsreq_$h
+	    _getmars_generic_icbc_ $DATES_SLICE $TIMES_SLICE $hinput `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | unmarsify.py
 
 	fi
 
