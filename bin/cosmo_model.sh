@@ -101,9 +101,8 @@ retrieve,
  levtype = sfc,
  param = skt/tsn/sd/src/stl1/stl2/stl3/stl4/swvl1/swvl2/swvl3/swvl4/ci/istl1"
 
-# constant parameters request (must start with retrieve)
-    MODEL_MARS_CONST="retrieve,
- levtype = ml,
+# constant parameters request (must not start with retrieve)
+    MODEL_MARS_CONST=" levtype = ml,
  levelist = 1,
  param = z
 retrieve,

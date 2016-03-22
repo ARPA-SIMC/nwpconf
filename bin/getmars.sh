@@ -36,7 +36,8 @@ $MODEL_MARS_PARAM"
 
 # constant fields
     if [ "$4" = "Y" ]; then
-	echo "$MODEL_MARS_CONST"
+	echo "retrieve,
+$MODEL_MARS_CONST"
     fi
 
 }
