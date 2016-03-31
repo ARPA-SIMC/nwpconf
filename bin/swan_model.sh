@@ -30,7 +30,7 @@ swan_model_init() {
     MODEL_MARS_BASE=" dataset = interim,
  origin = all,
  type = an,
- area = 57/-32/24/50,
+ area = 46/-6/30/38,
  grid = 0.5/0.5,"
 
 # parameters request (must not start with retrieve)
@@ -40,6 +40,17 @@ swan_model_init() {
 # constant parameters request (must not start with retrieve)
     MODEL_MARS_CONST=" levtype = sfc,
  param = lsm"
+
+# compute grid steps (note that $SWAN_NX/Y are 1 less than the number
+# of grid points, Swan convention)
+
+    SWAN_TDX=`echo "scale 12;$SWAN_XMAX-$SWAN_XMIN"|bc`
+    SWAN_TDY=`echo "scale 12;$SWAN_YMAX-$SWAN_YMIN"|bc`
+    SWAN_DX=`echo "scale 12;$SWAN_TDX/$SWAN_NX"|bc`
+    SWAN_DY=`echo "scale 12;$SWAN_TDY/$SWAN_NY"|bc`
+
+    SWAN_CGRID="REGULAR $SWAN_XMIN $SWAN_YMIN 0. $SWAN_TDX $SWAN_TDY $SWAN_NX $SWAN_NY"
+    SWAN_INPGRID="REGULAR $SWAN_XMIN $SWAN_YMIN 0. $SWAN_NX $SWAN_NY $SWAN_DX $SWAN_DY"
 
 }
 
@@ -63,6 +74,21 @@ inputmodel_name() {
     fi
 
     echo ${PARENTMODEL}_wind_$suff
+
+}
+
+
+swan_create_wind_input() {
+
+    local tmpout
+    tmpout=wind_out.tmp
+
+    vg6d_transform --type=regular_ll --trans-type=inter --sub-type-bilin \
+	--x-min=$SWAN_XMIN --y-min=$SWAN_YMIN --x-max=$SWAN_XMAX --y-max=$SWAN_YMAX \
+	--nx=$(($SWAN_NX+1)) --ny=$(($SWAN_NY+1)) $1 $tmpout
+    grib_get_data -w shortName=10u $tmpout > $2
+    grib_get_data -w shortName=10v $tmpout >> $2
+    rm -f $tmpout
 
 }
 

@@ -69,12 +69,16 @@
 ## - `$DATES` and `$TIMES` absolute date and time of start of model
 ##   run, either assimilation or forecast, based on `$DATE`, `$TIME`
 ##   and `$MODEL_BACK`
+## 
+## - `$DATEE` and `$TIMEE` absolute date and time of end of model
+##   run, either assimilation or forecast, based on `$DATE`, `$TIME`,
+##   `$MODEL_BACK` and `$MODEL_STOP`
 nwptime_init() {
 # start of NWP run
     DATES=`date_sub $DATE $TIME $MODEL_BACK`
     TIMES=`time_sub $DATE $TIME $MODEL_BACK`
-#    DATES_SLICE=$DATES
-#    TIMES_SLICE=$TIMES
+    DATEE=`date_add $DATES $TIMES $MODEL_STOP`
+    TIMEE=`time_add $DATES $TIMES $MODEL_STOP`
 # reset MODEL_DELTABD when bcana is set
     if [ "$MODEL_BCANA" = "Y" ]; then
 	MODEL_DELTABD=0
