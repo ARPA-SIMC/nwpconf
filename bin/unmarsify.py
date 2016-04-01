@@ -53,6 +53,7 @@ def mars_retrieve(req, target):
     service.execute(req, target)
 
 def dict_retrieve(req, append):
+    print req
     if append: # save real target name and d/l request to a tmp target file
         savetarget = req['target']
         req['target'] = req['target']+'.tmp'

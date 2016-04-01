@@ -44,10 +44,10 @@ swan_model_init() {
 # compute grid steps (note that $SWAN_NX/Y are 1 less than the number
 # of grid points, Swan convention)
 
-    SWAN_TDX=`echo "scale 12;$SWAN_XMAX-$SWAN_XMIN"|bc`
-    SWAN_TDY=`echo "scale 12;$SWAN_YMAX-$SWAN_YMIN"|bc`
-    SWAN_DX=`echo "scale 12;$SWAN_TDX/$SWAN_NX"|bc`
-    SWAN_DY=`echo "scale 12;$SWAN_TDY/$SWAN_NY"|bc`
+    SWAN_TDX=`echo "scale=12;$SWAN_XMAX-$SWAN_XMIN"|bc`
+    SWAN_TDY=`echo "scale=12;$SWAN_YMAX-$SWAN_YMIN"|bc`
+    SWAN_DX=`echo "scale=12;$SWAN_TDX/$SWAN_NX"|bc`
+    SWAN_DY=`echo "scale=12;$SWAN_TDY/$SWAN_NY"|bc`
 
     SWAN_CGRID="REGULAR $SWAN_XMIN $SWAN_YMIN 0. $SWAN_TDX $SWAN_TDY $SWAN_NX $SWAN_NY"
     SWAN_INPGRID="REGULAR $SWAN_XMIN $SWAN_YMIN 0. $SWAN_NX $SWAN_NY $SWAN_DX $SWAN_DY"
@@ -68,7 +68,7 @@ inputmodel_name() {
 
     local suff
     if [ "$1" = "a" ]; then
-	suff=${DATES}${TIMES}_000;;
+	suff=${DATES}${TIMES}_000
     else
 	suff=${DATES}${TIMES}_`printf "%03d" $1`
     fi
@@ -83,9 +83,12 @@ swan_create_wind_input() {
     local tmpout
     tmpout=wind_out.tmp
 
-    vg6d_transform --type=regular_ll --trans-type=inter --sub-type-bilin \
+    vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
 	--x-min=$SWAN_XMIN --y-min=$SWAN_YMIN --x-max=$SWAN_XMAX --y-max=$SWAN_YMAX \
 	--nx=$(($SWAN_NX+1)) --ny=$(($SWAN_NY+1)) $1 $tmpout
+# consider to add:
+# -m missingValue, Default is to skip the missing values.
+# -F format, C style format for values. Default is "%.10e"
     grib_get_data -w shortName=10u $tmpout > $2
     grib_get_data -w shortName=10v $tmpout >> $2
     rm -f $tmpout

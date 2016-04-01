@@ -202,17 +202,17 @@ cosmo_getarki_obsncdf() {
 # optional wait
     [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
 #    test -n "$1" && bufr_wait_logsim $1
-    sms_meter_increment
+    type meter_increment 2>/dev/null && meter_increment || true
 # get data
     getarki_obsbufr obs_ecmwf.bufr
-    sms_meter_increment
+    type meter_increment 2>/dev/null && meter_increment || true
 
     if [ -s obs_ecmwf.bufr ]; then
 # convert to netcdf
        	bufr_preconvert obs_ecmwf.bufr obs_wmo_cosmo.bufr
-	sms_meter_increment
+	type meter_increment 2>/dev/null && meter_increment || true
 	bufr2netcdf -o obs obs_wmo_cosmo.bufr
-	sms_meter_increment
+	type meter_increment 2>/dev/null && meter_increment || true
 
 # make symbolic links to files for COSMO
 	make_ncdf_link . obs-0-0-13 cdfin_synop

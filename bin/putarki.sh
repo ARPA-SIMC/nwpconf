@@ -211,7 +211,7 @@ putarki_model_output() {
 # update status for $rfile
 		statuslist[$rfile]="DONE"
 # if defined, increment progress meter
-		type meter_increment > /dev/null && meter_increment
+		type meter_increment 2>/dev/null && meter_increment || true
 		found=Y
 	    fi
 	done

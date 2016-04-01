@@ -94,7 +94,7 @@ getarki_icbc() {
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
 	fi
 # if defined, increment progress meter
-	type meter_increment > /dev/null && meter_increment
+	type meter_increment 2>/dev/null && meter_increment || true
     done
 
 }

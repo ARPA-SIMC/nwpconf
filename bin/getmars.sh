@@ -35,7 +35,7 @@ $MODEL_MARS_PARAM"
 
 
 # constant fields
-    if [ "$4" = "Y" ]; then
+    if [ "$4" = "Y" -a -n "$MODEL_MARS_CONST" ]; then
 	echo "retrieve,
 $MODEL_MARS_CONST"
     fi
@@ -72,11 +72,11 @@ getmars_icbc() {
 	if [ "$MODEL_BCANA" = "Y" ]; then
 	    d2h=`date_add $DATES_SLICE $TIMES_SLICE $h`
 	    t2h=`time_add $DATES_SLICE $TIMES_SLICE $h`
-	    _getmars_generic_icbc_ $d2h $t2h 0 `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | unmarsify.py
+	    _getmars_generic_icbc_ $d2h $t2h 0 `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | $NWPCONFBINDIR/unmarsify.py
 
 	else
 	    hinput=$(($h+$MODEL_DELTABD_SLICE))
-	    _getmars_generic_icbc_ $DATES_SLICE $TIMES_SLICE $hinput `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | unmarsify.py
+	    _getmars_generic_icbc_ $DATES_SLICE $TIMES_SLICE $hinput `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | $NWPCONFBINDIR/unmarsify.py
 
 	fi
 
@@ -85,7 +85,7 @@ getmars_icbc() {
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
 	fi
 # if defined, increment progress meter
-	type meter_increment > /dev/null && meter_increment
+	type meter_increment 2>/dev/null && meter_increment || true
     done
 
 }
