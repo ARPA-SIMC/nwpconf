@@ -77,16 +77,12 @@ getarki_icbc() {
     for h in `seq $MODEL_START_SLICE $MODEL_FREQ_SLICE $MODEL_STOP_SLICE`; do
 	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h
 
-	if [ "$MODEL_BCANA" = "Y" ]; then
-	    d2h=`date_add $DATES_SLICE $TIMES_SLICE $h`
-	    t2h=`time_add $DATES_SLICE $TIMES_SLICE $h`
-	    reftime=`getarki_datetime $d2h $t2h`
-	    timerange="timerange:Timedef,0h,254"
-	else
-	    reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
-	    hinput=$(($h+$MODEL_DELTABD_SLICE))
-	    timerange="timerange:Timedef,${hinput}h,254"
-	fi
+#	if [ "$MODEL_BCANA" = "Y" ]; then # no more necessary
+	hinput=$(($h+$MODEL_DELTABD_SLICE))
+	timerange="timerange:Timedef,${hinput}h,254"
+
+	reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
+
 	arki-query --data -o `inputmodel_name $h` \
 	    "reftime:=$reftime;$timerange;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
 	if [ "$h" -eq "0" ]; then

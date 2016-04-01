@@ -69,16 +69,9 @@ getmars_icbc() {
 	outfile=`inputmodel_name $h`
 	rm -f $outfile
 
-	if [ "$MODEL_BCANA" = "Y" ]; then
-	    d2h=`date_add $DATES_SLICE $TIMES_SLICE $h`
-	    t2h=`time_add $DATES_SLICE $TIMES_SLICE $h`
-	    _getmars_generic_icbc_ $d2h $t2h 0 `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | $NWPCONFBINDIR/unmarsify.py
-
-	else
-	    hinput=$(($h+$MODEL_DELTABD_SLICE))
-	    _getmars_generic_icbc_ $DATES_SLICE $TIMES_SLICE $hinput `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | $NWPCONFBINDIR/unmarsify.py
-
-	fi
+#	if [ "$MODEL_BCANA" = "Y" ]; then # no more necessary
+	hinput=$(($h+$MODEL_DELTABD_SLICE))
+	_getmars_generic_icbc_ $DATES_SLICE $TIMES_SLICE $hinput `[ "$h" -eq "0" ] && echo Y || echo N` $outfile | $NWPCONFBINDIR/unmarsify.py
 
 	if [ "$h" -eq "0" ]; then
 	    ana=`inputmodel_name a`
