@@ -30,7 +30,7 @@ swan_model_init() {
     MODEL_MARS_BASE=" dataset = interim,
  origin = all,
  type = an,
- area = 46/-6/30/38,
+ area = `echo "$SWAN_YMAX+1"|bc`/`echo "$SWAN_XMIN-1"|bc`/`echo "$SWAN_YMIN-1"|bc`/`echo "$SWAN_YMAX+1"|bc`,
  grid = 0.5/0.5,"
 
 # parameters request (must not start with retrieve)
@@ -44,13 +44,13 @@ swan_model_init() {
 # compute grid steps (note that $SWAN_NX/Y are 1 less than the number
 # of grid points, Swan convention)
 
-    SWAN_TDX=`echo "scale=12;$SWAN_XMAX-$SWAN_XMIN"|bc`
-    SWAN_TDY=`echo "scale=12;$SWAN_YMAX-$SWAN_YMIN"|bc`
+    SWAN_TDX=`echo "$SWAN_XMAX-$SWAN_XMIN"|bc`
+    SWAN_TDY=`echo "$SWAN_YMAX-$SWAN_YMIN"|bc`
     SWAN_DX=`echo "scale=12;$SWAN_TDX/$SWAN_NX"|bc`
     SWAN_DY=`echo "scale=12;$SWAN_TDY/$SWAN_NY"|bc`
 
-    SWAN_CGRID="REGULAR $SWAN_XMIN $SWAN_YMIN 0. $SWAN_TDX $SWAN_TDY $SWAN_NX $SWAN_NY"
-    SWAN_INPGRID="REGULAR $SWAN_XMIN $SWAN_YMIN 0. $SWAN_NX $SWAN_NY $SWAN_DX $SWAN_DY"
+#    SWAN_CGRID="REGULAR $SWAN_XMIN $SWAN_YMIN 0. $SWAN_TDX $SWAN_TDY $SWAN_NX $SWAN_NY"
+#    SWAN_INPGRID="REGULAR $SWAN_XMIN $SWAN_YMIN 0. $SWAN_NX $SWAN_NY $SWAN_DX $SWAN_DY"
 
 }
 
@@ -83,13 +83,34 @@ swan_create_wind_input() {
     local tmpout
     tmpout=wind_out.tmp
 # --extrap to avoid missing values at the borders, use with care
-    vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin --extrap \
+    vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
 	--x-min=$SWAN_XMIN --y-min=$SWAN_YMIN --x-max=$SWAN_XMAX --y-max=$SWAN_YMAX \
 	--nx=$(($SWAN_NX+1)) --ny=$(($SWAN_NY+1)) $1 $tmpout
 # consider to add:
 # -F format, C style format for values. Default is "%.10e"
     grib_get_data -w shortName=10u/10v -m -99999. $tmpout > $2
-#    rm -f $tmpout
+    rm -f $tmpout
+
+}
+
+swan_create_bathymetry() {
+
+    local tmp1, tmp2
+    tmp1=bathy1.tmp
+    tmp1=bathy2.tmp
+
+# interpolate from original bathymetry
+    vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
+	--x-min=$SWAN_XMIN --y-min=$SWAN_YMIN --x-max=$SWAN_XMAX --y-max=$SWAN_YMAX \
+	--nx=$(($SWAN_NX+1)) --ny=$(($SWAN_NY+1)) $1 $tmp1
+# set "land" >-0.1m to missing
+    vg6d_transform --trans-type=metamorphosis --sub-type=maskvalid \
+	--maskbounds=-12000.,-0.1 --coord-file=$tmp1 --coord-format=grib_api $tmp1 $tmp2
+
+# consider to add:
+# -F format, C style format for values. Default is "%.10e"
+    grib_get_data -m -99999. $tmp2 > $2
+    rm -f $tmp1 $tmp2
 
 }
 
