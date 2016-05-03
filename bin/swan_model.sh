@@ -95,9 +95,9 @@ swan_create_wind_input() {
 
 swan_create_bathymetry() {
 
-    local tmp1, tmp2
+    local tmp1 tmp2
     tmp1=bathy1.tmp
-    tmp1=bathy2.tmp
+    tmp2=bathy2.tmp
 
 # interpolate from original bathymetry
     vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
