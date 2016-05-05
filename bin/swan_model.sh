@@ -78,6 +78,32 @@ inputmodel_name() {
 }
 
 
+## @fn swan_compute_scanning_mode()
+## @brief Output the number to be used in the SWAN command file
+## according to the scanning mode of the input grib file
+## @details This function scans the input grib file provided, reads
+## the scanning mode of the first message and prints on stdout a
+## number (either 2, 4 or 6) describing the grib scanning mode in the
+## convention required by the SWAN command file as described in
+## http://swanmodel.sourceforge.net/online_doc/swanuse/node26.html
+## parameter \a idla of command \a READINP, e.g. for wind and
+## bathymetry input. If the scanning mode is not handled by SWAN, 0 is
+## printed.
+## @param $1 name of the grib file in input
+swan_compute_scanning_mode() {
+
+    flags=(`grib_get -p iScansNegatively,jScansPositively,jPointsAreConsecutive $1|head -1`)
+    if [ "${flag[0]}" = "0" ]; then
+	if [ "${flag[1]}" = "0" -a "${flag[2]}" = "0" ]; then
+	    echo "2"
+	elif [ "${flag[1]}" = "1" -a "${flag[2]}" = "0" ]; then
+	    echo "4"
+	elif [ "${flag[1]}" = "1" -a "${flag[2]}" = "1" ]; then
+	    echo "6"
+	fi
+    fi
+}
+
 swan_create_wind_input() {
 
     local tmpout
@@ -85,7 +111,8 @@ swan_create_wind_input() {
 # --extrap to avoid missing values at the borders, use with care
     vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
 	--x-min=$SWAN_XMIN --y-min=$SWAN_YMIN --x-max=$SWAN_XMAX --y-max=$SWAN_YMAX \
-	--nx=$(($SWAN_NX+1)) --ny=$(($SWAN_NY+1)) $1 $tmpout
+	--nx=$(($SWAN_NX+1)) --ny=$(($SWAN_NY+1)) --component-flag=0 \
+	$1 $tmpout
 # consider to add:
 # -F format, C style format for values. Default is "%.10e"
     grib_get_data -w shortName=10u/10v -m -99999. $tmpout > $2
