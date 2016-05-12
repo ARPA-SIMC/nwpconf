@@ -1,17 +1,17 @@
 # NWPconf
 
 NWPconf is a library of bash shell functions that simplify the task of
-running Numerical Weather Prediction or --more generally-- Environmental
-models on a regular daily basis, taking into account the basic
-operations related to date/time computations, defining test
-configurations, creating configuration files from templates and
-parallel process managing.
+running Numerical Weather Prediction or --more generally--
+Environmental models on a regular daily basis, taking into account the
+basic operations related to date/time computations, defining test
+configurations, creating configuration files from templates, preparing
+input data and managing parallel processes.
 
-The library consists of a main bash shell module, _nwpconf.sh_,
-and a set of optional modules. These modules can be used within a
-regular shell script in bash shells as well as within a batch
-job submitted to a scheduling system, provided that the shell chosen
-for the batch job is bash.
+The library consists of a main bash shell module, _nwpconf.sh_, and a
+set of optional modules. These modules can be used within a regular
+shell script in bash shell as well as within a batch job submitted to
+a scheduling system, provided that the shell chosen for the batch job
+is bash.
 
 In order to use the library, the user shell script must export some
 valuable environmental variables (see the documentation of each module
