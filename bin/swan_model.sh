@@ -104,6 +104,33 @@ swan_compute_scanning_mode() {
     fi
 }
 
+
+## @fn swan_create_wind_input()
+## @brief Generate an input file with wind field suitable for the SWAN
+## model from an input file in grib format.
+## @details This function interpolates all the 10m wind fields
+## encountered in the input grib file on the grid defined for SWAN and
+## outputs them in a text format suitable to be read by the SWAN
+## model. The fields are interpolated on the configured latlon regular
+## grid (other types of SWAN grids are not supported) according to
+## `$SWAN_NX`, `$SWAN_XMIN` etc. environmental variables.  The input
+## projections supported are those supported by libsim package; input
+## wind components with different values of component flag (wind
+## rotation) are supported. The input scanning mode (i.e. order of
+## points in the grib fields) is assumed to be the same for all wind
+## fields and an equivalent value in the SWAN convention is computed
+## and assigned to the variable `$SWAN_WIND_SCMODE` to be used in the
+## SWAN command file, see _swan_compute_scanning_mode()_ function.
+##
+## The output text file should be read by SWAN using, in the command
+## file, the key `EXC -99999.` in `INPGRID` command and the key
+## `FORMAT '(19X,F17.0)'` in `READINP` command.
+##
+## No check is made on the quantity and reference/forecast time of
+## wind fields in input file, it is up to the user to make sure that
+## they correspond to what SWAN expects.
+## @param $1 input file name in grib format
+## @param $1 output file name in text format
 swan_create_wind_input() {
 
     local tmpout
@@ -117,9 +144,37 @@ swan_create_wind_input() {
 # -F format, C style format for values. Default is "%.10e"
     grib_get_data -w shortName=10u/10v -m -99999. $tmpout > $2
     rm -f $tmpout
+    export SWAN_WIND_SCMODE=`swan_compute_scanning_mode $1`
 
 }
 
+
+## @fn swan_create_wind_input()
+## @brief Generate an input file with bathymetry suitable for the SWAN
+## model from an input file in grib format.
+## @details This function interpolates the field in the input grib
+## file on the grid defined for SWAN and outputs it in a text format
+## suitable to be read by the SWAN model. The field is interpolated on
+## the configured latlon regular grid (other types of SWAN grids are
+## not supported) according to `$SWAN_NX`, `$SWAN_XMIN`
+## etc. environmental variables.  The input projections supported are
+## those supported by libsim package. The input scanning mode
+## (i.e. order of points in the grib field) is read from the input
+## file and an equivalent value in the SWAN convention is computed and
+## assigned to the variable `$SWAN_BATHY_SCMODE` to be used in the
+## SWAN command file, see _swan_compute_scanning_mode()_ function.
+##
+## The output text file should be read by SWAN using, in the command
+## file, the key `EXC -99999.` in `INPGRID` command and the key
+## `FORMAT '(19X,F17.0)'` in `READINP` command.
+##
+## The input grib file should contain only a single grib field with
+## the height of earth surface/sea bottom above sea level in m, no
+## check is made on the correctness of the parameter. Points having a
+## missing value or a value greater than -0.1 m in the input file are
+## set to a missing value (`EXC` key) in the output.
+## @param $1 input file name in grib format
+## @param $1 output file name in text format
 swan_create_bathymetry() {
 
     local tmp1 tmp2
@@ -138,6 +193,7 @@ swan_create_bathymetry() {
 # -F format, C style format for values. Default is "%.10e"
     grib_get_data -m -99999. $tmp2 > $2
     rm -f $tmp1 $tmp2
+    export SWAN_BATHY_SCMODE=`swan_compute_scanning_mode $1`
 
 }
 

@@ -30,12 +30,14 @@
 ##   nominal date and time, i.e. the start of the run for a forecast
 ##   run or the end of the run for an assimilation run
 ## 
-## - `$MODEL_BACK` indicates the number of hours to go back from
-##   `$DATE$TIME` for starting an assimilation run (0 for a forecast
-##   run)
+## - `$MODEL_STOP` indicates the total absolute duration of the run in
+##   hours
 ## 
-## - `$MODEL_STOP` indicates the duration of the run in hours (`==
-##   $MODEL_BACK` for an assimilation run)
+## - `$MODEL_BACK` indicates the number of hours to go back from
+##   `$DATE$TIME` for starting an assimilation or warm-up run, typical
+##   values are 0 for a forecast run and `$MODEL_BACK` for
+##   assimilation or warm-up, intermediate values between 0 and
+##   `$MODEL_BACK` may give unexpected results
 ## 
 ## - `$MODEL_BCANA` if set to `Y` indicates that analysis data are
 ##   used as boundary conditions
@@ -50,12 +52,14 @@
 ##   at 00 UTC and successively every `$PARENTMODEL_FREQANA` hours
 ## 
 ## - `$PARENTMODEL_FREQINI` indicates the interval in hours between
-##   initialisation of successive driving model forecasts, it is
-##   assumed that forecasts are initialised at 00 UTC and successively
-##   every `$PARENTMODEL_FREQINI` hours
+##   initialisation of successive driving model forecasts, used in the
+##   case of `$MODEL_BCANA != Y`, it is assumed that forecasts are
+##   initialised at 00 UTC and successively every
+##   `$PARENTMODEL_FREQINI` hours
 ## 
 ## - `$PARENTMODEL_FREQFC` indicates the interval in hours between
-##   successive driving model forecast steps of a single forecast run
+##   successive driving model forecast steps of a single forecast run,
+##   used in the case of `$MODEL_BCANA != Y`
 ## 
 ## It is an optional module and it has to be sourced after the main
 ## _nwpconf.sh_ module.
