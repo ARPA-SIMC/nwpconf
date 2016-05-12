@@ -43,7 +43,7 @@
 ## configuration is said to be running in ensemble mode, providing
 ## extra features for managing ensemble member-specific configurations
 ## and files.
-##
+## 
 ## ### Defining the configuration and importing it in the environment
 ## 
 ## Each of these directory levels may contain a shell script file
@@ -61,7 +61,7 @@
 ## the explicit `export` keyword. Thus, after sourcing the present
 ## script, the user environment will contain all the variable
 ## assignments according to the requested configurations.
-##
+## 
 ## When running in ensemble mode, in every directory of the tree a
 ## file named `conf.sh.$ENS_MEMB` is searched for and sourced if
 ## found, after the corresponding `conf.sh` file, thus allowing to
@@ -79,7 +79,7 @@
 ## used. Any occurrence of `@<string>@` in the template file will be
 ## replaced by the current value of `$<string>` environment variable
 ## in the destination file.
-##
+## 
 ## When running in ensemble mode, in every directory of the tree a
 ## file named `<filename>.in.$ENS_MEMB` is also searched for, with a
 ## higher priority than the corresponding `<filename>.in`.
@@ -89,7 +89,7 @@
 ## The configuration tree can also contain generic files ready for use,
 ## at different configuration levels, the function conf_getfile() helps
 ## in choosing the one with highest priority in these cases.
-##
+## 
 ## As indicated above for template files, here too, in ensemble mode,
 ## the name of a file with an additional `.$ENS_MEMB` extension, if
 ## present, is returned in place of the corresponding file without

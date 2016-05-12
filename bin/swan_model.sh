@@ -13,7 +13,32 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+## @file
+## @brief Module with functions specific to the SWAN model.
+## @details This module provides functions specific to the sea wave
+## model [SWAN](http://www.swan.tudelft.nl/). Grid-related functions
+## for SWAN support only regular latlon grids.
+## 
+## The following environmental variables should be set by the user
+## when using the functions from present module:
+## 
+## - `$SWAN_XMIN` indicates the minimum x coordinate of model domain
+##   (longitude of lower left corner of the model grid)
+## 
+## - `$SWAN_XMAX` indicates the maximum x coordinate of model domain
+##   (longitude of upper right corner of the model grid)
+## 
+## - `$SWAN_YMIN` indicates the minimum y coordinate of model domain
+##   (latitude of lower left corner of the model grid)
+## 
+## - `$SWAN_YMAX` indicates the maximum y coordinate of model domain
+##   (latitude of upper right corner of the model grid)
+## 
+## - `$SWAN_NX` indicates the number of intervals (number of points
+##   -1) in the model grid along the x axis
+## 
+## - `$SWAN_NY` indicates the number of intervals (number of points
+##   -1) in the model grid along the y axis
 
 ## @fn swan_model_init()
 ## @brief Setup the environment for SWAN model.
@@ -121,11 +146,11 @@ swan_compute_scanning_mode() {
 ## fields and an equivalent value in the SWAN convention is computed
 ## and assigned to the variable `$SWAN_WIND_SCMODE` to be used in the
 ## SWAN command file, see _swan_compute_scanning_mode()_ function.
-##
+## 
 ## The output text file should be read by SWAN using, in the command
 ## file, the key `EXC -99999.` in `INPGRID` command and the key
-## `FORMAT '(19X,F17.0)'` in `READINP` command.
-##
+## `FORMAT "(19X,F17.0)"` in `READINP` command.
+## 
 ## No check is made on the quantity and reference/forecast time of
 ## wind fields in input file, it is up to the user to make sure that
 ## they correspond to what SWAN expects.
@@ -149,7 +174,7 @@ swan_create_wind_input() {
 }
 
 
-## @fn swan_create_wind_input()
+## @fn swan_create_bathymetry()
 ## @brief Generate an input file with bathymetry suitable for the SWAN
 ## model from an input file in grib format.
 ## @details This function interpolates the field in the input grib
@@ -163,16 +188,21 @@ swan_create_wind_input() {
 ## file and an equivalent value in the SWAN convention is computed and
 ## assigned to the variable `$SWAN_BATHY_SCMODE` to be used in the
 ## SWAN command file, see _swan_compute_scanning_mode()_ function.
-##
+## 
 ## The output text file should be read by SWAN using, in the command
 ## file, the key `EXC -99999.` in `INPGRID` command and the key
-## `FORMAT '(19X,F17.0)'` in `READINP` command.
-##
+## `FORMAT "(19X,F17.0)"` in `READINP` command.
+## 
 ## The input grib file should contain only a single grib field with
 ## the height of earth surface/sea bottom above sea level in m, no
 ## check is made on the correctness of the parameter. Points having a
 ## missing value or a value greater than -0.1 m in the input file are
 ## set to a missing value (`EXC` key) in the output.
+## 
+## Notice that, if the field is coded as a topography height
+## (i.e. with negative values in sea points), a value of `-1` for the
+## `fac` key of the `READINP` command should be used in order to
+## change the sign of the bathymetry values as expected by SWAN.
 ## @param $1 input file name in grib format
 ## @param $1 output file name in text format
 swan_create_bathymetry() {
