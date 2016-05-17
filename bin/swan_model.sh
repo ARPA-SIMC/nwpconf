@@ -117,7 +117,7 @@ inputmodel_name() {
 ## @param $1 name of the grib file in input
 swan_compute_scanning_mode() {
 
-    flags=(`grib_get -p iScansNegatively,jScansPositively,jPointsAreConsecutive $1|head -1`)
+    flag=(`grib_get -p iScansNegatively,jScansPositively,jPointsAreConsecutive $1|head -1`)
     if [ "${flag[0]}" = "0" ]; then
 	if [ "${flag[1]}" = "0" -a "${flag[2]}" = "0" ]; then
 	    echo "2"
