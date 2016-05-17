@@ -227,6 +227,13 @@ swan_create_bathymetry() {
 
 }
 
+swan_make_grib() {
+
+    export PYTHONPATH=/usr/lib64/python2.7/site-packages/grib_api
+    $NWPCONFBINDIR/swan_make_grib.py "$@"
+
+}
+
 # start exporting all assignments
 set -a
 check_dep swan_model
