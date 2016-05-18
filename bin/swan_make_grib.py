@@ -71,7 +71,7 @@ for filein in sys.argv[1:-1]:
     n = 0
     while len(lineread) > 0:
         if os.environ['MODEL_BACK'] == '0': # forecast model
-            key['P1'] = n
+            keys['P1'] = n
         else: # analysis mode
             vertime = reftime + datetime.timedelta(hours=n)
             keys['dataDate'] = int(vertime.strftime('%Y%m%d'))
