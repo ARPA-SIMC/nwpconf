@@ -2,7 +2,7 @@
 ## @brief Module with functions for processing analysis fields in a continuous assimilation cycle.
 ## @details This module provides functions for merging and archiving
 ## analysis fields coming from a continuous model assimilation cycle
-## and interpolated from a parent model. It requores definition of the
+## and interpolated from a parent model. It requires definition of the
 ## following environmental variables (explanation to be added):
 ##
 ## - `$MODEL_ARKI_FROM_PARENT`

@@ -77,6 +77,9 @@
 ## - `$DATEE` and `$TIMEE` absolute date and time of end of model
 ##   run, either assimilation or forecast, based on `$DATE`, `$TIME`,
 ##   `$MODEL_BACK` and `$MODEL_STOP`
+## 
+## - `$PARENTMODEL_FREQ` interval in h between available boundary
+##   conditions regardless of them being analysis or forecast
 nwptime_init() {
 # start of NWP run
     DATES=`date_sub $DATE $TIME $MODEL_BACK`
@@ -86,7 +89,11 @@ nwptime_init() {
 # reset MODEL_DELTABD when bcana is set
     if [ "$MODEL_BCANA" = "Y" ]; then
 	MODEL_DELTABD=0
+	export PARENTMODEL_FREQ=$PARENTMODEL_FREQANA
+    else
+	export PARENTMODEL_FREQ=$PARENTMODEL_FREQFC
     fi
+    : ${MODEL_BACK:=0} # set to 0 if unset
 }
 
 
@@ -97,17 +104,13 @@ nwptime_init() {
 ## boundary conditions to an assimilation run. The most common cases
 ## are taken into account, like using analysed or forecast BC's,
 ## possibly with a shift in time and with specified frequency of
-## availability. It sets the following variables:
-## 
-## - `$MODEL_FREQ_SLICE` interval in h between available BCs from
-##   first slice providing BC (actually equal for every slice)
-## 
+## availability.
 ## For the correct use see _nwpbctimeloop_loop()_.
 nwpbctimeloop_init() {
     MODEL_STOP_SLICE=0
-    : ${MODEL_BACK:=0} # set to 0 if unset
 # MODEL_DELTABD_SLICE is difference between start of assimilation and start of
 # input forecast suitable for providing BC
+# MODEL_FREQ_SLICE set here on behalf of nwpbctimeloop_loop function
     if [ "$MODEL_BCANA" != "Y" ]; then
 	MODEL_DELTABD_SLICE=$(($MODEL_DELTABD-$MODEL_BACK))
 	while [ $MODEL_DELTABD_SLICE -lt 0 ]; do
@@ -115,9 +118,9 @@ nwpbctimeloop_init() {
 	done
 	D3=`date_sub $DATE $TIME $MODEL_DELTABD`
 	T3=`time_sub $DATE $TIME $MODEL_DELTABD`
-	export MODEL_FREQ_SLICE=$PARENTMODEL_FREQFC
+	export MODEL_FREQ_SLICE=$PARENTMODEL_FREQ
     else
-	export MODEL_FREQ_SLICE=$PARENTMODEL_FREQANA
+	export MODEL_FREQ_SLICE=$PARENTMODEL_FREQ
 	MODEL_DELTABD_SLICE=0
     fi
     DELTABD_SAVE=$MODEL_DELTABD_SLICE
@@ -137,6 +140,10 @@ nwpbctimeloop_init() {
 ## - `$MODEL_START_SLICE` and `$MODEL_STOP_SLICE` indicate the first
 ##   and the last instants, in h starting from `$DATES` and `$TIMES`,
 ##   for which BCs are taken from current slice
+## 
+## - `$MODEL_FREQ_SLICE` interval in h between available instants
+##   (boundary conditions) for current slice (actually equal for every
+##   slice and equal to `$PARENTMODEL_FREQ`)
 ## 
 ## - `$MODEL_DELTABD_SLICE` difference in h between start of assimilation
 ##    and start of current slice of input model providing BCs
