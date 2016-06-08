@@ -78,7 +78,14 @@
 ## the one contained in the directory with the highest priority is
 ## used. Any occurrence of `@<string>@` in the template file will be
 ## replaced by the current value of `$<string>` environment variable
-## in the destination file.
+## in the destination file. Any occurrence of `@INCLUDE <file>@` in
+## the template file determines the inclusion of `<file>` in that
+## point, applying recursively the same variable substitutions and
+## file inclusion rules. If `<file>` contains a directory
+## specification, either relative or absolute, it is searched starting
+## from the current directory, otherwise it is searchd in the
+## configuration tree with the same rules used for finding the
+## template file.
 ## 
 ## When running in ensemble mode, in every directory of the tree a
 ## file named `<filename>.in.$ENS_MEMB` is also searched for, with a

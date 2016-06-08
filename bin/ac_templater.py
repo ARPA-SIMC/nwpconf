@@ -4,6 +4,25 @@ import sys
 import os
 import re
 
+def open_include(name):
+    confdirlist = os.getenv('confdirlist')
+    if os.path.basename(name) != name or confdirlist is None:
+        return open(name)
+    else:
+# emulate conf_getfile
+        ens_memb = os.getenv('ENS_MEMB')
+        if ens_memb is not None: ens_memb = '.'+ens_memb
+        for searchdir in confdirlist.split():
+            tryfile = os.path.join(searchdir, name)
+            if ens_memb is not None:
+                tryfile2 = tryfile+ens_memb
+                if os.path.exists(tryfile2):
+                    return open(tryfile2)
+            if os.path.exists(tryfile):
+                return open(tryfile)
+    return None
+
+
 def ac_templater(fd_in, fd_out):
     """
     Replace values represented as @VAR@
@@ -22,7 +41,7 @@ def ac_templater(fd_in, fd_out):
     for line in fd_in:
         mo = RE_INCLUDE.match(line)
         if mo is not None:
-            fd_inc = open(mo.group(1))
+            fd_inc = open_include(mo.group(1))
             ac_templater(fd_inc, fd_out)
             fd_inc.close()
         else:
