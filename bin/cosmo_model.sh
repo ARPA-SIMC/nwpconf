@@ -98,9 +98,9 @@ $MODEL_LAKE_PRODUCT"
 # base request (must not start with retrieve)
     MODEL_MARS_BASE=" dataset = interim,
  origin = all,
- type = an,
  area = 57/-32/24/50,
  grid = 0.5/0.5,"
+# removed type = an,
 
 # parameters request (must not start with retrieve)
     MODEL_MARS_PARAM=" levelist = all,

@@ -25,8 +25,16 @@
 
 _getmars_generic_icbc_(){
 
+    local ttype
+    if [ "$3" = 0 ]; then # euristic and hardcoded, check better
+	ttype="type = AN,"
+    else
+	ttype="type = FC,"
+    fi
+
     echo "retrieve,
 $MODEL_MARS_BASE
+$ttype
 date = $1,
 time = $2,
 step = $3,
