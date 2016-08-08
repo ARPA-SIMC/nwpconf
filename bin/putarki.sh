@@ -149,7 +149,7 @@ putarki_wait_for_deletion() {
         fi
 # make a break
         if [ "$ARKI_USE_INOTIFY" = Y ]; then
-            inotifywait --timeout $PUTARKI_WAITDEL --event delete $ARKI_IMPDIR || true
+            inotifywait --timeout $PUTARKI_WAITDEL --event delete $ARKI_IMPDIR >/dev/null 2>&1 || true
         else
             sleep $PUTARKI_WAITDEL
         fi

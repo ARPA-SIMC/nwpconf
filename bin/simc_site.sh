@@ -95,7 +95,7 @@ simc_create_radar_grib() {
 # get grib template on the model grid
     model_template=`conf_getfile model_radar_template.grb`
     if [ -z "$model_template" ]; then
-	echo "Error: grib template model_radar_template.grib for radar precipitation gridding not found in configuration directories"
+	echo "Error: grib template model_radar_template.grib for radar precipitation gridding not found in configuration directories" >&2
 	return 1
     fi
 
