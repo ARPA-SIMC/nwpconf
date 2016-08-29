@@ -51,14 +51,6 @@
 ## @param $* the files to be archived
 putarki_archive_and_wait() {
     putarki_wait_for_deletion `putarki_archive $@`
-
-    # case "$ARKI_SCAN_METHOD" in
-    #     arki_importer)
-    #         wait_for_deletion `archive_grib1 $@`
-    #         ;;
-    #     *)
-    #         archive_grib1 $@;;
-    # esac
 }
 
 
@@ -74,6 +66,15 @@ putarki_archive_and_wait() {
 ##   the termination of the archiving; this method is advantageous
 ##   because it allows concurrent processes to simultaneously send
 ##   data to the same dataset
+## - `remote_arki_importer`: it is similar to the previous method, but
+##   it assumes that the consumer process is active on a different
+##   host, in this case the variable `$ARKI_IMPSSH` indicates the
+##   credentials for accessing the remote import server by ssh/scp in
+##   the form `user@host` and `$ARKI_IMPDIR` indicate the import
+##   directory configured on the remote server; paswordless ssh access
+##   to the remote server must be set up; this method allows
+##   concurrency as well, but it is less performant due to the access
+##   to a remote server through ssh.
 ## - `arki-scan`: an arki-scan is performed with configuration file
 ##   `$ARKI_CONF`, in this case the function exits when the archival
 ##   has finished; this approach does not require a consumer process,
@@ -111,6 +112,10 @@ putarki_archive() {
             mv -f $ARKI_IMPDIR/$dest $ARKI_IMPDIR/$ddest
 # print file name on stdout, to be used by archive_and_wait_grib1
             echo $ARKI_IMPDIR/$ddest;;
+        remote_arki_importer)
+	    scp $file $ARKI_IMPSSH:$ARKI_IMPDIR/.$file.$$.$tf
+	    ssh $ARKI_IMPSSH mv -f $ARKI_IMPDIR/.$file.$$.$tf $ARKI_IMPDIR/$file.$$.$tf
+            echo $ARKI_IMPDIR/$file.$$.$tf;;
         arki-scan)
 # do a simple, local, file-based arki-scan, the user must deal with
 # concurrency problems; synchronous method
@@ -138,17 +143,25 @@ putarki_wait_for_deletion() {
     local waitlist=("$@")
     while true; do
         for i in ${!waitlist[*]}; do
-            if [ ! -f ${waitlist[$i]} ]; then
-#            if ! remote_check_file ${waitlist[$i]}; then # bug with nfs, check on server
-                unset waitlist[$i]
-            fi
+	    case "$ARKI_SCAN_METHOD" in
+		arki_importer)
+		    if [ ! -f ${waitlist[$i]} ]; then
+			unset waitlist[$i]
+		    fi
+		    ;;
+		remote_arki_importer)
+		    if ! ssh $ARKI_IMPSSH test -f $1; then
+			unset waitlist[$i]
+		    fi
+		    ;;
+	    esac
         done
 # check if there are still files to wait for
         if [ ${#waitlist[*]} -eq 0 ]; then
             return
         fi
 # make a break
-        if [ "$ARKI_USE_INOTIFY" = Y ]; then
+        if [ "$ARKI_SCAN_METHOD" = arki_importer -a "$ARKI_USE_INOTIFY" = Y ]; then
             inotifywait --timeout $PUTARKI_WAITDEL --event delete $ARKI_IMPDIR >/dev/null 2>&1 || true
         else
             sleep $PUTARKI_WAITDEL
@@ -157,11 +170,6 @@ putarki_wait_for_deletion() {
         
 }
 
-
-remote_check_file() {
-    ssh maialinux test -f $1
-    return
-}
 
 ## @fn putarki_model_output()
 ## @brief Archive the output of a model run while it is being produced.
@@ -254,6 +262,7 @@ putarki_model_output() {
 # start exporting all assignments
 set -a
 check_dep putarki
+check_defined ARKI_SCAN_METHOD
 # default time to wait before starting processing output files during model run (s)
 PUTARKI_WAITSTART=30
 # default maximum time to wait between checks when no events happen (s)
