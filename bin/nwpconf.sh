@@ -370,6 +370,22 @@ minus_signedhour_to_date() {
     fi
 }
 
+## @fn datetime_cnmc()
+## @brief Output the provided date and time in the format required by CNMC.
+## @details This function prints to standard output the provided date
+## and time in the format `MMDDHHMM` as used in the files provided by
+## the Italian Military Meteorological Service (cnmc in WMO
+## abbreviations).
+## @param $1 date in the format `YYYYMMDD`
+## @param $2 time in the format `HH`
+datetime_cnmc() {
+    if [ "${#1}" -gt 8 ]; then
+	$DATECOM --date "${1:0:8} ${1:8:4}" '+%m%d%H%M'
+    else
+	$DATECOM --date "$1 $2:00" '+%m%d%H%M'
+    fi
+}
+
 ## @fn max()
 ## @brief Compute the maximum between two numerical arguments.
 ## @details This function computes the maximum between the two integer
