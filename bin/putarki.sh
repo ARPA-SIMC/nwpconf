@@ -150,7 +150,7 @@ putarki_wait_for_deletion() {
 		    fi
 		    ;;
 		remote_arki_importer)
-		    if ! ssh $ARKI_IMPSSH test -f $1; then
+		    if ! ssh $ARKI_IMPSSH test -f ${waitlist[$i]}; then
 			unset waitlist[$i]
 		    fi
 		    ;;
