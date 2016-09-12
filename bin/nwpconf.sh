@@ -438,6 +438,17 @@ timeout_exec() {
     exec "$@"
 }
 
+## @fn nonunique_exit
+## @brief exit if another instance is currently running.
+## @details If another instance of the same process, i.e. a script
+## with the same file name (regardless of the absolute path), is
+## already running under the same user id, the process exits.
+nonunique_exit() {
+
+    ps -u $USER -o pid= -o comm= | grep -v "^ *$$ " | \
+	grep `basename $0` > /dev/null && exit 0
+
+}
 
 ## @fn safe_rm_rf()
 ## @brief Remove recursively directory tree(s) with some security checks.
