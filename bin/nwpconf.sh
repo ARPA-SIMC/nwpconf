@@ -446,7 +446,7 @@ timeout_exec() {
 nonunique_exit() {
 
     ps -u $USER -o pid= -o comm= | grep -v "^ *$$ " | \
-	grep `basename $0` > /dev/null && exit 0
+	grep `basename $0` > /dev/null && exit 0 || true
 
 }
 
