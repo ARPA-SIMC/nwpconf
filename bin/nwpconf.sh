@@ -445,9 +445,10 @@ timeout_exec() {
 ## already running under the same user id, the process exits.
 nonunique_exit() {
 
+    local comm=`basename $0`
     ps -u $USER -o pid= -o comm= | grep -v "^ *$$ " | \
-	grep `basename $0` > /dev/null && exit 0 || true
-
+	grep ${comm::15} > /dev/null && exit 0 || true
+# is 15 univeral truncation of comm format? field length does not help
 }
 
 ## @fn safe_rm_rf()
