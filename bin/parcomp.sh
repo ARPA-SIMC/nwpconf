@@ -14,13 +14,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## @file
-## @brief Module with utilities for parallel computing.
+## @brief Module with utilities for parallel computing and batch scheduling.
 ## @details This module provides some functions that help in
-## performing operations related to parallel computing, such as
-## defining a Cartesian topology and starting parallel MPI executables
-## in an MPI implementation- and scheduler-independent way. It is an
-## optional module and it has to be sourced after the main
-## _nwpconf.sh_ module.
+## performing operations related to parallel computing and interaction
+## with a batch scheduler, such as defining a Cartesian topology and
+## starting parallel MPI executables in an MPI implementation- and
+## scheduler-independent way. It is an optional module and it has to
+## be sourced after the main _nwpconf.sh_ module.
+
+
+## @fn cd_submit_dir()
+## @brief Change working directory to submit directory.
+## @details This function changes the current working directory to the
+## directory from which a job was submitted to a batch scheduler;
+## outside a batch environment it silently does nothing. It is useful
+## to write portable scripts that can work both on the command line
+## and under a batch scheduler.
+cd_submit_dir() {
+    if [ -n "$SLURM_SUBMIT_DIR" ]; then # slurm
+	cd $SLURM_SUBMIT_DIR
+    elif [ -n "$PBS_O_WORKDIR" ]; then # pbs
+	cd $PBS_O_WORKDIR
+    elif [ -n "$LOADL_STEP_INITDIR" ]; then # LoadLeveler, verify
+	cd $LOADL_STEP_INITDIR
+    fi # no scheduler, do nothing
+}
+
 
 ## @fn parcomp_init()
 ## @brief Setup the environment for parallel computing.
