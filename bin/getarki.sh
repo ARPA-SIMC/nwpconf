@@ -27,7 +27,7 @@
 ## @brief Retrieve observations in BUFR format from arkimet archive.
 ## @details This function retrieves observations in BUFR format from
 ## the arkimet dataset(s) specified in the configuration variable
-## `$ARKI_BUFR_DS`, for the data assimilation interval specified in
+## `$BUFR_ARKI_DS`, for the data assimilation interval specified in
 ## the configuration. It should be called after having loaded the
 ## module nwptime.sh for setting up the time-related environment
 ## variables. The interval of data retrieved is extended by a
@@ -49,7 +49,7 @@ getarki_obsbufr() {
     [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
 
     arki-query --data -o $1 \
-	"origin: BUFR; reftime:>=$ds,<=$de;" $ARKI_BUFR_DS
+	"origin: BUFR; reftime:>=$ds,<=$de;" $BUFR_ARKI_DS
 
 }
 
