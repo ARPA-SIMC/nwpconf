@@ -84,6 +84,7 @@ simc_send_logevent() {
 # RADAR_MOSAICODIR=$HOME/prelhn/Composito
 # RADAR_MOSAICOCONF=$RADAR_MOSAICODIR/configurazioni/DPC.CONF
 # RADAR_LHNDIR=$HOME/prelhn/bufr2grib-RUC
+# stdout and error handling must be improved
 # 
 # @param $1 previous end date and time (`+%Y%m%d%H%M`, UTC)
 # @param $2 end date and time (`+%Y%m%d%H%M`, UTC)
@@ -120,7 +121,7 @@ simc_create_radar_grib() {
 	    if [ -f $gribmosaico ]; then
 		if [ -n "$RADAR_LHN_GP" ]; then
 		    grib_set -s generatingProcessIdentifier=$RADAR_LHN_GP \
-			$gribmosaico $gribmosaico.gp
+			$gribmosaico $gribmosaico.gp>/dev/null
 		    mv -f $gribmosaico.gp $gribmosaico
 		fi
 # archive and remember for final waiting
