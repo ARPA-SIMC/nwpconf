@@ -205,11 +205,16 @@ model_readyfiletoname() {
 }
 
 
-# extract from arkimet archive the observations in bufr format
-# required for the data assimilation in the proper time interval and
-# convert them into COSMO-netcdf format, arguments are:
-# $1 (optional) name of the logsim event to wait for, if empty it does
-# not wait
+## @fn cosmo_getarki_obsncdf()
+## @brief Retrieve observation data for assimilation.
+## @details This function retrieves from the arkimet dataset specified
+## by `$BUFR_ARKI_DS` (see getarki.sh::getarki_obsbufr() function) the
+## observations in bufr format required by COSMO and converts them
+## into COSMO-netcdf format. The files are placed in the current
+## directory with the name required by the model. The time interval of
+## data retrieved is computed on the basis of the environment
+## variables defining assimilation and forecast time.
+# @param $1 (optional) name of the logsim event to wait for, if empty it does not wait
 cosmo_getarki_obsncdf() {
 
 # optional wait
@@ -282,14 +287,14 @@ make_ncdf_link() {
 
 
 ## @fn cosmo_getarki_lhn()
-## @brief Retrieve precipitation files for LHN.
-## @details This function retrieves from the configured arkimet
-## dataset the grib files with observed gridded precipitation
-## (typically derived from radar data) required by COSMO for the
-## latent heat nudging procedure. The time interval of data retrieved
-## is computed on the basis of the environment variables defining
-## assimilation and forecast time. The files are placed in the current
-## directory with the name required by the model.
+## @brief Retrieve precipitation data for LHN.
+## @details This function retrieves from the arkimet dataset specified
+## by `$ARKI_LHN_DS` the grib files with observed gridded
+## precipitation (typically derived from radar data) required by COSMO
+## for the latent heat nudging procedure. The time interval of data
+## retrieved is computed on the basis of the environment variables
+## defining assimilation and forecast time. The files are placed in
+## the current directory with the name required by the model.
 cosmo_getarki_lhn() {
 
     local startdate enddate curdate nextdate
