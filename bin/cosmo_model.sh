@@ -314,9 +314,11 @@ cosmo_getarki_lhn() {
 
 	nextdate=`datetime_add $curdate 1`
 	echo "$nextdate"
-	filename=${curdate:2}.grib1 # 2-digit year
+	filename=${curdate:2}.grib # 2-digit year
 	arki-query --data -o $filename "Reftime:>=`getarki_datetime $curdate`,<`getarki_datetime $nextdate`" $ARKI_LHN_DS
 	 [ -f $filename ] || touch $filename
+# depending on model version .grib or .grib1 may be required
+        ln -fs $filename ${filename}1
 
 	curdate=$nextdate
     done
