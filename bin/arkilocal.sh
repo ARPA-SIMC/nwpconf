@@ -14,7 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ## @file
-## @brief module with functions for working with a local file-based arkimet archive
+## @brief module with functions for working with a local file-based arkimet archive.
 ## @details This module provides functions for managing a local,
 ## file-based and serverless arkimet archive. The archive will have
 ## lower performances and flexibility than a real arkimet archive
@@ -31,8 +31,8 @@
 
 
 ## @fn arkilocal_create()
-## @brief Creates a local file-based arkimet dataset
-## @detail This function creates the directory tree and the basic
+## @brief Creates a local file-based arkimet dataset.
+## @details This function creates the directory tree and the basic
 ## configuration files required for working with a local file-based
 ## and serverless arkimet archive rooted in the directory specified by
 ## `$ARKI_URL` (which must contain only a local path
@@ -42,7 +42,7 @@
 ## creates also the error dataset, required by arkimet, and merges all
 ## the config files into a single configuration file. It also sets the
 ## variable `$ARKI_SCAN_METHOD` to `arki-scan` and `$ARKI_CONF` to the
-## required value (see putarki.sh::putarki_Archive() ) and exports the
+## required value (see putarki.sh::putarki_archive() ) and exports the
 ## `$ARKI_DS_<TYPE>` variables pointing to the proper dataset.
 arkilocal_create() {
     local typ gp

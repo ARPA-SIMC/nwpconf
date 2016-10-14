@@ -4,43 +4,43 @@
 ## analysis fields coming from a continuous model assimilation cycle
 ## and interpolated from a parent model. It requires definition of the
 ## following environmental variables (explanation to be added):
-##
+## 
 ## - `$MODEL_ARKI_FROM_PARENT`
-##
+## 
 ## - `$MODEL_N_PARENT`
-##
+## 
 ## - `$MODEL_SOIL_PARENT`
-##
+## 
 ## - `$MODEL_ARKI_FROM_ASSIM_SLOW`
-##
+## 
 ## - `$MODEL_N_ASSIM_SLOW`
-##
+## 
 ## - `MODEL_SOIL_PARENT`
-##
+## 
 ## - `$MODEL_ARKI_FROM_ASSIM_FAST`
-##
+## 
 ## - `$MODEL_N_ASSIM_FAST`
-##
+## 
 ## - `$MODEL_ARKI_TIMERANGE_ASSIM`
-##
+## 
 ## - `$MODEL_ARKI_TIMERANGE_FCAST`
-##
+## 
 ## - `$ARKI_DS_ASSIM`
-##
+## 
 ## - `$ARKI_DS_FCAST`
-##
+## 
 ## - `$ARKI_DS_INTER`
-##
+## 
 ## - `$MODEL_ASSIM_GP`
-##
+## 
 ## - `$MODEL_FCAST_GP` (no?)
-##
+## 
 ## - `$MODEL_INTER_GP` (no?)
-##
+## 
 ## - `$MODEL_ARKI_SURFT`
-##
+## 
 ## - `$MODEL_ARKI_LSM`
-##
+## 
 ## - `$MODEL_ARKI_BBC`
 
 ## @fn arkiana_archive()
