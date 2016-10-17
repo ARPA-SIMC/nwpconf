@@ -15,8 +15,6 @@
 ## 
 ## - `$MODEL_N_ASSIM_SLOW`
 ## 
-## - `MODEL_SOIL_PARENT`
-## 
 ## - `$MODEL_ARKI_FROM_ASSIM_FAST`
 ## 
 ## - `$MODEL_N_ASSIM_FAST`
@@ -45,17 +43,27 @@
 
 ## @fn arkiana_archive()
 ## @brief Archive interpolated analysis and merge surface fields with the ones available from assimilation.
-## @details This function selects, from an interpolated analysis file,
-## only those fields that should come from parent model as selected by
-## the variable `$MODEL_ARKI_FROM_PARENT` and archives them for being
-## used in the successive model run. It also merges parent model sea
-## surface temperature with soil surface temperature from analysis, if
-## necessary and available, and archives it. It also checks for
-## availability of so-called "slow" fields in the analysis, as
-## selected by the variable `$MODEL_ARKI_FROM_ASSIM_SLOW`, and if
-## found within an interval of `$MODEL_SLOW_PAST_H` hours in the past,
-## it refreshes the date in grib fields and rearchives them for
-## successive use.
+## @details This function has to be called when the analysis for the
+## current time (`$DATE$TIME`) from a previous assimilation cycle, if
+## available, has been archived, and after the analysis for the
+## current time has been interpolated from a parent model and is
+## available as a plain file. It performs the following operations:
+## 
+## - it selects, from the interpolated analysis file, only those
+##   fields that should come from parent model as selected by the
+##   variable `$MODEL_ARKI_FROM_PARENT` and archives them for being
+##   used in the successive model run
+## 
+## - it checks the availability of so-called "slow" fields in the
+##   analysis, as selected by the variable
+##   `$MODEL_ARKI_FROM_ASSIM_SLOW`, and, if found within an interval
+##   of `$MODEL_SLOW_PAST_H` hours in the past, it refreshes the date
+##   in grib fields and rearchives them for successive use
+## 
+## - if `$MODEL_SOIL_PARENT != N`, it merges parent model sea surface
+##   temperature with soil surface temperature from previous analysis,
+##   if available, and archives it, overwriting the original surface
+##   temperature from the analysis.
 ## @param $1 the name of the file containing parent model interpolated analysis
 arkiana_archive() {
     local parentana=$1
@@ -113,7 +121,6 @@ arkiana_archive() {
     done
     rm -f $parentslow
 
-    #if [ ... -a "$MODEL_REPLACE_SST" = Y ]; then
     if [ -n "$parentana" -a "$MODEL_SOIL_PARENT" = N ]; then
 	# replace archived soil/surface temperature on sea with temperature
 	# from parent model and lower soil boundary climatological data with
