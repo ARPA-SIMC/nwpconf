@@ -56,9 +56,11 @@
 ## 
 ## - it checks the availability of so-called "slow" fields in the
 ##   analysis, as selected by the variable
-##   `$MODEL_ARKI_FROM_ASSIM_SLOW`, and, if found within an interval
-##   of `$MODEL_SLOW_PAST_H` hours in the past, it refreshes the date
-##   in grib fields and rearchives them for successive use
+##   `$MODEL_ARKI_FROM_ASSIM_SLOW`, and, if not available for the
+##   current time but found within an interval of `$MODEL_SLOW_PAST_H`
+##   hours in the past, it retrieves the most recent fields available,
+##   refreshes the date in grib fields and rearchives them for
+##   successive use
 ## 
 ## - if `$MODEL_SOIL_PARENT != N`, it merges parent model sea surface
 ##   temperature with soil surface temperature from previous analysis,
@@ -200,16 +202,20 @@ arkiana_retrieve() {
     n=`grib_count $parentclim` || n=0
     if [ $n -lt "$MODEL_N_PARENT" ]; then
 	# in case of failure get them from analysis in archive
-	echo "climatological fields not found in parent model archive, trying to get them from analysis archive"
-	arki-query --data -o $parentclim \
-	    "reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_PARENT;" \
-	    $ARKI_DS_ASSIM
+	echo "climatological fields not found in parent model archive"
 	MODEL_CLIM_PARENT=N
-	n=`grib_count $parentclim` || n=0
-	if [ $n -lt "$MODEL_N_PARENT" ]; then
-	    echo "climatological fields not found neither in analysis archive"
-	    exit 1
-	fi
+	exit 1
+# this is dangerous, it may unadvertently keep the climatological fields fixed
+#	echo "climatological fields not found in parent model archive, trying to get them from analysis archive"
+#	arki-query --data -o $parentclim \
+#	    "reftime:=$arki_date;$MODEL_ARKI_TIMERANGE_ASSIM;$MODEL_ARKI_FROM_PARENT;" \
+#	    $ARKI_DS_ASSIM
+#	MODEL_CLIM_PARENT=N
+#	n=`grib_count $parentclim` || n=0
+#	if [ $n -lt "$MODEL_N_PARENT" ]; then
+#	    echo "climatological fields not found neither in analysis archive"
+#	    exit 1
+#	fi
     else
 	MODEL_CLIM_PARENT=Y
     fi
