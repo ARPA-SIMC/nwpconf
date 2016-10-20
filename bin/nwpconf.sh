@@ -499,7 +499,7 @@ save_state() {
     [ -z "$state_file" ] && state_file=$NWPCONFDIR/$NWPCONF/$1
     shift
     for var in $*; do
-	echo "$var=`eval echo '$'$var`"
+	echo "$var='`eval echo '$'$var`'"
     done > $state_file
 }
 
