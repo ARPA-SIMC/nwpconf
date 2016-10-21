@@ -23,24 +23,6 @@
 ## be sourced after the main _nwpconf.sh_ module.
 
 
-## @fn cd_submit_dir()
-## @brief Change working directory to submit directory.
-## @details This function changes the current working directory to the
-## directory from which a job was submitted to a batch scheduler;
-## outside a batch environment it silently does nothing. It is useful
-## to write portable scripts that can work both on the command line
-## and under a batch scheduler.
-cd_submit_dir() {
-    if [ -n "$SLURM_SUBMIT_DIR" ]; then # slurm
-	cd $SLURM_SUBMIT_DIR
-    elif [ -n "$PBS_O_WORKDIR" ]; then # pbs
-	cd $PBS_O_WORKDIR
-    elif [ -n "$LOADL_STEP_INITDIR" ]; then # LoadLeveler, verify
-	cd $LOADL_STEP_INITDIR
-    fi # no scheduler, do nothing
-}
-
-
 ## @fn parcomp_init()
 ## @brief Setup the environment for parallel computing.
 ## @details This functions is implicitly called when the module is
@@ -183,6 +165,46 @@ parcomp_mpirun() {
 # adapt to mpi/queuing system used
     mpirun -np $NP $@
 }
+
+
+## @fn get_job_status()
+## @brief Get the status of a batch job
+## @details This function queries the batch scheduler and prints on
+## stdout the status of a batch job; it recognises slurm and pbs
+## schedulers. The output is one letter (possibly scheduler dependent)
+## indicating the job status, no output with error code 0 if the job
+## does not exists or no output with error code 1 if the scheduler is
+## not recognized.
+## @param $1 the id of the job
+get_job_status() {
+    if type qstat >/dev/null 2>&1; then
+	qstat -f $1 2>/dev/null |grep '^ *job_state *= *'|sed -e 's/^ *job_state *= *//g' || true
+    elif type squeue >/dev/null 2>&1; then
+	squeue -h --job $1 --format=%t 2>/dev/null || true
+    else
+# batch scheduling system not recognised
+	return 1
+    fi
+}
+
+
+## @fn cd_submit_dir()
+## @brief Change working directory to submit directory.
+## @details This function changes the current working directory to the
+## directory from which a job was submitted to a batch scheduler;
+## outside a batch environment it silently does nothing. It is useful
+## to write portable scripts that can work both on the command line
+## and under a batch scheduler.
+cd_submit_dir() {
+    if [ -n "$SLURM_SUBMIT_DIR" ]; then # slurm
+	cd $SLURM_SUBMIT_DIR
+    elif [ -n "$PBS_O_WORKDIR" ]; then # pbs
+	cd $PBS_O_WORKDIR
+    elif [ -n "$LOADL_STEP_INITDIR" ]; then # LoadLeveler, verify
+	cd $LOADL_STEP_INITDIR
+    fi # no scheduler, do nothing
+}
+
 
 # start exporting all assignments
 set -a
