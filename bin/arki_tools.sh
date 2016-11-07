@@ -5,13 +5,20 @@ arki_getdslist()
     sed -n -e '/^\[.*\]$/{s/\[\(.*\)\]/\1/g;p};' $1
 }
 
+# @param $1 config file name
+# @param $2 key whose value should be printed for every dataset
+arki_getdskey()
+{
+    sed -n -e '/^ *'$2' *=/{s/^ *'$2' *= *//;p};' $1
+}
+
 # config 8 12
 # @param $1 config file name
 # @param $2 days in the past for starting deletion
 # @param $3 days in the past for stopping deletion
 arki_dailycleanup() {
     local dslist
-    dslist=`arki_getdslist $1`
+    dslist=`arki_getdskey $1 path`
     
 #    arki_dev=`stat -c %D $ARKI_DIR`
     for back in `seq $2 $3`; do
