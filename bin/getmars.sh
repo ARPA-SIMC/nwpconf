@@ -50,7 +50,7 @@ $MODEL_MARS_CONST"
 
 }
 
-## @fn getarki_icbc()
+## @fn getmars_icbc()
 ## @brief Retrieve gridded initial and/or boundary conditions from MARS archive.
 ## @details This function retrieves gridded fields, tipically in GRIB
 ## format, to be used as initial and/or boundary conditions, possibly
