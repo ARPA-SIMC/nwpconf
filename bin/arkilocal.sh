@@ -44,6 +44,7 @@
 ## variable `$ARKI_SCAN_METHOD` to `arki-scan` and `$ARKI_CONF` to the
 ## required value (see putarki.sh::putarki_archive() ) and exports the
 ## `$ARKI_DS_<TYPE>` variables pointing to the proper dataset.
+## @param $1 -c for cleaning the contents of a previous dataset (erases `$ARKI_URL` directory!)
 arkilocal_create() {
     local typ gp
 
@@ -51,7 +52,10 @@ arkilocal_create() {
     ARKI_SCAN_METHOD=arki-scan
     ARKI_CONF=$ARKI_URL/config
 
-#    mkdir -p $ARKI_URL
+    if [ "$1" = "-c" ]; then
+	safe_rm_rf $ARKI_URL
+    fi
+    mkdir -p $ARKI_URL
 # create typical model datasets
     for typ in ASSIM FCAST INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`

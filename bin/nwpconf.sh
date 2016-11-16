@@ -453,19 +453,19 @@ nonunique_exit() {
 
 ## @fn safe_rm_rf()
 ## @brief Remove recursively directory tree(s) with some security checks.
-## @details This functions removes the requested directories and all
+## @details This function removes the requested directories and all
 ## their content recursively (`rm -rf`) performing some preliminary
 ## checks to prevent removing undesired files due, e.g., to wrong
 ## environmental variable assignment. Each argument provided must
 ## match the following conditions:
 ## 
 ##  * being non null
-##  * being not be equal to /
+##  * being not equal to /
 ##  * being a directory
 ##  * being owned by the user
 ## 
-## otherwise the remove processof the current argument is canceled and
-## it continues with the following argument.
+## otherwise the removal for the current argument is canceled and the
+## following argument is examined.
 ## 
 ## @param $* directories to be removed
 safe_rm_rf() {
