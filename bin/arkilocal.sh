@@ -99,7 +99,7 @@ EOF
 # start exporting all assignments
 set -a
 # checks
-check_dep arkiana getarki putarki
+check_dep arkilocal
 check_defined ARKI_URL
 # stop exporting all assignments
 set +a
