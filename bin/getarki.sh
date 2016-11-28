@@ -42,8 +42,8 @@ getarki_obsbufr() {
     d=`date_sub $DATES $TIMES $dt`
     t=`time_sub $DATES $TIMES $dt`
     ds=`getarki_datetime $d $t`
-    d=`date_add $DATE $TIME $dt`
-    t=`time_add $DATE $TIME $dt`
+    d=`date_add $DATEE $TIMEE $dt`
+    t=`time_add $DATEE $TIMEE $dt`
     de=`getarki_datetime $d $t`
 
     [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
