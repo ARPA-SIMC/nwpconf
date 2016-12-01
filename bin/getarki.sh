@@ -71,6 +71,13 @@ getarki_obsbufr() {
 ##     while nwpbctimeloop_loop; do
 ##         getarki_icbc
 ##     done
+## 
+## Additional query keys for the arki-query can be specified by means
+## of the variable `$MODEL_ARKI_PARAM`, terminated by `;`,
+## e.g. `MODEL_ARKI_PARAM="proddef:GRIB:nn=$ENS_MEMB;"` for selecting
+## a specific ensemble member as input.
+
+
 getarki_icbc() {
     local h hinput timerange ana d2h t2h
 
