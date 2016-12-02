@@ -59,4 +59,4 @@ set -a
 # checks
 check_dep arkitools
 # stop exporting all assignments
-set +
+set +a

@@ -30,6 +30,31 @@
 ## files should be set.
 
 
+## @fn arkilocal_init()
+## @brief Creates a local file-based arkimet dataset.
+## @details This function creates the directory tree and the basic
+
+## @brief Initialise the environment for using a local file-based arkimet dataset.
+## @details This function is implicitly called when the module is
+## sourced, it sets the variables `$ARKI_SCAN_METHOD`, `$ARKI_CONF`
+## and `$ARKI_DS_*` internally used by the dataset creation function
+## and by the archiving and retrieving functions.
+arkilocal_init() {
+    local typ gp
+
+# automatically set some variables
+    ARKI_SCAN_METHOD=arki-scan
+    ARKI_CONF=$ARKI_URL/config
+
+    for typ in ASSIM FCAST INTER RADAR; do
+	gp=`eval echo '$'MODEL_${typ}_GP`
+	if [ -n "$gp" ]; then
+	    eval export ARKI_DS_$typ=$ARKI_URL/$typ
+	fi
+    done
+}
+
+
 ## @fn arkilocal_create()
 ## @brief Creates a local file-based arkimet dataset.
 ## @details This function creates the directory tree and the basic
@@ -48,10 +73,6 @@
 arkilocal_create() {
     local typ gp
 
-# automatically set some variables
-    ARKI_SCAN_METHOD=arki-scan
-    ARKI_CONF=$ARKI_URL/config
-
     if [ "$1" = "-c" ]; then
 	safe_rm_rf $ARKI_URL
     fi
@@ -60,7 +81,6 @@ arkilocal_create() {
     for typ in ASSIM FCAST INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`
 	if [ -n "$gp" ]; then
-	    eval export ARKI_DS_$typ=$ARKI_URL/$typ
 	    __arkilocal_create_ds $ARKI_URL/$typ $typ $gp
 	fi
     done
@@ -101,5 +121,7 @@ set -a
 # checks
 check_dep arkilocal
 check_defined ARKI_URL
+# init module
+arkilocal_init
 # stop exporting all assignments
 set +a
