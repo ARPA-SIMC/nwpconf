@@ -84,24 +84,18 @@ arki_dailyarchivecleanup() {
     dslist=`arki_getdskey $1 path`
     for ds in $dslist; do
 	apath=$2/`basename $ds`
-#	if [ -n "$2" -a -n "$3" ]; then
-#	    s1=$2
-#	    s2=$3
-#	else
-	    confage=`arki_getdskey $ds/config 'delete age'`
-	    confaage=`arki_getdskey $ds/config 'archive age'`
-	    s1=0
-	    s2=-1
-	    if [ -n "$confage" ]; then
-		s1=$confage
-		s2=$(($confage + 8))
-	    fi
-	    s0=$s1
-	    if [ -n "$confaage" ]; then
-		s0=$confaage
-	    fi
-#	fi
-#    arki_dev=`stat -c %D $ARKI_DIR`
+	confage=`arki_getdskey $ds/config 'delete age'`
+	confaage=`arki_getdskey $ds/config 'archive age'`
+	s1=0
+	s2=-1
+	if [ -n "$confage" ]; then
+	    s1=$confage
+	    s2=$(($confage + 8))
+	fi
+	s0=$s1
+	if [ -n "$confaage" ]; then
+	    s0=$confaage
+	fi
 	for back in `seq $s0 $(($s1 - 1))`; do
             yy=`date -u --date "$back days ago" "+%Y"`
             mm=`date -u --date "$back days ago" "+%m"`
@@ -129,7 +123,7 @@ arki_dailyarchivecleanup() {
 	    done
 	done
     done
-    arki-check --fix --config=$1 # --repack
+#    arki-check --fix --config=$1 # --repack
 }
 
 # start exporting all assignments
