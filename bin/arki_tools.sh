@@ -102,7 +102,7 @@ arki_dailyarchivecleanup() {
             dd=`date -u --date "$back days ago" "+%d"`
 	    mkdir -p $apath/$yy
 	    for file in $ds/$yy/$mm-$dd.grib* $ds/$yy/$mm-$dd.bufr; do
-		if [ -f "$file" ]; then
+		if [ -f "$file" -a ! -L "$file" ]; then
 		    f=`basename $file`
 		    mv $file $apath/$yy/$f
 		    ln -s $apath/$yy/$f $file # $ds must be absolute path
