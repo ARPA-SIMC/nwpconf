@@ -57,6 +57,9 @@
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a857e788a855b08f978021fd6e74cfc1f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="arkilocal_8sh.html#a857e788a855b08f978021fd6e74cfc1f">arkilocal_init</a> ()</td></tr>
+<tr class="memdesc:a857e788a855b08f978021fd6e74cfc1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialise the environment for using a local file-based arkimet dataset.  <a href="#a857e788a855b08f978021fd6e74cfc1f">More...</a><br/></td></tr>
+<tr class="separator:a857e788a855b08f978021fd6e74cfc1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e5b88f1af7d862071001c1c80b6c12c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="arkilocal_8sh.html#a7e5b88f1af7d862071001c1c80b6c12c">arkilocal_create</a> ($1)</td></tr>
 <tr class="memdesc:a7e5b88f1af7d862071001c1c80b6c12c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a local file-based arkimet dataset.  <a href="#a7e5b88f1af7d862071001c1c80b6c12c">More...</a><br/></td></tr>
 <tr class="separator:a7e5b88f1af7d862071001c1c80b6c12c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -65,6 +68,26 @@ Functions</h2></td></tr>
 <div class="textblock"><p>module with functions for working with a local file-based arkimet archive. </p>
 <p>This module provides functions for managing a local, file-based and serverless arkimet archive. The archive will have lower performances and flexibility than a real arkimet archive based on an arkimet server, but all the archiving and retrieving procedures can work almost transparently. It is useful mainly for using the functions designed for continuous assimilation defined in the <a class="el" href="arkiana_8sh.html" title="Module with functions for processing analysis fields in a continuous assimilation cycle...">arkiana.sh</a> module. The environment variable <code>$ARKI_URL</code> must be exported before sourcing the module, it indicates the root directory of the archive, moreover at least one of the <code>$MODEL_ASSIM_GP</code>, <code>$MODEL_FCAST_GP</code>, <code>$MODEL_INTER_GP</code>, <code>$MODEL_RADAR_GP</code> variables indicating the generating processes of assimilation, forecast and interpolated from parent model grib files should be set. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="a857e788a855b08f978021fd6e74cfc1f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">arkilocal_init </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialise the environment for using a local file-based arkimet dataset. </p>
+<p>Creates a local file-based arkimet dataset.</p>
+<p>This function is implicitly called when the module is sourced, it sets the variables <code>$ARKI_SCAN_METHOD</code>, <code>$ARKI_CONF</code> and <code>$ARKI_DS_*</code> internally used by the dataset creation function and by the archiving and retrieving functions.</p>
+<p>This function creates the directory tree and the basic </p>
+
+</div>
+</div>
 <a class="anchor" id="a7e5b88f1af7d862071001c1c80b6c12c"></a>
 <div class="memitem">
 <div class="memproto">

@@ -123,7 +123,9 @@ Functions</h2></td></tr>
 <pre class="fragment">nwpbctimeloop_init
 while nwpbctimeloop_loop; do
     getarki_icbc
-done  </pre> 
+done
+</pre><p>Additional query keys for the arki-query can be specified by means of the variable <code>$MODEL_ARKI_PARAM</code>, terminated by <code>;</code>, e.g. <code>MODEL_ARKI_PARAM="proddef:GRIB:nn=$ENS_MEMB;"</code> for selecting a specific ensemble member as input. </p>
+
 </div>
 </div>
 </div><!-- contents -->
