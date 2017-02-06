@@ -125,9 +125,12 @@ simc_create_radar_grib() {
 		    mv -f $gribmosaico.gp $gribmosaico
 		fi
 # archive and remember for final waiting
-		waitfor="$waitfor `putarki_archive grib $gribmosaico`"
+		if [ -n "$ARKI_SCAN_METHOD" ]; then
+		    waitfor="$waitfor `putarki_archive grib $gribmosaico`"
+		    rm -f $gribmosaico
+		fi
 	    fi
-	    rm -f $ncmosaico $gribmosaico
+	    rm -f $ncmosaico
 # store successful date
 	    succdate=$fromdate
 	fi
