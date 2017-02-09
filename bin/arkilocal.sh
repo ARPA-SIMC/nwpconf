@@ -40,9 +40,17 @@
 ## and `$ARKI_DS_*` internally used by the dataset creation function
 ## and by the archiving and retrieving functions.
 arkilocal_init() {
-
+    local typ gp
 # automatically set some variables
     ARKI_SCAN_METHOD=arki-scan
+    ARKI_CONF=$ARKI_URL/config
+
+    for typ in ASSIM FCAST INTER RADAR; do
+	gp=`eval echo '$'MODEL_${typ}_GP`
+	if [ -n "$gp" ]; then
+	    eval export ARKI_DS_$typ=$ARKI_URL/$typ
+	fi
+    done
 }
 
 
@@ -62,16 +70,7 @@ arkilocal_init() {
 ## `$ARKI_DS_<TYPE>` variables pointing to the proper dataset.
 ## @param $1 -c for cleaning the contents of a previous dataset (erases `$ARKI_URL` directory!)
 arkilocal_create() {
-    local typ gp
 
-    ARKI_CONF=$ARKI_URL/config
-
-    for typ in ASSIM FCAST INTER RADAR; do
-	gp=`eval echo '$'MODEL_${typ}_GP`
-	if [ -n "$gp" ]; then
-	    eval export ARKI_DS_$typ=$ARKI_URL/$typ
-	fi
-    done
     if [ "$1" = "-c" ]; then
 	safe_rm_rf $ARKI_URL
     fi
