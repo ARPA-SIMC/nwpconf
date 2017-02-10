@@ -15,12 +15,15 @@ is bash.
 
 In order to use the library, the user shell script must export some
 valuable environmental variables (see the documentation of each module
-for the correspoding variables and explanation), and _source_ the
+for the corresponding variables and explanation), and _source_ the
 desired module files, in the following way:
 
-    # Export main variables (customize)
+    # Export main variables:
+    # path to the root of the configuration tree
     export NWPCONFDIR=$HOME/conf
+    # path to the installed nwpconf scripts
     export NWPCONFBINDIR=$HOME/nwpconf/bin
+    # configuration to be adopted in the current script
     export NWPCONF=production/dailymodelrun/forecast
     # source the main library file
     . $NWPCONFBINDIR/nwpconf.sh
@@ -47,8 +50,12 @@ most of the functions may work also with the traditional ksh shell,
 but some will for sure fail due to the use of some bash-specific
 constructs.
 
-The documentation can be built with the help of
-[Doxygen](http://www.stack.nl/~dimitri/doxygen/index.html) and the
-additional `doxygen-bash.sed` script for extracting documentation from
-shell scripts, available from the [bash-doxygen
+The documentation is available
+[online](http://arpa-simc.github.io/nwpconf/), it can be built with
+the help of [Doxygen](http://www.stack.nl/~dimitri/doxygen/index.html)
+and the additional `doxygen-bash.sed` script for extracting
+documentation from shell scripts, available from the [bash-doxygen
 project](https://github.com/Anvil/bash-doxygen).
+
+Nwpconf was inspired by Enrico Zini's
+[cfget](http://slideplayer.it/slide/11178755/) package.
