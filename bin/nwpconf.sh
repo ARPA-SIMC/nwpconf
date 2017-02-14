@@ -87,9 +87,10 @@
 ## configuration tree with the same rules used for finding the
 ## template file.
 ## 
-## When running in ensemble mode, in every directory of the tree a
-## file named `<filename>.in.$ENS_MEMB` is also searched for, with a
-## higher priority than the corresponding `<filename>.in`.
+## When running in ensemble mode, in every directory of the tree,
+## files named `<filename>.in.ens` and `<filename>.in.$ENS_MEMB` are
+## also searched for, with increasing priority and with a higher
+## priority than the corresponding `<filename>.in`.
 ## 
 ## ### Picking different variants of a generic file
 ## 
@@ -98,9 +99,10 @@
 ## in choosing the one with highest priority in these cases.
 ## 
 ## As indicated above for template files, here too, in ensemble mode,
-## the name of a file with an additional `.$ENS_MEMB` extension, if
-## present, is returned in place of the corresponding file without
-## additional extension.
+## the name of a file with an additional extension `.ens` (for any
+## member, with lower priority) or `.$ENS_MEMB` (for a specific
+## member, with higher priority), if present, is returned in place of
+## the corresponding file without additional extension.
 
 # Add current file to the list of loaded modules and check for
 # optional dependencies
@@ -175,6 +177,9 @@ conf_source() {
 	    source "$dir/conf.sh"
 	fi
 	if [ -n "$ENS_MEMB" ]; then
+	    if [ -f "$dir/conf.sh.ens" ]; then
+		source "$dir/conf.sh.ens"
+	    fi
 	    if [ -f "$dir/conf.sh.$ENS_MEMB" ]; then
 		source "$dir/conf.sh.$ENS_MEMB"
 	    fi
@@ -198,6 +203,9 @@ conf_getfile() {
 	    conffile="$dir/$1"
 	fi
 	if [ -n "$ENS_MEMB" ]; then
+	    if [ -f "$dir/$1.ens" ]; then
+		conffile="$dir/$1.ens"
+	    fi
 	    if [ -f "$dir/$1.$ENS_MEMB" ]; then
 		conffile="$dir/$1.$ENS_MEMB"
 	    fi
