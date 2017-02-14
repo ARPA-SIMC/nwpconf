@@ -1,3 +1,7 @@
+cineca_site_init() {
+    CINECA_ARCHIVE_PRE=/gpfs/meteo/lm/galileo/auto/archive/PROD
+}
+
 getarki_icbc_cineca() {
 
     local h hinput timerange ana d2h t2h
@@ -8,7 +12,7 @@ getarki_icbc_cineca() {
 #	timerange="timerange:Timedef,${hinput}h,254"
 #	reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
 	weekday=`date -u --date $DATES_SLICE +%A`
-	origdir=$CINECA_ARCHIVE_PRE/$TIMES_SLICE/$weekday/$CINECA_ARCHIVE_POST
+	origdir=$CINECA_ARCHIVE_PRE/$TIMES_SLICE/$weekday/$PARENTMODEL_ARKI_DS
 	if [ ! -f "$origdir/$DATES_SLICE$TIMES_SLICE " ]; then
 	    return 1
 	fi
@@ -27,5 +31,7 @@ getarki_icbc_cineca() {
 # start exporting all assignments
 set -a
 check_dep cineca_site cosmo_model
+# init module
+cineca_site_init
 # stop exporting all assignments
 set +a
