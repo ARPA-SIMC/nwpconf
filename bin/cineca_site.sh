@@ -24,6 +24,8 @@ getarki_icbc_cineca() {
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
 	fi
+# link constant file with same name
+	ln -s $origdir/`inputmodel_name 0`c .
     done
 
 }
