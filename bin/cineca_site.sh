@@ -13,7 +13,7 @@ getarki_icbc_cineca() {
 #	reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
 	weekday=`date -u --date $DATES_SLICE +%A`
 	origdir=$CINECA_ARCHIVE_PRE/$TIMES_SLICE/$weekday/$PARENTMODEL_ARKI_DS
-	if [ ! -f "$origdir/$DATES_SLICE$TIMES_SLICE " ]; then
+	if [ ! -f "$origdir/$DATES_SLICE$TIMES_SLICE" ]; then
 	    return 1
 	fi
 # will not work with analysis
@@ -24,9 +24,9 @@ getarki_icbc_cineca() {
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
 	fi
-# link constant file with same name
-	ln -s $origdir/`inputmodel_name 0`c .
     done
+# link constant file with same name
+    ln -s $origdir/`inputmodel_name 0`c .
 
 }
 
