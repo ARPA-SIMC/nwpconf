@@ -113,9 +113,10 @@ putarki_archive() {
 # print file name on stdout, to be used by archive_and_wait_grib1
             echo $ARKI_IMPDIR/$ddest;;
         remote_arki_importer)
-	    scp $file $ARKI_IMPSSH:$ARKI_IMPDIR/.$file.$$.$tf
-	    ssh $ARKI_IMPSSH mv -f $ARKI_IMPDIR/.$file.$$.$tf $ARKI_IMPDIR/$file.$$.$tf
-            echo $ARKI_IMPDIR/$file.$$.$tf;;
+	    dest=${file##*/}
+	    scp $file $ARKI_IMPSSH:$ARKI_IMPDIR/.$dest.$$.$tf
+	    ssh $ARKI_IMPSSH mv -f $ARKI_IMPDIR/.$dest.$$.$tf $ARKI_IMPDIR/$dest.$$.$tf
+            echo $ARKI_IMPDIR/$dest.$$.$tf;;
         arki-scan)
 # do a simple, local, file-based arki-scan, the user must deal with
 # concurrency problems; synchronous method
