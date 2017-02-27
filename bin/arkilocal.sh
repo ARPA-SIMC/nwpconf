@@ -30,7 +30,7 @@
 ## files should be set.
 
 
-## @fn arkilocal_init()
+## @fn arkilocal_setup()
 ## @brief Creates a local file-based arkimet dataset.
 ## @details This function creates the directory tree and the basic
 
@@ -39,7 +39,7 @@
 ## sourced, it sets the variables `$ARKI_SCAN_METHOD`, `$ARKI_CONF`
 ## and `$ARKI_DS_*` internally used by the dataset creation function
 ## and by the archiving and retrieving functions.
-arkilocal_init() {
+arkilocal_setup() {
     local typ gp
 # automatically set some variables
     ARKI_SCAN_METHOD=arki-scan
@@ -118,8 +118,6 @@ EOF
 set -a
 # checks
 check_dep arkilocal
-check_defined ARKI_DIR
-# init module
-arkilocal_init
+#check_defined ARKI_DIR
 # stop exporting all assignments
 set +a
