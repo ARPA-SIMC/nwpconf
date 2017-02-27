@@ -122,6 +122,11 @@ retrieve,
  levtype = sfc,
  param = z/lsm/slt"
 
+# ensemble prediction
+    ENS_MODE=.FALSE.
+    if [ -n "$ENS_TOTAL_MEMB" -a -n "$ENS_MEMB" ]; then
+	ENS_MODE=.TRUE.
+    fi
 }
 
 # Delta time to be used in COSMO grib file names, input forecast time
