@@ -183,24 +183,40 @@ elif [ ${#pgtime} = 2 ]; then
     pgtime="${pgtime}00"
 fi
 
-# improve allowing to check for empty and for ANY message
-if [ "$3" = "*" ]; then
-    pgsql_command <<EOF
+case $IMPORT_SIGNAL_METHOD in
+
+    psql)
+# \set ON_ERROR_STOP on returns a status of 3 in case of query error
+# e.g. wrong time syntax
+
+ 	if [ "$3" = "*" ]; then
+	    pgsql_command <<EOF
 \set ON_ERROR_STOP on
 SELECT COUNT(*) FROM imports
  WHERE dataset = '$1' AND
  reftime = timestamp without time zone '$pgdate $pgtime';
 EOF
-else
-    pgsql_command <<EOF
+	else
+	    pgsql_command <<EOF
 \set ON_ERROR_STOP on
 SELECT COUNT(*) FROM imports
  WHERE dataset = '$1' AND
  reftime = timestamp without time zone '$pgdate $pgtime' AND message='$3';
 EOF
-fi
-# \set ON_ERROR_STOP on returns a status of 3 in case of query error
-# e.g. wrong time syntax
+	fi
+	;;
+    curl)
+ 	if [ "$3" = "*" ]; then
+#	    url="$1/$pgdate $pgtime"
+	    url="$1/$2"
+	else
+#	    url="$1/$pgdate $pgtime/$3"
+	    url="$1/$2/$3"
+	fi
+	curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url"
+	;;
+esac
+	    
 }
 
 
@@ -236,7 +252,7 @@ import_signal_wait()
 
 pgsql_command()
 {
-    psql $IMPORT_SIGNAL_INFO -A -F ',' -n -q -t
+    psql $IMPORT_SIGNAL_ARGS -A -F ',' -n -q -t
 }
 
 
