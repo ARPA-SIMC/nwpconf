@@ -126,6 +126,120 @@ arki_dailyarchivecleanup() {
 #    arki-check --fix --config=$1 # --repack
 }
 
+
+import_signal_setupdb()
+{
+
+if [ "$1" = -f ]; then
+    pgsql_command <<EOF
+DROP TABLE imports;
+EOF
+fi
+
+pgsql_command <<EOF
+CREATE TABLE imports (dataset varchar(128) NOT NULL,
+ reftime timestamp without time zone NOT NULL,
+ message varchar(128) DEFAULT NULL,
+ importtime timestamp without time zone DEFAULT NULL,
+ PRIMARY KEY (reftime, dataset, message));
+EOF
+
+}
+
+
+import_signal_imported()
+{
+local pgdate pgtime
+pgdate=${2:0:8}
+pgtime=${2:8:4}
+# pad with zero hour/minutes
+if [ ${#pgtime} = 0 ]; then
+    pgtime="0000"
+elif [ ${#pgtime} = 2 ]; then
+    pgtime="${pgtime}00"
+fi
+
+pgsql_command <<EOF
+INSERT INTO imports (dataset, reftime, message, importtime)
+ SELECT '$1', '$pgdate $pgtime', '$3', 'now'
+ WHERE NOT EXISTS(SELECT 1 FROM imports 
+ WHERE dataset = '$1' AND reftime = '$pgdate $pgtime' AND message = '$3');
+EOF
+# update importtime if exists?
+# return status?
+
+}
+
+
+import_signal_check()
+{
+local pgdate pgtime
+pgdate=${2:0:8}
+pgtime=${2:8:4}
+# pad with zero hour/minutes
+if [ ${#pgtime} = 0 ]; then
+    pgtime="0000"
+elif [ ${#pgtime} = 2 ]; then
+    pgtime="${pgtime}00"
+fi
+
+# improve allowing to check for empty and for ANY message
+if [ "$3" = "*" ]; then
+    pgsql_command <<EOF
+\set ON_ERROR_STOP on
+SELECT COUNT(*) FROM imports
+ WHERE dataset = '$1' AND
+ reftime = timestamp without time zone '$pgdate $pgtime';
+EOF
+else
+    pgsql_command <<EOF
+\set ON_ERROR_STOP on
+SELECT COUNT(*) FROM imports
+ WHERE dataset = '$1' AND
+ reftime = timestamp without time zone '$pgdate $pgtime' AND message='$3';
+EOF
+fi
+# \set ON_ERROR_STOP on returns a status of 3 in case of query error
+# e.g. wrong time syntax
+}
+
+
+import_signal_dailycleanup()
+{
+
+pgsql_command <<EOF
+DELETE FROM imports WHERE
+reftime < timestamp without time zone 'now' - interval '$1 day';
+EOF
+
+}
+
+
+import_signal_wait()
+{
+    local count mincount
+    if [ -n "$5" ]; then
+	mincount=$5
+    else
+	mincount=1	
+    fi
+# wait forever, improve?
+    while true; do
+	count=`import_signal_check "$1" "$2" "$3" "$4"`
+	if [ "$count" -ge "$mincount" ]; then
+	    return 0
+	fi
+	sleep $PUTARKI_WAITSTART
+    done
+}
+
+
+pgsql_command()
+{
+    psql $IMPORT_SIGNAL_INFO -A -F ',' -n -q -t
+}
+
+
 # start exporting all assignments
 set -a
 # checks
