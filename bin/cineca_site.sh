@@ -9,7 +9,6 @@ import_signal_check_cineca()
     pgdate=${1:0:8}
     pgtime=${1:8:2}
     weekday=`date -u --date $pgdate +%A`
-    dir=`cineca_archive_dir $1 `
     [ -f "$CINECA_ARCHIVE_PRE/$pgtime/$weekday/$PARENTMODEL_ARKI_DS/$pgdate$pgtime" ]
 }
 
