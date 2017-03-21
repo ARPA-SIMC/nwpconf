@@ -174,14 +174,28 @@ elif [ ${#pgtime} = 2 ]; then
     pgtime="${pgtime}00"
 fi
 
-pgsql_command <<EOF
+case $IMPORT_SIGNAL_METHOD in
+    psql)
+	pgsql_command <<EOF
 INSERT INTO imports (dataset, reftime, message, importtime)
  SELECT '$1', '$pgdate $pgtime', '$3', 'now'
  WHERE NOT EXISTS(SELECT 1 FROM imports 
  WHERE dataset = '$1' AND reftime = '$pgdate $pgtime' AND message = '$3');
 EOF
 # update importtime if exists?
-# return status?
+	;;
+    curl)
+ 	if [ "$3" = "*" ]; then
+#	    url="imported/$1/$pgdate $pgtime"
+	    url="imported/$1/$2"
+	else
+#	    url="imported/$1/$pgdate $pgtime/$3"
+	    url="imported/$1/$2/$3"
+	fi
+	curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url"
+	;;
+esac
+
 
 }
 
@@ -199,7 +213,6 @@ elif [ ${#pgtime} = 2 ]; then
 fi
 
 case $IMPORT_SIGNAL_METHOD in
-
     psql)
 # \set ON_ERROR_STOP on returns a status of 3 in case of query error
 # e.g. wrong time syntax
@@ -222,11 +235,11 @@ EOF
 	;;
     curl)
  	if [ "$3" = "*" ]; then
-#	    url="$1/$pgdate $pgtime"
-	    url="$1/$2"
+#	    url="check/$1/$pgdate $pgtime"
+	    url="check/$1/$2"
 	else
-#	    url="$1/$pgdate $pgtime/$3"
-	    url="$1/$2/$3"
+#	    url="check/$1/$pgdate $pgtime/$3"
+	    url="check/$1/$2/$3"
 	fi
 	curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url"
 	;;
