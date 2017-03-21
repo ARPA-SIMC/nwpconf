@@ -2,20 +2,29 @@ cineca_site_init() {
     CINECA_ARCHIVE_PRE=/gpfs/meteo/lm/galileo/auto/archive/PROD
 }
 
+
+import_signal_check_cineca()
+{
+    local pgdate pgtime weekday
+    pgdate=${1:0:8}
+    pgtime=${1:8:2}
+    weekday=`date -u --date $pgdate +%A`
+    dir=`cineca_archive_dir $1 `
+    [ -f "$CINECA_ARCHIVE_PRE/$pgtime/$weekday/$PARENTMODEL_ARKI_DS/$pgdate$pgtime" ]
+}
+
+
 getarki_icbc_cineca() {
 
     local h hinput timerange ana d2h t2h
 
+    import_signal_check_cineca $DATES_SLICE$TIMES_SLICE || return 1
+    weekday=`date -u --date $DATES_SLICE +%A`
+    origdir=$CINECA_ARCHIVE_PRE/$TIMES_SLICE/$weekday/$PARENTMODEL_ARKI_DS
+
     for h in `seq $MODEL_START_SLICE $MODEL_FREQ_SLICE $MODEL_STOP_SLICE`; do
 
 	hinput=$(($h+$MODEL_DELTABD_SLICE))
-#	timerange="timerange:Timedef,${hinput}h,254"
-#	reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
-	weekday=`date -u --date $DATES_SLICE +%A`
-	origdir=$CINECA_ARCHIVE_PRE/$TIMES_SLICE/$weekday/$PARENTMODEL_ARKI_DS
-	if [ ! -f "$origdir/$DATES_SLICE$TIMES_SLICE" ]; then
-	    return 1
-	fi
 # will not work with analysis
 	origname=`inputmodel_name $hinput`
 	ln -s $origdir/$origname `inputmodel_name $h`

@@ -127,6 +127,16 @@ arki_dailyarchivecleanup() {
 }
 
 
+# @fn import_signal_setupdb
+# @brief Initialise the import signal database.
+# @details This function initialises the postgresql database for
+# signaling the import of data into arkimet datasets. If `-f` argument
+# is passed it erases all the existing data in the `imports` table and
+# recreates it from zero, otherwise it fails if the table already
+# exists. It uses the `psql` command, the authentication must be taken
+# care of e.g. by means of a ~/.pgpass` file in the user's home
+# directory.
+# @param $1 `-f` for forcing the initialisation of the table if it already exists
 import_signal_setupdb()
 {
 
@@ -147,7 +157,12 @@ EOF
 }
 
 
-import_signal_imported()
+# @fn import_signal_imported
+# @brief Signal the import af a file into a dataset.
+# @details This function .
+# @param $1 dataset name
+# @param $2 reference date and time of the data YYYYmmdd[HH[MM]]
+# @param $3 additional unique name of the message imported (can be empty)
 {
 local pgdate pgtime
 pgdate=${2:0:8}
