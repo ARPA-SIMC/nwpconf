@@ -115,5 +115,7 @@ getarki_datetime() {
 set -a
 # checks
 check_dep getarki nwptime
+# default time to wait between checs for availability of input data
+GETARKI_WAITSTART=30
 # stop exporting all assignments
 set +a

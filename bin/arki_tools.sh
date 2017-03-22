@@ -261,7 +261,7 @@ import_signal_wait() {
 	if [ "$count" -ge "$mincount" ]; then
 	    return 0
 	fi
-	sleep $PUTARKI_WAITSTART
+	sleep $GETARKI_WAITSTART
     done
 }
 

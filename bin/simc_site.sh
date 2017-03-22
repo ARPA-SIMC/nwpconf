@@ -55,7 +55,7 @@ simc_wait_logevent() {
 	if [ "$n" -ge 1 ]; then
 	    return 0
 	fi
-	sleep $PUTARKI_WAITSTART
+	sleep $GETARKI_WAITSTART
     done
 # password in ~/.pgpass
 }
