@@ -234,7 +234,7 @@ EOF
 #	        url="check/$1/$pgdate $pgtime/$3"
 		url="check/$1/$2/$3"
 	    fi
-	    curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url"
+	    curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url" || echo 0
 	    ;;
     esac    
 }
@@ -250,6 +250,8 @@ EOF
 
 import_signal_wait() {
     local count mincount
+    local initialtime=`date -u +%s`
+
     if [ -n "$4" ]; then
 	mincount=$4
     else
@@ -260,6 +262,12 @@ import_signal_wait() {
 	count=`import_signal_check "$1" "$2" "$3"`
 	if [ "$count" -ge "$mincount" ]; then
 	    return 0
+	fi
+	if [ -n "$GETARKI_WAITTOTAL" ]; then
+	    if [ $((`date -u +%s` - $initialtime)) -gt "$GETARKI_WAITTOTAL" ]; then
+		echo "Timeout reached, exiting"
+		return 1
+	    fi
 	fi
 	sleep $GETARKI_WAITSTART
     done

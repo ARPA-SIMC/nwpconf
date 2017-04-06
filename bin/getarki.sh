@@ -90,8 +90,20 @@ getarki_icbc() {
 
 	reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
 
-	arki-query --data -o `inputmodel_name $h` \
-	    "reftime:=$reftime;$timerange;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
+	ntry=2
+	ofile=`inputmodel_name $h`
+	while [ "$ntry" -gt 0 ]; do
+	    arki-query --data -o $ofile \
+		"reftime:=$reftime;$timerange;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
+# if file is empty retry, otherwise exit
+	    if [ -s "$ofile" ]; then
+		break
+	    fi
+	    echo "retrying arki-query"
+	    sleep 10
+	    ntry=$(($ntry - 1))
+	done
+	
 	if [ "$h" -eq "0" ]; then
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana

@@ -104,7 +104,7 @@ putarki_archive() {
 # method, in order to be sure that the file has been completely
 # imported, archive_and_wait_grib1 function has to be used instead
             cd $ARKI_IMPDIR
-            dest=`mktemp .XXXXXXXX.$tf`
+            dest=`mktemp .XXXXXXXX.$DATE$TIME.$tf`
             cd - 1>/dev/null
             ddest=${dest#.}
 # try with a hard link, avoiding copy
@@ -114,9 +114,9 @@ putarki_archive() {
             echo $ARKI_IMPDIR/$ddest;;
         remote_arki_importer)
 	    dest=${file##*/}
-	    scp $file $ARKI_IMPSSH:$ARKI_IMPDIR/.$dest.$$.$tf
-	    ssh $ARKI_IMPSSH mv -f $ARKI_IMPDIR/.$dest.$$.$tf $ARKI_IMPDIR/$dest.$$.$tf
-            echo $ARKI_IMPDIR/$dest.$$.$tf;;
+	    scp $file $ARKI_IMPSSH:$ARKI_IMPDIR/.$dest.$$.$DATE$TIME.$tf
+	    ssh $ARKI_IMPSSH mv -f $ARKI_IMPDIR/.$dest.$$.$DATE$TIME.$tf $ARKI_IMPDIR/$dest.$$.$DATE$TIME.$tf
+            echo $ARKI_IMPDIR/$dest.$$.$DATE$TIME.$tf;;
         arki-scan)
 # do a simple, local, file-based arki-scan, the user must deal with
 # concurrency problems; synchronous method
