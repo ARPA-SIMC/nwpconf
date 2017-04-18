@@ -53,75 +53,14 @@ arki_dailycleanup() {
 		s2=$(($confage + 8))
 	    fi
 	fi
-#    arki_dev=`stat -c %D $ARKI_DIR`
 	for back in `seq $s1 $s2`; do
             yy=`date -u --date "$back days ago" "+%Y"`
             mm=`date -u --date "$back days ago" "+%m"`
             dd=`date -u --date "$back days ago" "+%d"`
-
-	    rm -f $ds/$yy/$mm-$dd.grib* $ds/$yy/$mm-$dd.bufr
-#            if [ "`stat -c %D $file 2>/dev/null`" = "$arki_dev" ]; then
+# remove data and indices
+	    rm -f $ds/$yy/$mm-$dd.*
 	done
     done
-    arki-check --fix --config=$1 # --repack
-}
-
-# @fn arki_dailyarchivecleanup
-# @brief Perform the daily cleanup of a set of arkimet datasets.
-# @details This function takes as an argument a collection of arkimet
-# datasets (generated with the `arki-mergeconf` command) and performs
-# the daily deletion of old data. If the two additional parameters
-# `$2` and `$3` are provided, they are applied to every dataset of the
-# config file; if the parameters are not provided, the deletion time
-# is taken from the `delete age` parameter of each dataset, thus
-# datasets without that parameter are not touched.
-# @param $1 config file name
-# @param $2 archiving base directory
-arki_dailyarchivecleanup() {
-    local dslist
-    dslist=`arki_getdskey $1 path`
-    for ds in $dslist; do
-	apath=$2/`basename $ds`
-	confage=`arki_getdskey $ds/config 'delete age'`
-	confaage=`arki_getdskey $ds/config 'archive age'`
-	s1=0
-	s2=-1
-	if [ -n "$confage" ]; then
-	    s1=$confage
-	    s2=$(($confage + 8))
-	fi
-	s0=$s1
-	if [ -n "$confaage" ]; then
-	    s0=$confaage
-	fi
-	for back in `seq $s0 $(($s1 - 1))`; do
-            yy=`date -u --date "$back days ago" "+%Y"`
-            mm=`date -u --date "$back days ago" "+%m"`
-            dd=`date -u --date "$back days ago" "+%d"`
-	    mkdir -p $apath/$yy
-	    for file in $ds/$yy/$mm-$dd.grib* $ds/$yy/$mm-$dd.bufr; do
-		if [ -f "$file" -a ! -L "$file" ]; then
-		    f=`basename $file`
-		    mv $file $apath/$yy/$f
-		    ln -s $apath/$yy/$f $file # $ds must be absolute path
-		fi
-	    done
-	done
-	for back in `seq $s1 $s2`; do
-            yy=`date -u --date "$back days ago" "+%Y"`
-            mm=`date -u --date "$back days ago" "+%m"`
-            dd=`date -u --date "$back days ago" "+%d"`
-
-	    for file in $ds/$yy/$mm-$dd.grib* $ds/$yy/$mm-$dd.bufr; do
-		if [ -L "$file" ]; then
-		    rm -f `readlink $file` $file
-		elif [ -f "$file" ]; then # non-broken symlink satisfies -f too
-		    rm -f $file
-		fi
-	    done
-	done
-    done
-#    arki-check --fix --config=$1 # --repack
 }
 
 
