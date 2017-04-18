@@ -45,7 +45,7 @@ arkilocal_setup() {
     ARKI_SCAN_METHOD=arki-scan
     ARKI_CONF=$ARKI_DIR/config
 
-    for typ in ASSIM FCAST INTER RADAR; do
+    for typ in ASSIM FCAST FCRUC INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`
 	if [ -n "$gp" ]; then
 	    eval export ARKI_DS_$typ=$ARKI_DIR/$typ
