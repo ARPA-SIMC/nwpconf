@@ -13,11 +13,20 @@ import_signal_check_cineca()
 }
 
 
+import_signal_wait_cineca() {
+    nwpwait_setup
+
+    while true; do
+	import_signal_check_cineca "$1" && return 0 || true
+	nwpwait_wait || return 1
+    done
+}
+
+
 getarki_icbc_cineca() {
 
     local h hinput timerange ana d2h t2h
 
-    import_signal_check_cineca $DATES_SLICE$TIMES_SLICE || return 1
     weekday=`date -u --date $DATES_SLICE +%A`
     origdir=$CINECA_ARCHIVE_PRE/$TIMES_SLICE/$weekday/$PARENTMODEL_ARKI_DS
 

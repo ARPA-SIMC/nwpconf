@@ -189,26 +189,20 @@ EOF
 
 import_signal_wait() {
     local count mincount
-    local initialtime=`date -u +%s`
+    nwpwait_setup
 
     if [ -n "$4" ]; then
 	mincount=$4
     else
 	mincount=1	
     fi
-# wait forever, improve?
+
     while true; do
 	count=`import_signal_check "$1" "$2" "$3"`
 	if [ "$count" -ge "$mincount" ]; then
 	    return 0
 	fi
-	if [ -n "$GETARKI_WAITTOTAL" ]; then
-	    if [ $((`date -u +%s` - $initialtime)) -gt "$GETARKI_WAITTOTAL" ]; then
-		echo "Timeout reached, exiting"
-		return 1
-	    fi
-	fi
-	sleep $GETARKI_WAITSTART
+	nwpwait_wait || return 1
     done
 }
 
@@ -219,8 +213,8 @@ pgsql_command() {
 
 
 # start exporting all assignments
-set -a
+#set -a
 # checks
 check_dep arki_tools
 # stop exporting all assignments
-set +a
+#set +a

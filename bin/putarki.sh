@@ -191,8 +191,6 @@ putarki_wait_for_deletion() {
 putarki_model_output() {
 
 # initialisations
-    local sleepint=$PUTARKI_WAITSTART
-    local initialtime=`date -u +%s`
     local workdir=$PWD
     local nrfiles=$1
     local wait=
@@ -201,6 +199,13 @@ putarki_model_output() {
     declare -a waitlist
     declare -A statuslist
     statuslist=()
+    if [ "$ARKI_USE_INOTIFY" = Y ]; then
+	NWPWAITWAIT=
+    else
+	NWPWAITWAIT=$PUTARKI_WAITSTART
+    fi
+    NWPWAITSOLAR=
+    nwpwait_setup
 
     while true; do
 # this is done here in case the directory is removed and recreated
@@ -227,7 +232,6 @@ putarki_model_output() {
 	shopt -u nullglob
 
 	if [ -n "$found" ]; then # something new has been found
-	    sleepint=$PUTARKI_WAITSTART
 	    if [ ${#waitlist[*]} -gt 0 -a -n "$wait" ]; then
 		putarki_wait_for_deletion ${waitlist[*]}
 	    fi
@@ -237,22 +241,11 @@ putarki_model_output() {
 	    if [ ${#statuslist[*]} -eq $nrfiles ]; then 
 		return
 	    fi
-# end of time
-# disable if running under a scheduler?
-	    if [ -n "$PUTARKI_WAITTOTAL" ]; then
-		if [ $((`date -u +%s` - $initialtime)) -gt "$PUTARKI_WAITTOTAL" ]; then
-		    echo "Timeout reached, exiting"
-		    exit 1
-		fi
-	    fi
+# check end of time and wait if necessary (i.e. if not using inotify)
+	    nwpwait_wait
 # wait for some event
 	    if [ "$ARKI_USE_INOTIFY" = Y ]; then
 		inotifywait --timeout $PUTARKI_WAITSTART --event close --exclude '^\.\/l.*' ./ || true
-	    else
-		sleep $sleepint
-		if [ "$sleepint" -lt "$PUTARKI_WAITMAX" ]; then
-		    sleepint=$(($sleepint * 2))
-		fi
 	    fi
 	fi
     done
