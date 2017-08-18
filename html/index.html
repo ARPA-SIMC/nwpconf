@@ -41,10 +41,13 @@
 <div class="contents">
 <div class="textblock"><p>NWPconf is a library of bash shell functions that simplify the task of running Numerical Weather Prediction or &ndash;more generally&ndash; Environmental models on a regular daily basis, taking into account the basic operations related to date/time computations, defining test configurations, creating configuration files from templates, preparing input data and managing parallel processes.</p>
 <p>The library consists of a main bash shell module, <em><a class="el" href="nwpconf_8sh.html" title="Main entry point for the NWPconf bash library. ">nwpconf.sh</a></em>, and a set of optional modules. These modules can be used within a regular shell script in bash shell as well as within a batch job submitted to a scheduling system, provided that the shell chosen for the batch job is bash.</p>
-<p>In order to use the library, the user shell script must export some valuable environmental variables (see the documentation of each module for the correspoding variables and explanation), and <em>source</em> the desired module files, in the following way: </p>
-<pre class="fragment"># Export main variables (customize)
+<p>In order to use the library, the user shell script must export some valuable environmental variables (see the documentation of each module for the corresponding variables and explanation), and <em>source</em> the desired module files, in the following way: </p>
+<pre class="fragment"># Export main variables:
+# path to the root of the configuration tree
 export NWPCONFDIR=$HOME/conf
+# path to the installed nwpconf scripts
 export NWPCONFBINDIR=$HOME/nwpconf/bin
+# configuration to be adopted in the current script
 export NWPCONF=production/dailymodelrun/forecast
 # source the main library file
 . $NWPCONFBINDIR/nwpconf.sh
@@ -55,7 +58,8 @@ export NWPCONF=production/dailymodelrun/forecast
 </pre><p>so that the execution will stop in case of serious errors.</p>
 <p>The examples/conf/ directory in the source tree contains a sample configuration tree, run the <code>testenv.sh</code> script from within the examples/ directory to try it.</p>
 <p>All the modules have been written for and tested with the bash shell; most of the functions may work also with the traditional ksh shell, but some will for sure fail due to the use of some bash-specific constructs.</p>
-<p>The documentation can be built with the help of <a href="http://www.stack.nl/~dimitri/doxygen/index.html">Doxygen</a> and the additional <code>doxygen-bash.sed</code> script for extracting documentation from shell scripts, available from the <a href="https://github.com/Anvil/bash-doxygen">bash-doxygen project</a>. </p>
+<p>The documentation is available <a href="http://arpa-simc.github.io/nwpconf/">online</a>, it can be built with the help of <a href="http://www.stack.nl/~dimitri/doxygen/index.html">Doxygen</a> and the additional <code>doxygen-bash.sed</code> script for extracting documentation from shell scripts, available from the <a href="https://github.com/Anvil/bash-doxygen">bash-doxygen project</a>.</p>
+<p>Nwpconf was inspired by Enrico Zini's <a href="http://slideplayer.it/slide/11178755/">cfget</a> package. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

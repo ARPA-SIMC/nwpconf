@@ -57,23 +57,23 @@
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a857e788a855b08f978021fd6e74cfc1f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="arkilocal_8sh.html#a857e788a855b08f978021fd6e74cfc1f">arkilocal_init</a> ()</td></tr>
-<tr class="memdesc:a857e788a855b08f978021fd6e74cfc1f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialise the environment for using a local file-based arkimet dataset.  <a href="#a857e788a855b08f978021fd6e74cfc1f">More...</a><br/></td></tr>
-<tr class="separator:a857e788a855b08f978021fd6e74cfc1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a183c028a2c1e093f8f3ba8af2e9838f8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="arkilocal_8sh.html#a183c028a2c1e093f8f3ba8af2e9838f8">arkilocal_setup</a> ()</td></tr>
+<tr class="memdesc:a183c028a2c1e093f8f3ba8af2e9838f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialise the environment for using a local file-based arkimet dataset.  <a href="#a183c028a2c1e093f8f3ba8af2e9838f8">More...</a><br/></td></tr>
+<tr class="separator:a183c028a2c1e093f8f3ba8af2e9838f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7e5b88f1af7d862071001c1c80b6c12c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="arkilocal_8sh.html#a7e5b88f1af7d862071001c1c80b6c12c">arkilocal_create</a> ($1)</td></tr>
 <tr class="memdesc:a7e5b88f1af7d862071001c1c80b6c12c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a local file-based arkimet dataset.  <a href="#a7e5b88f1af7d862071001c1c80b6c12c">More...</a><br/></td></tr>
 <tr class="separator:a7e5b88f1af7d862071001c1c80b6c12c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>module with functions for working with a local file-based arkimet archive. </p>
-<p>This module provides functions for managing a local, file-based and serverless arkimet archive. The archive will have lower performances and flexibility than a real arkimet archive based on an arkimet server, but all the archiving and retrieving procedures can work almost transparently. It is useful mainly for using the functions designed for continuous assimilation defined in the <a class="el" href="arkiana_8sh.html" title="Module with functions for processing analysis fields in a continuous assimilation cycle...">arkiana.sh</a> module. The environment variable <code>$ARKI_URL</code> must be exported before sourcing the module, it indicates the root directory of the archive, moreover at least one of the <code>$MODEL_ASSIM_GP</code>, <code>$MODEL_FCAST_GP</code>, <code>$MODEL_INTER_GP</code>, <code>$MODEL_RADAR_GP</code> variables indicating the generating processes of assimilation, forecast and interpolated from parent model grib files should be set. </p>
+<p>This module provides functions for managing a local, file-based and serverless arkimet archive. The archive will have lower performances and flexibility than a real arkimet archive based on an arkimet server, but all the archiving and retrieving procedures can work almost transparently. It is useful mainly for using the functions designed for continuous assimilation defined in the <a class="el" href="arkiana_8sh.html" title="Module with functions for processing analysis fields in a continuous assimilation cycle...">arkiana.sh</a> module. The environment variable <code>$ARKI_DIR</code> must be exported before sourcing the module, it indicates the root directory of the archive, moreover at least one of the <code>$MODEL_ASSIM_GP</code>, <code>$MODEL_FCAST_GP</code>, <code>$MODEL_INTER_GP</code>, <code>$MODEL_RADAR_GP</code> variables indicating the generating processes of assimilation, forecast and interpolated from parent model grib files should be set. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a857e788a855b08f978021fd6e74cfc1f"></a>
+<a class="anchor" id="a183c028a2c1e093f8f3ba8af2e9838f8"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">arkilocal_init </td>
+          <td class="memname">arkilocal_setup </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -103,10 +103,10 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Creates a local file-based arkimet dataset. </p>
-<p>This function creates the directory tree and the basic configuration files required for working with a local file-based and serverless arkimet archive rooted in the directory specified by <code>$ARKI_URL</code> (which must contain only a local path specification). It creates the datasets <code>&lt;TYPE&gt;</code> based on the settings of the variables <code>$MODEL_&lt;TYPE&gt;_GP</code> inserting a filter with the proper generating process in each configuration. It creates also the error dataset, required by arkimet, and merges all the config files into a single configuration file. It also sets the variable <code>$ARKI_SCAN_METHOD</code> to <code>arki-scan</code> and <code>$ARKI_CONF</code> to the required value (see putarki.sh::putarki_archive() ) and exports the <code>$ARKI_DS_&lt;TYPE&gt;</code> variables pointing to the proper dataset. </p>
+<p>This function creates the directory tree and the basic configuration files required for working with a local file-based and serverless arkimet archive rooted in the directory specified by <code>$ARKI_DIR</code> (which must contain only a local path specification). It creates the datasets <code>&lt;TYPE&gt;</code> based on the settings of the variables <code>$MODEL_&lt;TYPE&gt;_GP</code> inserting a filter with the proper generating process in each configuration. It creates also the error dataset, required by arkimet, and merges all the config files into a single configuration file. It also sets the variable <code>$ARKI_SCAN_METHOD</code> to <code>arki-scan</code> and <code>$ARKI_CONF</code> to the required value (see putarki.sh::putarki_archive() ) and exports the <code>$ARKI_DS_&lt;TYPE&gt;</code> variables pointing to the proper dataset. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">$1</td><td>-c for cleaning the contents of a previous dataset (erases <code>$ARKI_URL</code> directory!) </td></tr>
+    <tr><td class="paramname">$1</td><td>-c for cleaning the contents of a previous dataset (erases <code>$ARKI_DIR</code> directory!) </td></tr>
   </table>
   </dd>
 </dl>
