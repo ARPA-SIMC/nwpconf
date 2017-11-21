@@ -80,6 +80,9 @@ parcomp_computetopo() {
     elif [ "$1" -ge 144 ]; then
 	NPX=8
 	NPY=18
+    elif [ "$1" -ge 136 ]; then
+	NPX=8
+	NPY=17
     elif [ "$1" -ge 128 ]; then
 	NPX=8
 	NPY=16
@@ -92,6 +95,9 @@ parcomp_computetopo() {
     elif [ "$1" -ge 72 ]; then
 	NPX=4
 	NPY=18
+    elif [ "$1" -ge 68 ]; then
+	NPX=4
+	NPY=17
     elif [ "$1" -ge 64 ]; then
 	NPX=4
 	NPY=16
