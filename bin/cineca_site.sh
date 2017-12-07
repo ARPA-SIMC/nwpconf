@@ -1,5 +1,6 @@
 cineca_site_init() {
-    CINECA_ARCHIVE_PRE=/gpfs/meteo/lm/galileo/auto/archive/PROD
+#    CINECA_ARCHIVE_PRE=/gpfs/meteo/lm/galileo/auto/archive/PROD
+    CINECA_ARCHIVE_PRE=/marconi_meteo/lm/marconi/auto/archive/PROD
 }
 
 
