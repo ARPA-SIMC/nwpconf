@@ -1,8 +1,3 @@
-cineca_site_init() {
-#    CINECA_ARCHIVE_PRE=/gpfs/meteo/lm/galileo/auto/archive/PROD
-    CINECA_ARCHIVE_PRE=/marconi_meteo/lm/marconi/auto/archive/PROD
-}
-
 
 import_signal_check_cineca()
 {
@@ -52,6 +47,5 @@ getarki_icbc_cineca() {
 set -a
 check_dep cineca_site cosmo_model
 # init module
-cineca_site_init
 # stop exporting all assignments
 set +a
