@@ -89,7 +89,7 @@ simc_send_logevent() {
 # @param $1 previous end date and time (`+%Y%m%d%H%M`, UTC)
 # @param $2 end date and time (`+%Y%m%d%H%M`, UTC)
 simc_create_radar_grib() {
-    local model_template defaultdate fromdate todate succdate ncmosaico gribmosaico waitfor
+    local model_template fromdate todate succdate ncmosaico gribmosaico waitfor
 
     succdate=
     waitfor=
@@ -139,8 +139,90 @@ simc_create_radar_grib() {
 	fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
     done
 # wait once for all to avoid useless pauses
-    [ -n "$waitfor" ] && putarki_wait_for_deletion $waitfor
+    [ -n "$waitfor" ] && putarki_wait_for_deletion $waitfor || true
 # output last processed date
     echo $succdate
+}
+
+
+# Important environment variables:
+# RADAR_MOSAICODIR=$HOME/prelhn/Composito
+# RADAR_MOSAICOCONF=$RADAR_MOSAICODIR/configurazioni/DPC.CONF
+# stdout and error handling must be improved
+# 
+# @param $1 previous end date and time (`+%Y%m%d%H%M`, UTC)
+# @param $2 end date and time (`+%Y%m%d%H%M`, UTC)
+simc_create_radar_nc() {
+    local fromdate todate succdate ncmosaico
+
+    succdate=
+    fromdate=$1
+    todate=$2
+# increment date
+    fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
+# loop over radar-precipitation-rate time levels
+    while [ "$fromdate" -le "$todate" ]; do
+# compute filenames for current date
+	ncmosaico=COMP_$fromdate.nc
+	rm -f $ncmosaico
+	
+# create mosaico in netcdf format ($ncmosaico) from SIMC archives
+	$RADAR_MOSAICODIR/Mosaico.sh $RADAR_MOSAICODIR/mosaico.config -dn $fromdate -C $RADAR_MOSAICOCONF>/dev/null 2>&1
+
+	if [ -f $ncmosaico ]; then 
+# store successful date
+            succdate=$fromdate
+	fi
+
+# increment date
+	fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
+    done
+# output last processed date
+    echo $succdate
+}
+
+# Important environment variables:
+# RADAR_LHNDIR=$HOME/prelhn/bufr2grib-RUC
+# stdout and error handling must be improved
+simc_convert_radar_grib() {
+    local model_template gribmosaico waitfor
+
+    waitfor=
+# get grib template on the model grid
+    model_template=`conf_getfile model_radar_template.grib`
+    if [ -z "$model_template" ]; then
+	echo "Error: grib template model_radar_template.grib for radar precipitation gridding not found in configuration directories" >&2
+	return 1
+    fi
+
+    for nc in ../mosaico/COMP_????????????.nc; do
+	if [ -f "$nc" ]; then
+	    date=${nc%.nc}
+	    date=${date#*/COMP_}
+	    $RADAR_LHNDIR/netcdf2grib1_SIMC $nc $model_template
+	    gribmosaico=radar_SRI_$date.grib1
+
+	    if [ -f "$gribmosaico" ]; then
+		if [ -n "$RADAR_LHN_GP" ]; then
+		    grib_set -s generatingProcessIdentifier=$RADAR_LHN_GP \
+			     $gribmosaico $gribmosaico.gp>/dev/null
+		    mv -f $gribmosaico.gp $gribmosaico
+		fi
+# archive and remember for final waiting
+		if [ -n "$ARKI_SCAN_METHOD" ]; then
+		    waitfor="$waitfor `putarki_archive grib $gribmosaico`"
+		    rm -f $gribmosaico
+		fi
+	    fi
+	fi
+    done
+# wait once for all to avoid useless pauses
+# disabled at the moment, improve    
+#    [ -n "$waitfor" ] && putarki_wait_for_deletion $waitfor || true
+
+}
+
+simc_clean_radar_nc() {
+    rm -f ../mosaico/COMP_????????????.nc
 }
 
