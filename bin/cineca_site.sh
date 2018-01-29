@@ -33,12 +33,12 @@ import_signal_wait_cineca() {
 
     count=0
     while true; do
-	count=$(($count + 1))
 	import_signal_check_cineca "$1" && return 0 || true
 	if [ $(($count%2)) = 0 ]; then
 	    import_signal_check_cineca_remote "$1" && return 0 || true
 	fi
 	nwpwait_wait || return 1
+	count=$(($count + 1))
     done
 }
 
