@@ -85,7 +85,7 @@ arkilocal_create() {
 # create error dataset, required
     __arkilocal_create_error_ds $ARKI_DIR/error
 # merge all confs
-    arki-mergeconf $ARKI_DIR/* > $ARKI_CONF 2>/dev/null
+    arki-mergeconf $ARKI_DIR/*/ > $ARKI_CONF 2>/dev/null
 }
 
 __arkilocal_create_ds() {
