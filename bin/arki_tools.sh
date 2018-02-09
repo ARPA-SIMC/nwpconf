@@ -174,7 +174,7 @@ EOF
 	    curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url" || echo 0
 	    ;;
 	simc)
- 	    if [ "$3" = "*" -o -z "$3" ]; then
+	    if [ "$3" = "*" -o -z "$3" ]; then
 		simc_check_logevent "$1" "$pgdate$pgtime"
 	    else
 		simc_check_logevent "$1" "$pgdate$pgtime" "$3"
