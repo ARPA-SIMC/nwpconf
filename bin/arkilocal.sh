@@ -94,6 +94,7 @@ __arkilocal_create_ds() {
     mkdir -p $1
     cat > $1/config <<EOF
 type = iseg
+format = grib
 name = $2
 replace = yes
 step = daily
