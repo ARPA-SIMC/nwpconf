@@ -121,10 +121,8 @@ EOF
 	    ;;
 	curl)
  	    if [ "$3" = "*" ]; then
-#	        url="imported/$1/$pgdate $pgtime"
 		url="imported/$1/$2"
 	    else
-#	        url="imported/$1/$pgdate $pgtime/$3"
 		url="imported/$1/$2/$3"
 	    fi
 	    curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url"
@@ -174,6 +172,13 @@ EOF
 		url="check/$1/$2/$3"
 	    fi
 	    curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url" || echo 0
+	    ;;
+	simc)
+ 	    if [ "$3" = "*" -o -z "$3" ]; then
+		simc_check_logevent "$1" "$pgdate$pgtime"
+	    else
+		simc_check_logevent "$1" "$pgdate$pgtime" "$3"
+	    fi
 	    ;;
     esac    
 }

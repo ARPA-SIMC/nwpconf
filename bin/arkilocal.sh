@@ -78,8 +78,9 @@ arkilocal_create() {
 # create typical model datasets
     for typ in ASSIM FCAST INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`
+	filt=`eval echo '$'MODEL_ARKI_TIMERANGE_${typ}`
 	if [ -n "$gp" ]; then
-	    __arkilocal_create_ds $ARKI_DIR/$typ $typ $gp
+	    __arkilocal_create_ds $ARKI_DIR/$typ $typ $gp "$filt"
 	fi
     done
 # create error dataset, required
@@ -92,11 +93,11 @@ __arkilocal_create_ds() {
 
     mkdir -p $1
     cat > $1/config <<EOF
-type = ondisk2
+type = iseg
 name = $2
 replace = yes
 step = daily
-filter = origin:GRIB1,,,$3;
+filter = origin:GRIB1,,,$3;$4
 index = reftime, timerange, product, level, proddef
 unique = reftime, timerange, product, level, area, proddef
 EOF

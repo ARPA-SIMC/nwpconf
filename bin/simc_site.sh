@@ -14,6 +14,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+# Check for an event in the SIMC logging system.
+# Returns true (0) if the event is present in the logging system.
+# @param $1 name of event
+# @param $1 nominal date and time of event (`+%Y%m%d%H%M`, UTC),
+# @param $1 specific message to wait for within an event (if empty end of event will match)
+simc_check_logevent() {
+
+    res=`curl -s --fail \
+            "http://log.metarpa/simclog2/api/v1/checkmodel/$1/$2/?message_pattern=$3" || true`
+    if [ "$res" = '{"found":true}' ]; then
+	echo 1
+    else
+	echo 0
+    fi
+}
+
 # Wait for the logsim event concerning availability of observations in
 # bufr format in the arkimet archive.
 # @param $1 name of the logsim event to wait for (typically "CNMCA;BUFRLM" or "CNMCA;BUFRUC")
@@ -26,12 +42,12 @@ simc_wait_obs() {
     if [ "$1" = "CNMCA;BUFRLM" ]; then
 	d=`date_add $DATE $TIME 3`
 	t=`time_add $DATE $TIME 3`
-	ds=`getarki_datetime $d $t`
+	ds=$d$t
     else
-	ds=`getarki_datetime $DATE $TIME`
+	ds=$DATE$TIME
     fi
 
-    simc_wait_logevent "" "$ds" $1
+    simc_wait_logevent "" "${ds}00" $1
 
 }
 
@@ -39,25 +55,19 @@ simc_wait_obs() {
 
 # Wait for an event in the SIMC logging system.
 # @param $1 specific message to wait for within an event (if empty any message will match)
-# @param $1 nominal date and time of event (`+%Y-%m-%d %H:%M`, UTC), 
+# @param $1 nominal date and time of event (`+%Y%m%d%H%M`, UTC), 
 # @param $3 name of event
 simc_wait_logevent() {
 
     while true; do
-# \\pset format unaligned \\\\
-	if [ -n "$1" ]; then
-	    n=`echo "SELECT count(*) FROM imports i, entities e WHERE i.entity_id = e.id AND message = '$1' AND reftime = timestamp with time zone '$2:00+00' AND name = '$3';" \
-		| psql -h log.metarpa -d simclogdb -U simclog -A -F ',' -n -q -t`
-	else
-	    n=`echo "SELECT count(*) FROM imports i, entities e WHERE i.entity_id = e.id AND reftime = timestamp with time zone '$2:00+00' AND name = '$3';" \
-		| psql -h log.metarpa -d simclogdb -U simclog -A -F ',' -n -q -t`
-	fi
-	if [ "$n" -ge 1 ]; then
-	    return 0
-	fi
+        res=`curl -s --fail \
+            "http://log.metarpa/simclog2/api/v1/checkmodel/$3/$2/?message_pattern=$1" || true`
+        if [ "$res" = '{"found":true}' ]; then
+            return 0
+        fi
+
 	sleep $GETARKI_WAITSTART
     done
-# password in ~/.pgpass
 }
 
 
