@@ -97,7 +97,7 @@ type = iseg
 name = $2
 replace = yes
 step = daily
-filter = origin:GRIB1,,,$3;$4
+filter = origin:GRIB1,,,$3
 index = reftime, timerange, product, level, proddef
 unique = reftime, timerange, product, level, area, proddef
 EOF
