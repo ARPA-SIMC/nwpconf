@@ -76,15 +76,12 @@ getarki_obsbufr() {
 ## of the variable `$MODEL_ARKI_PARAM`, terminated by `;`,
 ## e.g. `MODEL_ARKI_PARAM="proddef:GRIB:nn=$ENS_MEMB;"` for selecting
 ## a specific ensemble member as input.
-
-
 getarki_icbc() {
     local h hinput timerange ana d2h t2h
 
     for h in `seq $MODEL_START_SLICE $MODEL_FREQ_SLICE $MODEL_STOP_SLICE`; do
 	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h
 
-#	if [ "$MODEL_BCANA" = "Y" ]; then # no more necessary
 	hinput=$(($h+$MODEL_DELTABD_SLICE))
 	timerange="timerange:Timedef,${hinput}h,254"
 
@@ -113,6 +110,48 @@ getarki_icbc() {
     done
 
 }
+
+
+## @fn getarki_icbc()
+## @brief Retrieve gridded static data from arkimet archive.
+## @details This function retrieves gridded fields, tipically in GRIB
+## format, to be used as static (constant) data, possibly through an
+## interpolation process, from the arkimet dataset(s) specified in the
+## configuration variable `$PARENTMODEL_ARKI_DS`. It should be called
+## after having loaded the module nwptime.sh for setting up the
+## time-related environment variables after having initialised the
+## time loop over input data, such as:
+##
+##     nwpbctimeloop_init
+##     getarki_static
+##
+## Additional query keys for the arki-query can be specified by means
+## of the variable `$MODEL_ARKI_PARAM`, terminated by `;`,
+## e.g. `MODEL_ARKI_PARAM="proddef:GRIB:nn=$ENS_MEMB;"` for selecting
+## a specific ensemble member as input.
+##
+## @param $1 name of the output grib file
+getarki_static() {
+    local h hinput timerange ana d2h t2h
+
+    h=$MODEL_START_SLICE
+    timerange="timerange:Timedef,0h,254"
+    reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
+    ntry=2
+    ofile=$1
+    while [ "$ntry" -gt 0 ]; do
+	arki-query --data -o $ofile \
+	  "reftime:=$reftime;$timerange;$MODEL_ARKI_PARENT_STATIC;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
+# if file is empty retry, otherwise exit
+	if [ -s "$ofile" ]; then
+	    break
+	fi
+	echo "retrying arki-query"
+	sleep 10
+	ntry=$(($ntry - 1))
+    done
+}
+
 
 # The date and time as requested by reftime arki-query key
 getarki_datetime() {

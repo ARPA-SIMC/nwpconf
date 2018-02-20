@@ -96,6 +96,12 @@ $MODEL_LAKE_PRODUCT"
     MODEL_ARKI_LSM="level:GRIB1,1; product:GRIB1,,2,81"
     MODEL_ARKI_BBC="level:GRIB1,111,1458"
 
+# for retrieving parent model static data
+    MODEL_ARKI_PARENT_STATIC="
+level:GRIB1,1;
+product:GRIB1,,202,57 or GRIB1,,2,81 or GRIB1,,2,6"
+# SOILTYP,FR_LAND,FIS
+
 # for retrieving data from MARS (predefined area, open ERA-interim dataset)
 # base request (must not start with retrieve)
     MODEL_MARS_BASE=" dataset = interim,
