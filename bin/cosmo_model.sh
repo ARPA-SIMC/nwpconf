@@ -222,6 +222,30 @@ model_readyfiletoname() {
 }
 
 
+## @fn model_readyfiletosignal()
+## @brief Output a signal name corresponding to a ready-file.
+## @details This function takes the name of a ready-file and prints to
+## stdout a name to be used for signalling the advance of analysis or forecast.
+## @param $1 name of the ready-file
+model_readyfiletosignal() {
+
+    local signalname
+
+    if [ "$MODEL_BACK" -gt 0 ]; then # assimilation run
+	signalname=${1#LMA_}
+	if [ "$signalname" != "$1" ]; then
+	    echo "$signalname"
+	fi
+#    else # forecast run
+#	signalname=${1#LMF_}
+#	if [ "$signalname" != "$1" ]; then
+#	    echo "$signalname"
+#	fi
+    fi
+
+}
+
+
 ## @fn cosmo_getarki_obsncdf()
 ## @brief Retrieve observation data for assimilation.
 ## @details This function retrieves from the arkimet dataset specified

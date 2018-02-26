@@ -100,7 +100,11 @@ getarki_icbc() {
 	    sleep 10
 	    ntry=$(($ntry - 1))
 	done
-	
+
+	if [ ! -s "$ofile" ]; then # file is empty or missing
+	    return 1
+	fi
+
 	if [ "$h" -eq "0" ]; then
 	    ana=`inputmodel_name a`
 	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
