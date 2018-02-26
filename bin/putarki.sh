@@ -197,6 +197,7 @@ putarki_model_output() {
     [ "$2" = "-w" ] && wait=Y
     local rfile
     declare -a waitlist
+    declare -a siglist
     declare -A statuslist
     statuslist=()
     if [ "$ARKI_USE_INOTIFY" = Y ]; then
@@ -211,6 +212,7 @@ putarki_model_output() {
 # this is done here in case the directory is removed and recreated
 	cd $workdir
 	waitlist=()
+	siglist=()
 	found=
 # loop on ready-files
 	shopt -s nullglob
@@ -224,6 +226,9 @@ putarki_model_output() {
 		done
 # update status for $rfile
 		statuslist[$rfile]="DONE"
+		if [ -n "$MODEL_SIGNAL" ]; then
+		    siglist[${#siglist[*]}]=`model_readyfiletosignal $rfile`
+		fi
 # if defined, increment progress meter
 		type meter_increment 2>/dev/null && meter_increment || true
 		found=Y
@@ -234,6 +239,13 @@ putarki_model_output() {
 	if [ -n "$found" ]; then # something new has been found
 	    if [ ${#waitlist[*]} -gt 0 -a -n "$wait" ]; then
 		putarki_wait_for_deletion ${waitlist[*]}
+	    fi
+	    if [ -n "$MODEL_SIGNAL" ]; then
+		for sig in ${siglist[*]}; do
+		    if [ -n "$sig" ]; then
+			import_signal_imported $MODEL_SIGNAL $sig
+		    fi
+		done
 	    fi
 	else # nothing new has been found
 # end of task condition
