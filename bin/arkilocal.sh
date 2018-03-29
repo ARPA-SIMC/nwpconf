@@ -92,6 +92,10 @@ arkilocal_create() {
 __arkilocal_create_ds() {
 
     mkdir -p $1
+    local delage=
+    if [ -n "$MODEL_SLOW_PAST_H" ]; then
+	delage="delete age = $(($MODEL_SLOW_PAST_H / 24))"
+    fi
     cat > $1/config <<EOF
 type = iseg
 format = grib
@@ -101,6 +105,7 @@ step = daily
 filter = origin:GRIB1,,,$3
 index = reftime, timerange, product, level, proddef
 unique = reftime, timerange, product, level, area, proddef
+$delage
 EOF
 
 }
