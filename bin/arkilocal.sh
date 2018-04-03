@@ -93,9 +93,9 @@ __arkilocal_create_ds() {
 
     mkdir -p $1
     local delage=
-    if [ -n "$MODEL_SLOW_PAST_H" ]; then
-	delage="delete age = $(($MODEL_SLOW_PAST_H / 24))"
-    fi
+#    if [ -n "$MODEL_SLOW_PAST_H" ]; then
+#	delage="delete age = $(($MODEL_SLOW_PAST_H / 24))"
+#    fi
     cat > $1/config <<EOF
 type = iseg
 format = grib
