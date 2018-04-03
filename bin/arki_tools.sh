@@ -33,7 +33,10 @@ arki_getdskey() {
 # `$2` and `$3` are provided, they are applied to every dataset of the
 # config file; if the parameters are not provided, the deletion time
 # is taken from the `delete age` parameter of each dataset, thus
-# datasets without that parameter are not touched.
+# datasets without that parameter are not touched in that
+# case. However in both cases, unlike arkimet's internal delete age
+# mechanism, the dates to be cleaned are computed relatively to the
+# suite date (`$DATE`) and not relatively to the current date.
 # @param $1 config file name
 # @param $2 days in the past for starting deletion (optional)
 # @param $3 days in the past for stopping deletion (optional)
@@ -54,9 +57,9 @@ arki_dailycleanup() {
 	    fi
 	fi
 	for back in `seq $s1 $s2`; do
-            yy=`date -u --date "$back days ago" "+%Y"`
-            mm=`date -u --date "$back days ago" "+%m"`
-            dd=`date -u --date "$back days ago" "+%d"`
+            yy=`date -u --date "$DATE $back days ago" "+%Y"`
+            mm=`date -u --date "$DATE $back days ago" "+%m"`
+            dd=`date -u --date "$DATE $back days ago" "+%d"`
 # remove data and indices
 	    rm -f $ds/$yy/$mm-$dd.*
 	done
