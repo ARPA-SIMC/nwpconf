@@ -121,6 +121,20 @@ EOF
 
 }
 
+
+## @fn arkilocal_drop_from_cache()
+## @brief Drops from disk cache the archived files.
+## @details This function drops from disk cache the files belonging to
+## the local arkimet archive, to avoid filling disk cache with
+## long-living files. The content is not touched.
+arkilocal_drop_from_cache() {
+
+    find $ARKI_DIR -name \*.grib -type f \
+	-exec dd of=\{\} oflag=nocache conv=notrunc,fdatasync count=0 \;
+
+}
+
+
 # start exporting all assignments
 set -a
 # checks
