@@ -151,7 +151,7 @@ arkiana_archive() {
 	    rm -f $anasurft
 	    vg6d_transform --trans-type=none --dup-mode=1 $tmp1 $anasurft
 	    # set generating process as if they came from assimilation
-	    grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP \
+	    grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP,timeRangeIndicator=13 \
 		$anasurft $anasurft.gp
 	    putarki_archive_and_wait grib $anasurft.gp
 	fi # else print warning?
@@ -164,7 +164,7 @@ arkiana_archive() {
 	    # set timerange indicator as for nudging?
 	    #    grib_set -s timeRangeIndicator=13 $parentbbc
 	    # set generating process as if they came from assimilation
-	    grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP \
+	    grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP,timeRangeIndicator=13 \
 		$parentbbc $parentbbc.gp
 	    putarki_archive_and_wait grib $parentbbc.gp
 	    rm -f $parentbbc $parentbbc.gp
