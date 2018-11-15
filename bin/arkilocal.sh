@@ -72,7 +72,7 @@ arkilocal_setup() {
 arkilocal_create() {
 
     if [ "$1" = "-c" ]; then
-	safe_rm_rf $ARKI_DIR
+	safe_rm_rf $ARKI_DIR/*
     fi
     mkdir -p $ARKI_DIR
 # create typical model datasets
@@ -98,6 +98,7 @@ __arkilocal_create_ds() {
 #    fi
     cat > $1/config <<EOF
 type = iseg
+locking = no
 format = grib
 name = $2
 replace = yes
@@ -115,6 +116,7 @@ __arkilocal_create_error_ds() {
     mkdir -p $1
     cat > $1/config <<EOF
 name = error
+locking = no
 step = daily
 type = error
 EOF
