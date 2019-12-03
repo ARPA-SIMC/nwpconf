@@ -6,4 +6,4 @@ pkgdata_DATA = confprofile
 
 # Execute make in subdirs
 #SUBDIRS = bin examples doc
-SUBDIRS = bin doc
+SUBDIRS = src bin doc
