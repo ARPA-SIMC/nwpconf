@@ -121,6 +121,11 @@ putarki_archive() {
 # do a simple, local, file-based arki-scan, the user must deal with
 # concurrency problems; synchronous method
             arki-scan --dispatch=$ARKI_CONF $tf:$file > /dev/null;;
+	external_importer)
+	    mkdir -p $ARKI_IMPDIR/$NWPCONF/$DATE$TIME
+# try with a hard link, avoiding copy
+            cp -f -l $file $ARKI_IMPDIR/$NWPCONF/$DATE$TIME || cp -f $file $ARKI_IMPDIR/$NWPCONF/$DATE$TIME
+	    ;;
     esac
     done
 }
@@ -140,6 +145,12 @@ putarki_archive() {
 ## deletion checking function.
 ## @param $* the files to be deleted
 putarki_wait_for_deletion() {
+
+    case "$ARKI_SCAN_METHOD" in
+        external_importer) # no wait by definition in this case
+	    return
+	    ;;
+    esac
 
     local waitlist=("$@")
     while true; do
