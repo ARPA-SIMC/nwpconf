@@ -61,7 +61,7 @@ void procfs_getmem(size_t *memtotal, size_t *memfree, size_t *memavailable) {
 
 void main(int argc, char **argv) {
   size_t memtotal, memfree, memavailable, memreq, tobefreed, margin=1024LL*1024LL*1024LL;
-  void *mpt[NPTRS];
+  char *mpt[NPTRS];
   int i, n, numanodes=2;
 
   if (argc < 2) usage(argv[0]);
@@ -70,12 +70,15 @@ void main(int argc, char **argv) {
 
   procfs_getmem(&memtotal, &memfree, &memavailable);
   if (memreq > memavailable) {
-    printf("memreq %zd > memavailable %zd\n", memreq, memavailable);
+    printf("memreq %zd > memavailable %zd, your application is likely to fail\n", memreq, memavailable);
     exit(2);
   }
 
   tobefreed = memtotal/numanodes*(numanodes-1) + memreq/numanodes;
-  if (tobefreed < memfree) exit(0);
+  if (tobefreed < memfree)  {
+    printf("no need to free memory\n");
+    exit(0);
+  }
   printf("memtotal: %zd, memfree: %zd, memavailable: %zd\n", memtotal, memfree, 
 	memavailable);
   tobefreed = tobefreed > memavailable-margin ? memavailable-margin : tobefreed;
@@ -83,17 +86,19 @@ void main(int argc, char **argv) {
   n = (int)((double)(tobefreed)*1024./(double)(MSIZE));
   n = n > NPTRS ? NPTRS : n;
 
-  printf("allocating %d buffers of %zd bytes\n=", n, (size_t)(MSIZE));
+  printf("allocating %d buffers of %zd bytes:\n|", n, (size_t)(MSIZE));
   for (i=0; i<n; i++) {
     if (mpt[i] = malloc(MSIZE)) memset(mpt[i], 47, MSIZE);
-    printf("*");fflush(stdout);
+    if ((i+1) % 10 == 0) {printf(":");fflush(stdout);}
+    else {printf(".");fflush(stdout);}
   }
-  printf("=\ndeallocating:\n=");
+  printf("|\ndeallocating:\n|");
     
   for (i=0; i<n; i++) {
     if (mpt[i]) free(mpt[i]);
-    printf("*");fflush(stdout);
+    if ((i+1) % 10 == 0) {printf(":");fflush(stdout);}
+    else {printf(".");fflush(stdout);}
   }
-  printf("=\n");
+  printf("|\n");
 
 }
