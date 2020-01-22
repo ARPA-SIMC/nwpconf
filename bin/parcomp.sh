@@ -62,7 +62,13 @@ parcomp_init() {
 ## environment variables.
 ## @param $1 the number of computational tasks requested
 parcomp_computetopo() {
-    if [ "$1" -ge 384 ]; then
+    if [ "$1" -ge 512 ]; then
+	NPX=16
+	NPY=32
+    elif [ "$1" -ge 416 ]; then
+	NPX=16
+	NPY=26
+    elif [ "$1" -ge 384 ]; then
 	NPX=16
 	NPY=24
     elif [ "$1" -ge 352 ]; then
