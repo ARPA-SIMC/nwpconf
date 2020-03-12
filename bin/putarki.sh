@@ -307,9 +307,10 @@ putarki_configured_setup() {
 ## @param $* list of data files to be uploaded for archiving
 putarki_configured_archive() {
 
-    [ -f "$ARKI_IMPDIR/configured/start.sh" ] || return 1
+    local dir=$ARKI_IMPDIR/configured/$1
+    [ -f "$dir/start.sh" ] || return 1
     shift
-    rsync -p "$@" $ARKI_IMPDIR/configured/start.sh
+    rsync -p "$@" $dir
 
 }
 
@@ -325,8 +326,9 @@ putarki_configured_archive() {
 
 putarki_configured_end() {
 
-    [ -f "$ARKI_IMPDIR/configured/start.sh" ] || return 1
-    touch $ARKI_IMPDIR/configured/end.sh
+    local dir=$ARKI_IMPDIR/configured/$1
+    [ -f "$dir/start.sh" ] || return 1
+    touch $dir/end.sh
 
 }
 
