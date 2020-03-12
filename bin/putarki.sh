@@ -276,6 +276,61 @@ putarki_model_output() {
 }
 
 
+## @fn putarki_configured_setup()
+## @brief Start a session of configured archiving.  @details This
+## function starts a session of configured archiving creating the
+## archiving directory (local or remote) below $ARKI_IMPDIR/configured
+## and populating it with the configuration file for the importer
+## `start.sh`. This method should replace the legacy putarki* methods
+## of this module.
+## @param $1 the (unique) name of the directory to be created relative to $ARKI_IMPDIR/configured
+## @param $* the parameters to be set in the configuration file in form `key=val`
+putarki_configured_setup() {
+
+    local dir=$ARKI_IMPDIR/configured/$1
+    shift
+    mkdir $dir || return 1
+    touch $dir/start.sh
+    for var in "$@"; do
+	echo $var >> $dir/start.sh
+    done
+}
+
+
+## @fn putarki_configured_archive()
+## @brief Archives one or more file in a configured archiving directory.
+## @details This function uploads the listed data files in the
+## specified configured directory for successive archiving.  The
+## directory must have been created with the putarki_configured_setup
+## function.
+## @param $1 the (unique) name of the upload directory as specified in putarki_configured_setup
+## @param $* list of data files to be uploaded for archiving
+putarki_configured_archive() {
+
+    [ -f "$ARKI_IMPDIR/configured/start.sh" ] || return 1
+    shift
+    rsync -p "$@" $ARKI_IMPDIR/configured/start.sh
+
+}
+
+
+## @fn putarki_configured_end()
+## @brief Closes a configured archiving session.
+## @details This function closes a configured archiving session by
+## uploding a conventiona `end.sh` file. After this operation no more
+## files can be added for archiving. The calling process does not need
+## to perform any other opration, the archiving daemon will take care
+## of archiving the files and signalling the completion if requested.
+## @param $1 the (unique) name of the upload directory as specified in putarki_configured_setup
+
+putarki_configured_end() {
+
+    [ -f "$ARKI_IMPDIR/configured/start.sh" ] || return 1
+    touch $ARKI_IMPDIR/configured/end.sh
+
+}
+
+
 # start exporting all assignments
 set -a
 check_dep putarki
