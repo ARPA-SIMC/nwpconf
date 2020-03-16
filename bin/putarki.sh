@@ -277,12 +277,12 @@ putarki_model_output() {
 
 
 ## @fn putarki_configured_setup()
-## @brief Start a session of configured archiving.  @details This
-## function starts a session of configured archiving creating the
-## archiving directory (local or remote) below $ARKI_IMPDIR/configured
-## and populating it with the configuration file for the importer
-## `start.sh`. This method should replace the legacy putarki* methods
-## of this module.
+## @brief Start a session of configured archiving.
+## @details This function starts a session of configured archiving
+## creating the archiving directory (local or remote) below
+## $ARKI_IMPDIR/configured and populating it with the configuration
+## file for the importer `start.sh`. This method should replace the
+## legacy putarki* methods of this module.
 ## @param $1 the (unique) name of the directory to be created relative to $ARKI_IMPDIR/configured
 ## @param $* the parameters to be set in the configuration file in form `key=val`
 putarki_configured_setup() {
@@ -310,7 +310,7 @@ putarki_configured_archive() {
     local dir=$ARKI_IMPDIR/configured/$1
     [ -f "$dir/start.sh" ] || return 1
     shift
-    rsync -p "$@" $dir
+    cp -f -l "$@" $dir || rsync -p "$@" $dir
 
 }
 
