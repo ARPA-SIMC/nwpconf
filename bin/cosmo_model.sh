@@ -286,7 +286,8 @@ cosmo_getarki_obsncdf() {
 	make_ncdf_link . obs-4-0-8 cdfin_amdar
 	make_ncdf_link . obs-4-0-9 cdfin_acars
     else
-	exit 1
+        rm -f obs_ecmwf.bufr
+	touch noobs 
     fi
 # create empty blacklist file
     touch blklsttmp
