@@ -121,10 +121,8 @@ putarki_archive() {
 # do a simple, local, file-based arki-scan, the user must deal with
 # concurrency problems; synchronous method
             arki-scan --dispatch=$ARKI_CONF $tf:$file > /dev/null;;
-	external_importer)
-	    mkdir -p $ARKI_IMPDIR/$NWPCONF/$DATE$TIME
-# try with a hard link, avoiding copy
-            cp -f -l $file $ARKI_IMPDIR/$NWPCONF/$DATE$TIME || cp -f $file $ARKI_IMPDIR/$NWPCONF/$DATE$TIME
+	configured_importer)
+	    putarki_configured_archive add_upload_dir $file
 	    ;;
     esac
     done
@@ -147,7 +145,7 @@ putarki_archive() {
 putarki_wait_for_deletion() {
 
     case "$ARKI_SCAN_METHOD" in
-        external_importer) # no wait by definition in this case
+        configured_importer) # no wait by definition in this case
 	    return
 	    ;;
     esac
@@ -262,6 +260,69 @@ putarki_model_output() {
 # end of task condition
 #	    if [ "${statuslist[$1]}" = "DONE" ]; then
 	    if [ ${#statuslist[*]} -eq $nrfiles ]; then 
+		return
+	    fi
+# check end of time and wait if necessary (i.e. if not using inotify)
+	    nwpwait_wait
+# wait for some event
+	    if [ "$ARKI_USE_INOTIFY" = Y ]; then
+		inotifywait --timeout $PUTARKI_WAITSTART --event close --exclude '^\.\/l.*' ./ || true
+	    fi
+	fi
+    done
+
+}
+
+
+putarki_configured_model_output() {
+
+# initialisations
+    local workdir=$PWD
+    local nrfiles=$1
+    local rfile
+    declare -A statuslist
+    statuslist=()
+    if [ "$ARKI_USE_INOTIFY" = Y ]; then
+	NWPWAITWAIT=
+    else
+	NWPWAITWAIT=$PUTARKI_WAITSTART
+    fi
+    NWPWAITSOLAR=
+    nwpwait_setup
+    # check MODEL_SIGNAL?
+    dirname=${MODEL_SIGNAL}_$DATE$TIME.$$
+    putarki_configured_setup $dirname "reftime=$DATE$TIME" "format=grib" "signal=$MODEL_SIGNAL"
+
+    while true; do
+# this is done here in case the directory is removed and recreated
+	cd $workdir
+	found=
+# loop on ready-files
+	shopt -s nullglob
+	for rfile in $READYFILE_PATTERN; do
+	    if [ -z "${statuslist[$rfile]}" ]; then # it is a new file
+		echo $rfile
+# process all grib files related to $rfile
+		for gfile in `model_readyfiletoname $rfile`; do
+		    echo $gfile
+		    putarki_configured_archive $dirname $gfile
+		done
+# update status for $rfile
+		statuslist[$rfile]="DONE"
+# if defined, increment progress meter
+		type meter_increment 2>/dev/null && meter_increment || true
+		found=Y
+	    fi
+	done
+	shopt -u nullglob
+
+	if [ -n "$found" ]; then # something new has been found
+	    :
+	else # nothing new has been found
+# end of task condition
+#	    if [ "${statuslist[$1]}" = "DONE" ]; then
+	    if [ ${#statuslist[*]} -eq $nrfiles ]; then 
+		putarki_configured_end $dirname
 		return
 	    fi
 # check end of time and wait if necessary (i.e. if not using inotify)
