@@ -123,12 +123,20 @@ EOF
 # update importtime if exists?
 	    ;;
 	curl)
- 	    if [ "$3" = "*" ]; then
+ 	    if [ "$3" = "*" -o -z "$3" ]; then
 		url="imported/$1/$2"
 	    else
 		url="imported/$1/$2/$3"
 	    fi
 	    curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url"
+	    ;;
+	filesystem)
+	    mkdir -p  "$IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/"
+ 	    if [ "$3" = "*" -o -z "$3" ]; then
+		touch "$IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/IMPORTED"
+	    else
+		touch "$IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/$3"
+	    fi
 	    ;;
     esac
 }
@@ -183,6 +191,14 @@ EOF
 		simc_check_logevent "$1" "$pgdate$pgtime" "$3"
 	    fi
 	    ;;
+	filesystem)
+ 	    if [ "$3" = "*" ]; then
+		ls -1 $IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/ 2>/dev/null | wc -l
+ 	    elif [ -z "$3" ]; then
+		ls -1 $IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/IMPORTED 2>/dev/null | wc -l
+	    else
+		ls -1 $IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/$3 2>/dev/null | wc -l
+	    fi
     esac    
 }
 
@@ -219,6 +235,20 @@ pgsql_command() {
     psql $IMPORT_SIGNAL_ARGS -A -F ',' -n -q -t
 }
 
+
+set_import_signal_method() {
+
+# extend list
+
+
+if [[ "$1" =~ http://arkimet.metarpa:8090/ ]]; then
+    export IMPORT_SIGNAL_METHOD=simc
+elif [[ "$1" =~ https?://[^/]*/ ]]; then
+    export IMPORT_SIGNAL_METHOD=curl
+else
+    export IMPORT_SIGNAL_METHOD=filesystem
+fi
+}
 
 # start exporting all assignments
 #set -a
