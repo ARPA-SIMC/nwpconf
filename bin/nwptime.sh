@@ -98,10 +98,12 @@ nwptime_init() {
     : ${MODEL_BACK:=0} # set to 0 if unset
 
     # Frequency boundary conditions
-    if [ $MODEL_STOP -lt $PARENTMODEL_FREQ ]; then
-        export BC_FREQ=$MODEL_STOP
-    else
-        export BC_FREQ=$PARENTMODEL_FREQ
+    if [ -n "$PARENTMODEL_FREQ" ]; then
+	if [ $MODEL_STOP -lt $PARENTMODEL_FREQ ]; then
+            export BC_FREQ=$MODEL_STOP
+	else
+            export BC_FREQ=$PARENTMODEL_FREQ
+	fi
     fi
 }
 
