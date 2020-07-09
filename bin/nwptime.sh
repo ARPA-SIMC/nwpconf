@@ -80,6 +80,8 @@
 ## 
 ## - `$PARENTMODEL_FREQ` interval in h between available boundary
 ##   conditions regardless of them being analysis or forecast
+##
+## - '$BC_FREQ' frequency in h of boundary conditions
 nwptime_init() {
 # start of NWP run
     DATES=`date_sub $DATE $TIME $MODEL_BACK`
@@ -94,6 +96,13 @@ nwptime_init() {
 	export PARENTMODEL_FREQ=$PARENTMODEL_FREQFC
     fi
     : ${MODEL_BACK:=0} # set to 0 if unset
+
+    # Frequency boundary conditions
+    if [ $MODEL_STOP -lt $PARENTMODEL_FREQ ]; then
+        export BC_FREQ=$MODEL_STOP
+    else
+        export BC_FREQ=$PARENTMODEL_FREQ
+    fi
 }
 
 

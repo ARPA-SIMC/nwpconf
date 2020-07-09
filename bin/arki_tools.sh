@@ -143,9 +143,28 @@ EOF
 
 
 import_signal_check() {
-    local pgdate pgtime
+    local pgdate pgtime rest add_h DATE_NEXT_BUFR TIME_NEXT_BUFR
     pgdate=${2:0:8}
     pgtime=${2:8:4}
+
+    # In case bufr frequency (defined by 'FREQ_FILE_BUFR') does not match the 
+    # frequency of assimilation cycles, the first subsequent BUFR file is considered.
+    if [ "$1" = "cnmc_bufr" ]; then
+        if [ -z "$FREQ_FILE_BUFR" ]; then
+            echo "Configuration variable FREQ_FILE_BUFR is not defined"
+            exit 1
+        fi
+
+        rest=`expr $pgtime % $FREQ_FILE_BUFR || true`
+        if [ $rest -ne 0 ]; then
+            add_h=$(($FREQ_FILE_BUFR-$rest))
+            DATE_NEXT_BUFR=`date_add $pgdate $pgtime $add_h`
+            TIME_NEXT_BUFR=`time_add $pgdate $pgtime $add_h`
+            pgdate=$DATE_NEXT_BUFR
+            pgtime=$TIME_NEXT_BUFR
+        fi
+    fi
+
 # pad with zero hour/minutes
     if [ ${#pgtime} = 0 ]; then
 	pgtime="0000"
@@ -177,10 +196,12 @@ EOF
 	curl)
  	    if [ "$3" = "*" ]; then
 #	        url="check/$1/$pgdate $pgtime"
-		url="check/$1/$2"
+#    		url="check/$1/$2"
+            url="check/$1/${pgdate}${pgtime:0:2}"
 	    else
 #	        url="check/$1/$pgdate $pgtime/$3"
-		url="check/$1/$2/$3"
+#   		url="check/$1/$2/$3"
+            url="check/$1/${pgdate}${pgtime:0:2}/$3"
 	    fi
 	    curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url" || echo 0
 	    ;;

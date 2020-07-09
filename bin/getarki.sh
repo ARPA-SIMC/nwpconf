@@ -26,19 +26,23 @@
 ## @fn getarki_obsbufr()
 ## @brief Retrieve observations in BUFR format from arkimet archive.
 ## @details This function retrieves observations in BUFR format from
-## the arkimet dataset(s) specified in the configuration variable
-## `$BUFR_ARKI_DS`, for the data assimilation interval specified in
-## the configuration. It should be called after having loaded the
+## the arkimet dataset(s) specified in the configuration variables
+## `$BUFR_ARKI_DS_CONV` (for which a template conversion is necessary)
+## and $BUFR_ARKI_DS_NOCONV` (for which it is not necessary), for the data
+## assimilation interval specified in the configuration.
+## It should be called after having loaded the
 ## module nwptime.sh for setting up the time-related environment
 ## variables. The interval of data retrieved is extended by a
 ## configurable amount of hours (default 3), before and after the
 ## strict assimilation interval.
-## @param $1 name of the output bufr file
-## @param $2 optional value of extra time interval in hours before and after assimilation, default 3
+## @param $1 name of the output bufr file associated to `$BUFR_ARKI_DS_CONV`
+## @param $2 name of the output bufr file associated to `$BUFR_ARKI_DS_NOCONV`
+## @param $3 optional value of extra time interval in hours before and after
+## assimilation, default 3
 getarki_obsbufr() {
 
     local d t ds de dt
-    dt=${2:-3}
+    dt=${3:-3}
     d=`date_sub $DATES $TIMES $dt`
     t=`time_sub $DATES $TIMES $dt`
     ds=`getarki_datetime $d $t`
@@ -49,8 +53,55 @@ getarki_obsbufr() {
     [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
 
     arki-query --data -o $1 \
-	"origin: BUFR; reftime:>=$ds,<=$de;" $BUFR_ARKI_DS
+    "origin: BUFR; reftime:>=$ds,<=$de;" $BUFR_ARKI_DS_CONV     || true
+    arki-query --data -o $2 \
+    "origin: BUFR; reftime:>=$ds,<=$de;" $BUFR_ARKI_DS_NOCONV   || true
 
+}
+
+
+## @fn getarki_radar_vol()
+## @brief Retrieve radar volume observations in hdf5 format from arkimet archive.
+## @details For each radar station specified in '$RADLIST', retrieve
+## the volume closest to '$DATEE$TIMEE' (analysis time). Starting from
+## '$DATEE$TIMEE', for each radar it goes back in time in '$RADAR_VOL_STEP'
+## seconds steps up to '$DATES$TIMES' (excluded) until a non-empty
+## file is downloaded.
+getarki_radar_vol() {
+    local dateobs timeobs YYYY MM DD hh mm fname dateobs_old timeobs_old
+
+    # Time frequency (in seconds) of available data
+    RADAR_VOL_STEP=600
+
+    # Loop over radar stations
+    for r in $RADLIST; do
+        dateobs=$DATEE
+        timeobs=${TIMEE}00
+        while [ "$dateobs$timeobs" -gt "$DATES${TIMES}00" ]; do
+            # Download data for specifica radar station and time
+            YYYY=${dateobs:0:4}
+            MM=${dateobs:4:2}
+            DD=${dateobs:6:2}
+            hh=${timeobs:0:2}
+            mm=${timeobs:2:2}
+            fname=odim_${dateobs}${timeobs}_${r}
+            arki-query --data -o $fname \
+                "reftime:=$YYYY-$MM-$DD $hh:$mm; origin:ODIMH5,$r;" \
+                $ARKI_URL/radar_vol
+
+            # If file is not empty, skip to the next radar station
+            if [ -s $fname ]; then break; fi
+
+            # Go back in time
+            dateobs_old=$dateobs
+            timeobs_old=$timeobs
+            dateobs=`date --date="$dateobs_old $timeobs_old -$RADAR_VOL_STEP seconds" '+%Y%m%d'`
+            timeobs=`date --date="$dateobs_old $timeobs_old -$RADAR_VOL_STEP seconds" '+%H%M'`
+        done
+    done
+
+    # Remove empty files
+    find . -size 0 -print -delete
 }
 
 
@@ -77,42 +128,97 @@ getarki_obsbufr() {
 ## e.g. `MODEL_ARKI_PARAM="proddef:GRIB:nn=$ENS_MEMB;"` for selecting
 ## a specific ensemble member as input.
 getarki_icbc() {
-    local h hinput timerange ana d2h t2h
+    local h hinput timerange ana d2h t2h rest deltat_TIMES a1 a2 b1 b2
+
+    # Redefines 'MODEL_STOP_SLICE' to retrieve the correct files for slices
+    # shorter than slice frequency.
+    if [ $MODEL_STOP_SLICE -lt $MODEL_FREQ_SLICE ]; then
+        MODEL_STOP_SLICE=$MODEL_FREQ_SLICE
+    fi
 
     for h in `seq $MODEL_START_SLICE $MODEL_FREQ_SLICE $MODEL_STOP_SLICE`; do
-	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h
+    	[ -n "$WAITFUNCTION" ] && $WAITFUNCTION $h
 
-	hinput=$(($h+$MODEL_DELTABD_SLICE))
-	timerange="timerange:Timedef,${hinput}h,254"
+        # Lead time (in hours) of the file to be retrieved
+    	hinput=$(($h+$MODEL_DELTABD_SLICE))
 
-	reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
+        # If 'hinput' isn't a valid lead time, i.e. it's not a multiple of
+        # 'MODEL_FREQ_SLICE', the previous one available is considered. This is
+        # the typical situation when you want to make assimilation cycles shorter
+        # than 'PARENTMODEL_FREQ'.
+        rest=`expr $hinput % $MODEL_FREQ_SLICE || true`
+        if [ $rest -ne 0 ]; then
+            hinput=$(($hinput-$rest))
+        fi
 
-	ntry=2
-	ofile=`inputmodel_name $h`
-	while [ "$ntry" -gt 0 ]; do
-	    arki-query --data -o $ofile \
-		"reftime:=$reftime;$timerange;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
-# if file is empty retry, otherwise exit
-	    if [ -s "$ofile" ]; then
-		break
-	    fi
-	    echo "retrying arki-query"
-	    sleep 10
-	    ntry=$(($ntry - 1))
-	done
+    	timerange="timerange:Timedef,${hinput}h,254"
+	    reftime=`getarki_datetime $DATES_SLICE $TIMES_SLICE`
 
-	if [ ! -s "$ofile" ]; then # file is empty or missing
-	    return 1
-	fi
+    	ntry=2
+	    ofile=`inputmodel_name $h`
+    	while [ "$ntry" -gt 0 ]; do
+    	    arki-query --data -o $ofile \
+    		"reftime:=$reftime;$timerange;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
+            # if file is empty retry, otherwise exit
+    	    if [ -s "$ofile" ]; then
+    		break
+    	    fi
+    	    echo "retrying arki-query"
+    	    sleep 10
+    	    ntry=$(($ntry - 1))
+    	done
 
-	if [ "$h" -eq "0" ]; then
-	    ana=`inputmodel_name a`
-	    [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
-	fi
-# if defined, increment progress meter
-	type meter_increment 2>/dev/null && meter_increment || true
+    	if [ ! -s "$ofile" ]; then # file is empty or missing
+    	    return 1
+    	fi
+
+        # Analysis link
+        if ([ "$h" -eq "0" ] && [ $MODEL_STOP -ge $MODEL_FREQ_SLICE ]); then
+            ana=`inputmodel_name a`
+            [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
+        fi
+
+        # if defined, increment progress meter
+	    type meter_increment 2>/dev/null && meter_increment || true
     done
 
+    # Temporal interpolation
+    if [ $MODEL_STOP -lt $MODEL_FREQ_SLICE ]; then
+        # Name of files to be sorted  before interpolation
+        first_file=`inputmodel_name 0`
+        last_file=`inputmodel_name $h`
+
+        # Sort gribs to ensure that they are in the same position
+        arki-query --data --sort=minute:timerange,level,product '' grib:$first_file > ${first_file}.sort
+        arki-query --data --sort=minute:timerange,level,product '' grib:$last_file  > ${last_file}.sort
+
+        # Compute coefficients for linear combination
+        deltat_TIMES=`expr $TIMES % $MODEL_FREQ_SLICE || true`
+        b1=$( echo "scale=16; $deltat_TIMES/$MODEL_FREQ_SLICE" | bc )
+        a1=$( echo "scale=16; 1-$b1" | bc )
+        b2=$( echo "scale=16; ($deltat_TIMES+$MODEL_STOP)/$MODEL_FREQ_SLICE" | bc )
+        a2=$( echo "scale=16; 1-$b2" | bc )
+
+        # Temporal interpolation
+        math_grib.exe $a1 ${first_file}.sort $b1 ${last_file}.sort lfff_ini sum -check='grid'
+        math_grib.exe $a2 ${first_file}.sort $b2 ${last_file}.sort lfff_fin sum -check='grid'
+
+        # Update stepRange of new files
+        grib_set -s stepRange=$MODEL_DELTABD_SLICE lfff_ini lfff_ini_mod
+        grib_set -s stepRange=$((${MODEL_DELTABD_SLICE}+${MODEL_STOP})) lfff_fin lfff_fin_mod
+
+        # Rename files
+        mv lfff_ini_mod $first_file
+        newfile=`inputmodel_name $MODEL_STOP`
+        mv lfff_fin_mod $newfile
+
+        # Analysis link
+        ana=`inputmodel_name a`
+        ln -fs $first_file $ana
+
+        # Remove un-necessary files
+        rm lfff_ini lfff_fin $last_file
+    fi
 }
 
 

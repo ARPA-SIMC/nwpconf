@@ -249,13 +249,14 @@ model_readyfiletosignal() {
 ## @fn cosmo_getarki_obsncdf()
 ## @brief Retrieve observation data for assimilation.
 ## @details This function retrieves from the arkimet dataset specified
-## by `$BUFR_ARKI_DS` (see getarki.sh::getarki_obsbufr() function) the
-## observations in bufr format required by COSMO and converts them
-## into COSMO-netcdf format. The files are placed in the current
-## directory with the name required by the model. The time interval of
-## data retrieved is computed on the basis of the environment
-## variables defining assimilation and forecast time.
-# @param $1 (optional) name of the logsim event to wait for, if empty it does not wait
+## by `$BUFR_ARKI_DS_CONV` and `$BUFR_ARKI_DS_NOCONV` (see
+## getarki.sh::getarki_obsbufr() function) the observations in bufr 
+## format required by COSMO and converts them into COSMO-netcdf format.
+## The files are placed in the current directory with the name required 
+## by the model. The time interval of data retrieved is computed on the
+## basis of the environment ## variables defining assimilation and 
+## forecast time.
+## @param $1 (optional) name of the logsim event to wait for, if empty it does not wait
 cosmo_getarki_obsncdf() {
 
 # optional wait
@@ -263,31 +264,40 @@ cosmo_getarki_obsncdf() {
 #    test -n "$1" && bufr_wait_logsim $1
     type meter_increment 2>/dev/null && meter_increment || true
 # get data
-    getarki_obsbufr obs_ecmwf.bufr
+    getarki_obsbufr obs_ecmwf_conv.bufr obs_wmo_cosmo_noconv.bufr $MODEL_STOP
     type meter_increment 2>/dev/null && meter_increment || true
 
-    if [ -s obs_ecmwf.bufr ]; then
-# convert to netcdf
-       	bufr_preconvert obs_ecmwf.bufr obs_wmo_cosmo.bufr
-	type meter_increment 2>/dev/null && meter_increment || true
-	bufr2netcdf -o obs obs_wmo_cosmo.bufr
-	type meter_increment 2>/dev/null && meter_increment || true
+    # convert to netcdf
+    if [ -s obs_ecmwf_conv.bufr ] || [ -s obs_wmo_cosmo_noconv.bufr ]; then
+        if [ -s obs_ecmwf_conv.bufr ] && [ -s obs_wmo_cosmo_noconv.bufr ]; then
+            bufr_preconvert obs_ecmwf_conv.bufr obs_wmo_cosmo_conv.bufr
+            cat obs_wmo_cosmo_conv.bufr obs_wmo_cosmo_noconv.bufr > obs_wmo_cosmo.bufr
+        elif [ ! -s obs_ecmwf_conv.bufr ] && [ -s obs_wmo_cosmo_noconv.bufr ]; then
+            mv obs_wmo_cosmo_noconv.bufr obs_wmo_cosmo.bufr
+        elif [ -s obs_ecmwf_conv.bufr ] && [ ! -s obs_wmo_cosmo_noconv.bufr ]; then
+            bufr_preconvert obs_ecmwf_conv.bufr obs_wmo_cosmo.bufr
+        fi
 
-# make symbolic links to files for COSMO
-	make_ncdf_link . obs-0-0-13 cdfin_synop
-	make_ncdf_link . obs-0-0-14 cdfin_synop_mob
-	make_ncdf_link . obs-1-0-255 cdfin_ship
-	make_ncdf_link . obs-2-4-255 cdfin_temp
-	make_ncdf_link . obs-2-5-255 cdfin_tempship
-# does not work at the moment, restore later
-# should work since dballe-6.2-3961
-#	make_ncdf_link . obs-2-1-4 cdfin_pilot
-	make_ncdf_link . obs-2-1-5 cdfin_pilot_p
-	make_ncdf_link . obs-4-0-8 cdfin_amdar
-	make_ncdf_link . obs-4-0-9 cdfin_acars
+        type meter_increment 2>/dev/null && meter_increment || true
+        bufr2netcdf -o obs obs_wmo_cosmo.bufr
+        type meter_increment 2>/dev/null && meter_increment || true
+
+        # make symbolic links to files for COSMO
+        make_ncdf_link . obs-0-0-13 cdfin_synop
+        make_ncdf_link . obs-0-0-14 cdfin_synop_mob
+        make_ncdf_link . obs-1-0-255 cdfin_ship
+        make_ncdf_link . obs-2-4-255 cdfin_temp
+        make_ncdf_link . obs-2-5-255 cdfin_tempship
+        # does not work at the moment, restore later
+        # should work since dballe-6.2-3961
+        #   make_ncdf_link . obs-2-1-4 cdfin_pilot
+        make_ncdf_link . obs-2-1-5 cdfin_pilot_p
+        #make_ncdf_link . obs-4-0-8 cdfin_amdar     # if template is converted
+        make_ncdf_link . obs-4-255-146 cdfin_amdar
+        make_ncdf_link . obs-4-0-9 cdfin_acars
     else
-        rm -f obs_ecmwf.bufr
-	touch noobs 
+        rm -f obs_ecmwf_conv.bufr obs_wmo_cosmo_noconv.bufr
+        touch noobs
     fi
 # create empty blacklist file
     touch blklsttmp
