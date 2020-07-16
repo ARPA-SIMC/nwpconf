@@ -97,10 +97,13 @@ EOF
 
 # @fn import_signal_imported
 # @brief Signal the import af a file into a dataset.
-# @details This function .
+# @details This function signals the end of import of a single file,
+# indicated as third argument, or of a complete model run, if third
+# argument is empty. It uses the signal method indicated by \a
+# $IMPORT_SIGNAL_METHOD variable (e.g. psql, curl or filesystem).
 # @param $1 dataset name
 # @param $2 reference date and time of the data YYYYmmdd[HH[MM]]
-# @param $3 additional unique name of the message imported (can be empty)
+# @param $3 additional unique name of the message/file imported (can be empty)
 import_signal_imported() {
     local pgdate pgtime
     pgdate=${2:0:8}
@@ -224,11 +227,43 @@ EOF
 }
 
 
+# @fn import_signal_dailycleanup
+# @brief Clean up the signal database from old messages.
+# @details This function cleans up the signal database from messages
+# older than the requested number of days. It uses the signal method
+# indicated by \a $IMPORT_SIGNAL_METHOD variable (e.g. psql or
+# filesystem).
+# @param $1 number of days to keep in the database with respect to current date
 import_signal_dailycleanup() {
-    pgsql_command <<EOF
+
+    case $IMPORT_SIGNAL_METHOD in
+	psql)
+	    pgsql_command <<EOF
 DELETE FROM imports WHERE
 reftime < timestamp without time zone 'now' - interval '$1 day';
 EOF
+	    ;;
+	filesystem)
+	    dt=`date_now`
+	    dt=`datetime_sub ${dt}00 $(($1 * 24))`00
+	    pushd $IMPORT_SIGNAL_BASE > /dev/null
+	    for ds in *; do
+		if [ -d "$ds" ]; then
+		    pushd $ds > /dev/null
+		    for dts in *; do
+			if [ -d "$dts" ]; then
+			    if [ "$dts" -lt "$dt" ]; then
+				safe_rm_rf $dts
+			    fi
+			fi
+		    done
+		    popd > /dev/null
+		fi
+	    done
+	    popd > /dev/null
+	    ;;
+    esac
+
 }
 
 
