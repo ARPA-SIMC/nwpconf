@@ -382,7 +382,7 @@ __putarki_configured_setup() {
 ## @param $* list of data files to be uploaded for archiving
 putarki_configured_archive() {
 
-    local dir=$1
+    local dir=$1:$DATE$TIME:$ENS_MEMB:
     shift
     if [ -n "$ARKI_IMPDIR" ]; then
 	__putarki_configured_archive $ARKI_IMPDIR/configured/$dir $@
@@ -413,7 +413,7 @@ __putarki_configured_archive() {
 ## @param $1 the (unique) name of the upload directory as specified in putarki_configured_setup
 putarki_configured_end() {
 
-    local dir=$1
+    local dir=$1:$DATE$TIME:$ENS_MEMB:
     if [ -n "$ARKI_IMPDIR" ]; then
 	__putarki_configured_end $ARKI_IMPDIR/configured/$dir
     fi
