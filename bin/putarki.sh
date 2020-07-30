@@ -290,7 +290,7 @@ putarki_configured_model_output() {
     NWPWAITSOLAR=
     nwpwait_setup
     # check MODEL_SIGNAL?
-    dirname=${MODEL_SIGNAL}_$DATE$TIME.$$
+    dirname=${MODEL_SIGNAL}
     putarki_configured_setup $dirname "reftime=$DATE$TIME" "format=grib" "signal=$MODEL_SIGNAL"
 
     while true; do
@@ -348,13 +348,27 @@ putarki_configured_model_output() {
 ## @param $* the parameters to be set in the configuration file in form `key=val`
 putarki_configured_setup() {
 
-    local dir=$ARKI_IMPDIR/configured/$1
+    local dir=$1:$DATE$TIME:$ENS_MEMB:
+    shift
+    if [ -n "$ARKI_IMPDIR" ]; then
+	__putarki_configured_setup $ARKI_IMPDIR/configured/$dir.$$ $@
+    fi
+    if [ -n "$ARKI_DLDIR" ]; then
+	__putarki_configured_setup $ARKI_DLDIR/configured/$dir $@
+    fi
+
+}
+
+__putarki_configured_setup() {
+
+    local dir=$1
     shift
     mkdir $dir || return 1
-    touch $dir/start.sh
+    rm -f $dir/.start.sh $dir/start.sh
     for var in "$@"; do
-	echo $var >> $dir/start.sh
+	echo $var >> $dir/.start.sh
     done
+    mv -f $dir/.start.sh $dir/start.sh
 }
 
 
@@ -368,7 +382,20 @@ putarki_configured_setup() {
 ## @param $* list of data files to be uploaded for archiving
 putarki_configured_archive() {
 
-    local dir=$ARKI_IMPDIR/configured/$1
+    local dir=$1
+    shift
+    if [ -n "$ARKI_IMPDIR" ]; then
+	__putarki_configured_archive $ARKI_IMPDIR/configured/$dir $@
+    fi
+    if [ -n "$ARKI_DLDIR" ]; then
+	__putarki_configured_archive $ARKI_DLDIR/configured/$dir $@
+    fi
+
+}
+
+__putarki_configured_archive() {
+
+    local dir=$1
     [ -f "$dir/start.sh" ] || return 1
     shift
     cp -f -l "$@" $dir || rsync -p "$@" $dir
@@ -381,13 +408,24 @@ putarki_configured_archive() {
 ## @details This function closes a configured archiving session by
 ## uploding a conventiona `end.sh` file. After this operation no more
 ## files can be added for archiving. The calling process does not need
-## to perform any other opration, the archiving daemon will take care
+## to perform any other operation, the archiving daemon will take care
 ## of archiving the files and signalling the completion if requested.
 ## @param $1 the (unique) name of the upload directory as specified in putarki_configured_setup
-
 putarki_configured_end() {
 
-    local dir=$ARKI_IMPDIR/configured/$1
+    local dir=$1
+    if [ -n "$ARKI_IMPDIR" ]; then
+	__putarki_configured_end $ARKI_IMPDIR/configured/$dir
+    fi
+    if [ -n "$ARKI_DLDIR" ]; then
+	__putarki_configured_end $ARKI_DLDIR/configured/$dir
+    fi
+
+}
+
+__putarki_configured_end() {
+
+    local dir=$1
     [ -f "$dir/start.sh" ] || return 1
     touch $dir/end.sh
 
