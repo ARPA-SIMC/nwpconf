@@ -79,19 +79,32 @@ arki_dailycleanup() {
 # @param $1 `-f` for forcing the initialisation of the table if it already exists
 import_signal_setupdb() {
 
-if [ "$1" = -f ]; then
-    pgsql_command <<EOF
+    case $IMPORT_SIGNAL_METHOD in
+	sqlite)
+	    if [ "$1" = -f ]; then
+		sqlite_command "DROP TABLE imports;"
+	    fi
+
+	    sqlite_command "CREATE TABLE imports (dataset TEXT NOT NULL, reftime INTEGER NOT NULL, message TEXT DEFAULT NULL, importtime INTEGER DEFAULT NULL, PRIMARY KEY (reftime, dataset, message));"
+	    ;;
+	psql)
+	    if [ "$1" = -f ]; then
+		pgsql_command <<EOF
 DROP TABLE imports;
 EOF
-fi
+	    fi
 
-pgsql_command <<EOF
+	    pgsql_command <<EOF
 CREATE TABLE imports (dataset varchar(128) NOT NULL,
  reftime timestamp without time zone NOT NULL,
  message varchar(128) DEFAULT NULL,
  importtime timestamp without time zone DEFAULT NULL,
  PRIMARY KEY (reftime, dataset, message));
 EOF
+	    ;;
+	filesystem)
+	    mkdir -p $IMPORT_SIGNAL_BASE
+    esac
 }
 
 
@@ -116,6 +129,15 @@ import_signal_imported() {
     fi
 
     case $IMPORT_SIGNAL_METHOD in
+	sqlite)
+	    sqltdt="${2:0:4}-${2:4:2}-${2:6:2} ${2:8:2}:${2:10:2}"
+	    if [  ${#sqltdt} = 11 ]; then
+		sqltdt="${sqltdt}00:00"
+	    elif [  ${#sqltdt} = 13 ]; then
+		sqltdt="${sqltdt}00"
+	    fi
+	    sqlite_command "INSERT INTO imports (dataset, reftime, message, importtime) SELECT '$1', strftime('%s','$sqltdt'), '', strftime('%s','now') WHERE NOT EXISTS(SELECT 1 FROM imports WHERE dataset = '$1' AND reftime = strftime('%s','$sqldt') AND message = '$3');"
+	    ;;
 	psql)
 	    pgsql_command <<EOF
 INSERT INTO imports (dataset, reftime, message, importtime)
@@ -176,6 +198,15 @@ import_signal_check() {
     fi
 
     case $IMPORT_SIGNAL_METHOD in
+	sqlite)
+	    sqltdt="${2:0:4}-${2:4:2}-${2:6:2} ${2:8:2}:${2:10:2}"
+	    if [  ${#sqltdt} = 11 ]; then
+		sqltdt="${sqltdt}00:00"
+	    elif [  ${#sqltdt} = 13 ]; then
+		sqltdt="${sqltdt}00"
+	    fi
+	    sqlite_command "SELECT COUNT(*) FROM imports WHERE dataset = '$1' AND reftime = strftime('%s','$sqldt');"
+	    ;;
 	psql)
 # \set ON_ERROR_STOP on returns a status of 3 in case of query error
 # e.g. wrong time syntax
@@ -291,6 +322,9 @@ pgsql_command() {
     psql $IMPORT_SIGNAL_ARGS -A -F ',' -n -q -t
 }
 
+sqlite_command() {
+    sqlite3 $IMPORT_SIGNAL_ARGS
+}
 
 set_import_signal_method() {
 
