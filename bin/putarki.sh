@@ -363,6 +363,9 @@ __putarki_configured_setup() {
 
     local dir=$1
     shift
+    if [ -d "$dir" ]; then
+	safe_rm_rf $dir
+    fi
     mkdir $dir || return 1
     rm -f $dir/.start.sh $dir/start.sh
     for var in "$@"; do
@@ -385,7 +388,7 @@ putarki_configured_archive() {
     local dir=$1:$DATE$TIME:$ENS_MEMB:
     shift
     if [ -n "$ARKI_IMPDIR" ]; then
-	__putarki_configured_archive $ARKI_IMPDIR/configured/$dir $@
+	__putarki_configured_archive $ARKI_IMPDIR/configured/$dir.$$ $@
     fi
     if [ -n "$ARKI_DLDIR" ]; then
 	__putarki_configured_archive $ARKI_DLDIR/configured/$dir $@
@@ -415,7 +418,7 @@ putarki_configured_end() {
 
     local dir=$1:$DATE$TIME:$ENS_MEMB:
     if [ -n "$ARKI_IMPDIR" ]; then
-	__putarki_configured_end $ARKI_IMPDIR/configured/$dir
+	__putarki_configured_end $ARKI_IMPDIR/configured/$dir.$$
     fi
     if [ -n "$ARKI_DLDIR" ]; then
 	__putarki_configured_end $ARKI_DLDIR/configured/$dir
