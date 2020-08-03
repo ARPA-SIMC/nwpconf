@@ -435,6 +435,44 @@ __putarki_configured_end() {
 }
 
 
+# @fn putarki_configured_dailycleanup
+# @brief Clean up the configured import directory.
+# @details This function cleans up the content of the configured
+# import directory tree from subdirectories older than the requested
+# number of days. It scans the directories indicated by \a
+# $ARKI_IMPDIR and \a $ARKI_DLDIR variables if set.
+# @param $1 number of days to keep in the import directory tree with respect to current date
+putarki_configured_dailycleanup() {
+
+    dt=`date_now`
+    dt=`datetime_sub ${dt}00 $(($1 * 24))`
+    if [ -n "$ARKI_IMPDIR" ]; then
+	__putarki_configured_dailycleanup $ARKI_IMPDIR/configured/ $dt
+    fi
+    if [ -n "$ARKI_DLDIR" ]; then
+	__putarki_configured_dailycleanup $ARKI_DLDIR/configured/ $dt
+    fi
+
+}
+
+__putarki_configured_dailycleanup() {
+
+    pushd $1 > /dev/null || return
+    local dt=$2
+    for dts in *; do
+	if [ -d "$dts" ]; then
+	    dtnum=`echo $dts | cut -d : -f 2`
+	    # if dtnum/dt non numeric, condition is not met
+	    if [ "$dtnum" -lt "$dt" ] 2>/dev/null; then
+		safe_rm_rf $dts
+	    fi
+	fi
+    done
+    popd > /dev/null
+
+}
+
+
 # start exporting all assignments
 set -a
 check_dep putarki
