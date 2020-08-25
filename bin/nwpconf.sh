@@ -489,6 +489,36 @@ safe_rm_rf() {
 
 }
 
+## @fn safe_source()
+## @brief source a shell-like file allowing only variable assignments.
+## @details This function sources a file similarly to the source or
+## "." shell command allowing only to perform environmental variable
+## assignments with limited syntax. To be improved by checking that
+## lhs contains only valid characters for variable names. Not
+## intrinsecally safe, it can be cheated with `` commands, it just
+## avoids accidental mistakes.
+## @param $1 the file to be sourced
+safe_source() {
+    local line var val
+    while read line; do
+	var=${line%%=*}
+	val=${line#*=}
+	if [ "$var" != "$line" -a -n "$var" ]; then
+	    eval "$var=$val"
+	fi
+    done < $1
+}
+
+## @fn log()
+## @brief Simple logging function.
+## @details Send a log message to stdout accompanied by timestamp and
+## pid (improve).
+## @param $* The Message(s) to log.
+log() {
+    echo `date -u --rfc-3339=seconds` "|$$|$@"
+}
+
+
 ## @fn save_state()
 ## @brief Save the state of a script on a file.
 ## @details This function saves the state (the contents of the
