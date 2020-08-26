@@ -33,7 +33,7 @@ lami_make_itr()
     # area itr (~"lama")
     time vg6d_transform --trans-mode=s --trans-type=zoom --sub-type=coord \
         --ilon=3.6 --ilat=33.8 --flon=23.5 --flat=49. \
-        $1 $2
+        $1 $2.grib
     log "end make_itr"
 }
 
@@ -49,7 +49,7 @@ lami_make_nit()
     # area nit, nord Italia dal cosmo 2I con conservazione dello staggering
     time vg6d_transform --trans-mode=s --trans-type=zoom --sub-type=coord \
         --ilon=5.61 --ilat=42.52 --flon=18. --flat=48.01 \
-        $1 $2
+        $1 $2.grib
     log "end make_nit"
 }
 
@@ -69,7 +69,7 @@ lami_make_medl()
         --ix=1 --iy=4 --fx=1083 --fy=559 ${1} tmp.$$
     vg6d_transform --trans-mode=s \
         --trans-type=boxregrid --sub-type=average --npx=4 --npy=4 \
-        tmp.$$ $2
+        tmp.$$ $2.grib
     rm -f tmp.$$
     log "end make_medl"
 }
@@ -116,7 +116,7 @@ lami_make_vprof()
         ${1}_destag - | \
         v7d_transform --input-format=native --output-format=BUFR  \
         --output-variable-list=B10007,B10004,B11001,B11002,B11003,B11004,B11006,B12101,B12103,B13001,B13003 \
-        - ${2}
+        - ${2}.bufr
 
     rm -f ${1}_109 ${1}_110 ${1}_109_110 ${1}_destag
     log "end make_vprof"
