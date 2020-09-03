@@ -382,16 +382,16 @@ __putarki_configured_setup() {
 ## directory must have been created with the putarki_configured_setup
 ## function.
 ## @param $1 the (unique) name of the upload directory as specified in putarki_configured_setup
-## @param $* list of data files to be uploaded for archiving
+## @param $2 data file to be uploaded for archiving
+## @param $3 (optional) suffix to be appended to the file to indicate its format, without dot character (e.g. \a grib)
 putarki_configured_archive() {
 
     local dir=$1:$DATE$TIME:$ENS_MEMB:
-    shift
     if [ -n "$ARKI_IMPDIR" ]; then
-	__putarki_configured_archive $ARKI_IMPDIR/configured/$dir.$$ $@
+	__putarki_configured_archive $ARKI_IMPDIR/configured/$dir.$$ $2 $3
     fi
     if [ -n "$ARKI_DLDIR" ]; then
-	__putarki_configured_archive $ARKI_DLDIR/configured/$dir $@
+	__putarki_configured_archive $ARKI_DLDIR/configured/$dir $2 $3
     fi
 
 }
@@ -399,9 +399,14 @@ putarki_configured_archive() {
 __putarki_configured_archive() {
 
     local dir=$1
+    local ext
+    if [ -n "$3" ]; then
+	ext=".$3"
+    else
+	ext=""
+    fi
     [ -f "$dir/start.sh" ] || return 1
-    shift
-    cp -f -l "$@" $dir || rsync -p "$@" $dir
+    cp -f -l $2 $dir/$2$ext || rsync -p $2 $dir/$2$ext
 
 }
 
