@@ -291,7 +291,7 @@ putarki_configured_model_output() {
     nwpwait_setup
     # check MODEL_SIGNAL?
     dirname=${MODEL_SIGNAL}
-    putarki_configured_setup $dirname "reftime=$DATE$TIME" "format=grib" "signal=$MODEL_SIGNAL"
+    putarki_configured_setup $dirname "reftime=$DATE$TIME" "signal=$MODEL_SIGNAL"
 
     while true; do
 # this is done here in case the directory is removed and recreated
@@ -301,11 +301,18 @@ putarki_configured_model_output() {
 	shopt -s nullglob
 	for rfile in $READYFILE_PATTERN; do
 	    if [ -z "${statuslist[$rfile]}" ]; then # it is a new file
-		echo $rfile
+                log "found ready-file $rfile"
 # process all grib files related to $rfile
 		for gfile in `model_readyfiletoname $rfile`; do
-		    echo $gfile
-		    putarki_configured_archive $dirname $gfile
+                    log "processing $gfile"
+		    putarki_configured_archive $dirname $gfile grib
+		    # create and archive postprocessed data if required
+		    for ppc in ${POSTPROC_LIST[*]}; do
+			ext=${ppc#*_}
+			$ppc $gfile ${gfile}_${ext}
+			putarki_configured_archive $dirname ${gfile}_${ext} $POSTPROC_FORMAT
+			rm -f ${gfile}_${ext}
+		    done
 		done
 # update status for $rfile
 		statuslist[$rfile]="DONE"
@@ -399,6 +406,7 @@ putarki_configured_archive() {
 __putarki_configured_archive() {
 
     local dir=$1
+    local file=${2##*/}
     local ext
     if [ -n "$3" ]; then
 	ext=".$3"
@@ -406,7 +414,7 @@ __putarki_configured_archive() {
 	ext=""
     fi
     [ -f "$dir/start.sh" ] || return 1
-    cp -f -l $2 $dir/$2$ext || rsync -p $2 $dir/$2$ext
+    cp -f -l $2 $dir/$file$ext || rsync -p $2 $dir/$file$ext
 
 }
 
