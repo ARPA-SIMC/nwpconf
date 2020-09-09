@@ -356,9 +356,15 @@ putarki_configured_model_output() {
 putarki_configured_setup() {
 
     local dir=$1:$DATE$TIME:$ENS_MEMB:
+    local putdir
     shift
     if [ -n "$ARKI_IMPDIR" ]; then
 	__putarki_configured_setup $ARKI_IMPDIR/configured/$dir.$$ $@
+    fi
+    if [ -n "$ARKI_SYNCDIR" ]; then
+	for putdir in ${ARKI_SYNCDIR[*]}; do
+	    __putarki_configured_setup $putdir/$dir.$$ $@
+	done
     fi
     if [ -n "$ARKI_DLDIR" ]; then
 	__putarki_configured_setup $ARKI_DLDIR/configured/$dir $@
@@ -394,8 +400,14 @@ __putarki_configured_setup() {
 putarki_configured_archive() {
 
     local dir=$1:$DATE$TIME:$ENS_MEMB:
+    local putdir
     if [ -n "$ARKI_IMPDIR" ]; then
 	__putarki_configured_archive $ARKI_IMPDIR/configured/$dir.$$ $2 $3
+    fi
+    if [ -n "$ARKI_SYNCDIR" ]; then
+	for putdir in ${ARKI_SYNCDIR[*]}; do
+	    __putarki_configured_archive $putdir/$dir.$$ $2 $3
+	done
     fi
     if [ -n "$ARKI_DLDIR" ]; then
 	__putarki_configured_archive $ARKI_DLDIR/configured/$dir $2 $3
@@ -430,8 +442,14 @@ __putarki_configured_archive() {
 putarki_configured_end() {
 
     local dir=$1:$DATE$TIME:$ENS_MEMB:
+    local putdir
     if [ -n "$ARKI_IMPDIR" ]; then
 	__putarki_configured_end $ARKI_IMPDIR/configured/$dir.$$
+    fi
+    if [ -n "$ARKI_SYNCDIR" ]; then
+	for putdir in ${ARKI_SYNCDIR[*]}; do
+	    __putarki_configured_end $putdir/$dir.$$
+	done
     fi
     if [ -n "$ARKI_DLDIR" ]; then
 	__putarki_configured_end $ARKI_DLDIR/configured/$dir
