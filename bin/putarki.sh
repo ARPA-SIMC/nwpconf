@@ -308,7 +308,7 @@ putarki_configured_model_output() {
 		    putarki_configured_archive $dirname $gfile grib
 		    # create and archive postprocessed data if required
 		    for ppc in ${POSTPROC_LIST[*]}; do
-			ext=${ppc#*_}
+			ext=${ppc##*_}
 			$ppc $gfile ${gfile}_${ext}
 			putarki_configured_archive $dirname ${gfile}_${ext} $POSTPROC_FORMAT
 			rm -f ${gfile}_${ext}
