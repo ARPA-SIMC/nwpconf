@@ -67,12 +67,13 @@ lami_make_nit()
 lami_make_medl()
 {
     log "start make_medl $1"
+    local tmpfile=`dirname $2`/tmp.$$
     time vg6d_transform --trans-mode=s --trans-type=zoom --sub-type=index \
-        --ix=1 --iy=4 --fx=1083 --fy=559 ${1} tmp.$$
+        --ix=1 --iy=4 --fx=1083 --fy=559 ${1} $tmpfile
     vg6d_transform --trans-mode=s \
         --trans-type=boxregrid --sub-type=average --npx=4 --npy=4 \
-        tmp.$$ $2
-    rm -f tmp.$$
+        $tmpfile $2
+    rm -f $tmpfile
     POSTPROC_FORMAT=grib
     log "end make_medl"
 }
