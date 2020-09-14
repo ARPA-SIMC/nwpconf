@@ -310,7 +310,7 @@ putarki_configured_model_output() {
 		    for ppc in ${POSTPROC_LIST[*]}; do
 			ext=${ppc##*_}
 			$ppc $gfile ${gfile}_${ext}
-			putarki_configured_archive $dirname ${gfile}_${ext} $POSTPROC_FORMAT
+			[ -s "${gfile}_${ext}" ] && putarki_configured_archive $dirname ${gfile}_${ext} $POSTPROC_FORMAT
 			rm -f ${gfile}_${ext}
 		    done
 		done
