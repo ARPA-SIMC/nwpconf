@@ -16,10 +16,20 @@
 ## @file
 ## @brief Module with functions related to waiting for events.
 
-## @details This module provides functions for intelligently waiting
-## for the occurrence of specific events, such as the availability of
-## input data.
+## @details This module provides functions for configuring wait
+## cycles. The environmental variables that can be preliminarly set
+## are \a $NWPWAITSOLAR and \a $NWPWAITELAPS ; the first sets a
+## maximum relative wait time in seconds with respect to \a
+## $DATE$TIME, while the second sets a maximum cumulative wait
+## time. If both variables are set the maximum wait time is the
+## minimum of the two times; if none of the two is set the maximum
+## wait time is infinite.
 
+## @fn nwpwait_setup()
+## @brief Setup the wait system.
+## @details this function has to be called once at the beginning of
+## the program in order to set the variables required for the wait
+## functions.
 nwpwait_setup() {
     local wait=
     NWPWAITFINAL=
@@ -39,18 +49,33 @@ nwpwait_setup() {
 }
 
 
+## @fn nwpwait_wait()
+## @brief Perform a wait cycle
+## @details This function checks if the maximum wait time has been
+## reached; if so it with a code 1 (error), while if it is not the
+## case it waits \a $NWPWAITWAIT seconds and returns 0 exit code.
 nwpwait_wait() {
+    nwpwait_check || return 1
+    if [ -n "$NWPWAITWAIT" ]; then
+	sleep $NWPWAITWAIT
+    fi
+
+}
+
+
+## @fn nwpwait_check()
+## @brief Check for final time
+## @details This function just checks if the maximum wait time has
+## been reached and returns with a code 1 (error), it if is the case.
+nwpwait_check() {
     if [ -n "$NWPWAITFINAL" ]; then
 	if [ `date -u +%s` -gt $NWPWAITFINAL ]; then
 	    echo "Final wait time reached, exiting"
 	    return 1
 	fi
     fi
-    if [ -n "$NWPWAITWAIT" ]; then
-	sleep $NWPWAITWAIT
-    fi
-
 }
+
 
 # start exporting all assignments
 #set -a
