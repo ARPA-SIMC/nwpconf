@@ -52,8 +52,8 @@ nwpwait_setup() {
 ## @fn nwpwait_wait()
 ## @brief Perform a wait cycle
 ## @details This function checks if the maximum wait time has been
-## reached; if so it with a code 1 (error), while if it is not the
-## case it waits \a $NWPWAITWAIT seconds and returns 0 exit code.
+## reached; if so it with a code 1 (error), while, if it is not the
+## case, it waits \a $NWPWAITWAIT seconds and returns 0 exit code.
 nwpwait_wait() {
     nwpwait_check || return 1
     if [ -n "$NWPWAITWAIT" ]; then
@@ -66,7 +66,7 @@ nwpwait_wait() {
 ## @fn nwpwait_check()
 ## @brief Check for final time
 ## @details This function just checks if the maximum wait time has
-## been reached and returns with a code 1 (error), it if is the case.
+## been reached and returns with a code 1 (error), if it is the case.
 nwpwait_check() {
     if [ -n "$NWPWAITFINAL" ]; then
 	if [ `date -u +%s` -gt $NWPWAITFINAL ]; then
