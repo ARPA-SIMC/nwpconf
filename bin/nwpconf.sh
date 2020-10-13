@@ -470,7 +470,7 @@ nonunique_exit() {
 ##  * being non null
 ##  * being not equal to /
 ##  * being a directory
-##  * being owned by the user
+##  * being owned or writable by the user
 ## 
 ## otherwise the removal for the current argument is canceled and the
 ## following argument is examined.
@@ -480,7 +480,7 @@ safe_rm_rf() {
     for dir in "$@"; do
 	if [ -n "$dir" -a "$dir" != "/" ]; then
 	    if [ -d "$dir" ]; then
-		if [ -O "$dir" ]; then
+		if [ -O "$dir" -o -w "$dir" ]; then
 		    rm -rf "$dir"
 		fi
 	    fi
