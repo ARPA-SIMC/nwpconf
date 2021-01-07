@@ -87,7 +87,7 @@ getarki_radar_vol() {
             fname=odim_${dateobs}${timeobs}_${r}
             arki-query --data -o $fname \
                 "reftime:=$YYYY-$MM-$DD $hh:$mm; origin:ODIMH5,$r;" \
-                $ARKI_URL/radar_vol
+                $BUFR_ARKI_DS_RADARVOL
 
             # If file is not empty, skip to the next radar station
             if [ -s $fname ]; then break; fi
