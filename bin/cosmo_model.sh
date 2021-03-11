@@ -279,7 +279,7 @@ cosmo_getarki_obsncdf() {
         fi
 
         type meter_increment 2>/dev/null && meter_increment || true
-        bufr2netcdf -o obs obs_wmo_cosmo.bufr
+        $SIMC_TOOLS bufr2netcdf -o obs obs_wmo_cosmo.bufr
         type meter_increment 2>/dev/null && meter_increment || true
 
         # make symbolic links to files for COSMO
@@ -310,7 +310,7 @@ cosmo_getarki_obsncdf() {
 # $2 output bufr file (COSMO, WMO-like template)
 bufr_preconvert() {
 
-    dbamsg convert --bufr2netcdf-categories --template=wmo $1 > $2
+    $SIMC_TOOLS dbamsg convert --bufr2netcdf-categories --template=wmo $1 > $2
 
 }
 
