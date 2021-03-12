@@ -283,18 +283,31 @@ cosmo_getarki_obsncdf() {
         type meter_increment 2>/dev/null && meter_increment || true
 
         # make symbolic links to files for COSMO
-        make_ncdf_link . obs-0-0-13 cdfin_synop
-        make_ncdf_link . obs-0-0-14 cdfin_synop_mob
-        make_ncdf_link . obs-1-0-255 cdfin_ship
-        make_ncdf_link . obs-2-4-255 cdfin_temp
-        make_ncdf_link . obs-2-5-255 cdfin_tempship
+#        make_ncdf_link . obs-0-0-13 cdfin_synop
+#        make_ncdf_link . obs-0-0-14 cdfin_synop_mob
+#        make_ncdf_link . obs-1-0-255 cdfin_ship
+#        make_ncdf_link . obs-2-4-255 cdfin_temp
+#        make_ncdf_link . obs-2-5-255 cdfin_tempship
         # does not work at the moment, restore later
         # should work since dballe-6.2-3961
         #   make_ncdf_link . obs-2-1-4 cdfin_pilot
-        make_ncdf_link . obs-2-1-5 cdfin_pilot_p
+#        make_ncdf_link . obs-2-1-5 cdfin_pilot_p
         #make_ncdf_link . obs-4-0-8 cdfin_amdar     # if template is converted
-        make_ncdf_link . obs-4-255-146 cdfin_amdar
-        make_ncdf_link . obs-4-0-9 cdfin_acars
+#        make_ncdf_link . obs-4-255-146 cdfin_amdar
+#        make_ncdf_link . obs-4-0-9 cdfin_acars
+
+        make_ncdf_link2 . cdfin_synop obs-0-0-13 obs-0-255-170 obs-0-255-172 obs-0-255-176 obs-0-255-178
+        make_ncdf_link2 . cdfin_synop_mob obs-0-0-14
+        make_ncdf_link2 . cdfin_ship obs-1-0-255 obs-1-255-180
+        make_ncdf_link2 . cdfin_temp obs-2-4-255 obs-2-255-109 obs-2-255-111
+        make_ncdf_link2 . cdfin_tempship obs-2-5-255
+        # does not work at the moment, restore later
+        # should work since dballe-6.2-3961
+        make_ncdf_link2 . cdfin_pilot obs-2-1-4
+        make_ncdf_link2 . cdfin_pilot_p obs-2-1-5
+        make_ncdf_link2 . cdfin_amdar obs-4-0-8 obs-4-255-146
+        make_ncdf_link2 . cdfin_acars obs-4-0-9
+
     else
         rm -f obs_ecmwf_conv.bufr obs_wmo_cosmo_noconv.bufr
         touch noobs
@@ -334,6 +347,32 @@ make_ncdf_link() {
         else
             break
         fi
+    done
+}
+
+
+# create symbolic links from files produced by bufr2netcdf to files
+# for COSMO model, arguments are:
+# $1 directory containing files
+# $2 name of basic (first) COSMO file (without .nc extension)
+# $3-$n name of each basic (first) netcdf file produced by bufr2netcdf
+# (without .nc extension)
+make_ncdf_link2() {
+    local dir=$1
+    local ofile=$2
+    shift; shift
+    local ext=''
+    for filetype in "$@"; do
+	for file in $dir/$filetype.nc $dir/$filetype.*.nc; do
+	    if [ -s $file ]; then
+		ln -sf $file $dir/$ofile$ext.nc
+		if [ -z "$ext" ]; then
+		    ext=.1
+		else
+		    ext=.$((${ext#.}+1))
+		fi
+	    fi
+	done
     done
 }
 
