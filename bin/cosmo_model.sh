@@ -367,7 +367,7 @@ make_ncdf_link2() {
 	    if [ -s $file ]; then
 		ln -sf $file $dir/$ofile$ext.nc
 		if [ -z "$ext" ]; then
-		    ext=.1
+		    ext=.2
 		else
 		    ext=.$((${ext#.}+1))
 		fi
