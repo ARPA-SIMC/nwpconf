@@ -41,14 +41,19 @@ parcomp_init() {
     [ -n "$NPIO" ] || NPIO=0
     if [ -n "$SLURM_NTASKS" ]; then # slurm
 	parcomp_computetopo $(($SLURM_NTASKS - $NPIO))
+	SCHED_ENV="slurm"
     elif [ -n "$PBS_NODEFILE" -a -f "$PBS_NODEFILE" ]; then # pbs
 	parcomp_computetopo `wc -l "$PBS_NODEFILE"`
+	SCHED_ENV="pbs"
     elif [ -n "$LOADL_TOTAL_TASKS" ]; then # LoadLeveler
 	parcomp_computetopo $(($LOADL_TOTAL_TASKS - $NPIO))
+	SCHED_ENV="ll"
     elif [ -n "$NPTOTAL" ]; then # generic
 	parcomp_computetopo $(($NPTOTAL - $NPIO))
+	SCHED_ENV="none"
     else
 	parcomp_computetopo 1
+	SCHED_ENV="none"
     fi
     NP=$(($NPX*$NPY+$NPIO))
 }
@@ -80,6 +85,9 @@ parcomp_computetopo() {
     elif [ "$1" -ge 288 ]; then
 	NPX=16
 	NPY=18
+    elif [ "$1" -ge 276 ]; then
+	NPX=12
+	NPY=23
     elif [ "$1" -ge 256 ]; then
 	NPX=16
 	NPY=16
@@ -199,7 +207,11 @@ parcomp_computetopo() {
 ## @param $* additional arguments to mpirun, parallel executable and its optional arguments
 parcomp_mpirun() {
 # adapt to mpi/queuing system used
-    mpirun -np $NP $@
+#    if [ "$SCHED_ENV" = "slurm" ]; then
+#        srun $@
+#    else
+        mpirun -np $NP $@
+#    fi
 }
 
 
