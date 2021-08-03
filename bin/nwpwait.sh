@@ -28,7 +28,9 @@
 ## @fn check_run()
 ## @brief Check whether a process can run.
 ## @details this function checks whether \a $NWPWAITSOLAR_RUN seconds
-## has elapsed from $\a $DATE$TIME and returns 1 if this is true.
+## has elapsed from $\a $DATE$TIME and returns with a code 1
+## (error) if this is not true. If any of the required variables is not
+## set, it returns with a code 0.
 ## It is a preliminary check which does not interfere with the other 
 # functions of this module.
 check_run() {
@@ -36,7 +38,7 @@ check_run() {
 
     if [ -n "$NWPWAITSOLAR_RUN" -a -n "$DATE" -a -n "$TIME" ]; then
         wait=$((`date -u --date "$DATE $TIME" +%s` + $NWPWAITSOLAR_RUN))
-        if [ `date -u +%s` -gt $wait ]; then
+        if [ `date -u +%s` -lt $wait ]; then
             return 1
         fi
     fi
@@ -70,7 +72,7 @@ nwpwait_setup() {
 ## @fn nwpwait_wait()
 ## @brief Perform a wait cycle
 ## @details This function checks if the maximum wait time has been
-## reached; if so it with a code 1 (error), while, if it is not the
+## reached; if so it returns with a code 1 (error), while, if it is not the
 ## case, it waits \a $NWPWAITWAIT seconds and returns 0 exit code.
 nwpwait_wait() {
     nwpwait_check || return 1
