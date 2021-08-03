@@ -25,6 +25,24 @@
 ## minimum of the two times; if none of the two is set the maximum
 ## wait time is infinite.
 
+## @fn check_run()
+## @brief Check whether a process can run.
+## @details this function checks whether \a $NWPWAITSOLAR_RUN seconds
+## has elapsed from $\a $DATE$TIME and returns 1 if this is true.
+## It is a preliminary check which does not interfere with the other 
+# functions of this module.
+check_run() {
+    local wait=
+
+    if [ -n "$NWPWAITSOLAR_RUN" -a -n "$DATE" -a -n "$TIME" ]; then
+        wait=$((`date -u --date "$DATE $TIME" +%s` + $NWPWAITSOLAR_RUN))
+        if [ `date -u +%s` -gt $wait ]; then
+            return 1
+        fi
+    fi
+}
+
+
 ## @fn nwpwait_setup()
 ## @brief Setup the wait system.
 ## @details this function has to be called once at the beginning of
