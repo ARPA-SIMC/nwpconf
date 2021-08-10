@@ -476,7 +476,7 @@ __putarki_configured_end() {
 putarki_configured_dailycleanup() {
 
     dt=`date_now`
-    dt=`datetime_sub ${dt}0000 $(($1 * 24))`
+    dt=`datetime_sub ${dt}00 $(($1 * 24))`00
     if [ -n "$ARKI_IMPDIR" ]; then
 	__putarki_configured_dailycleanup $ARKI_IMPDIR/configured/ $dt
     fi
@@ -493,9 +493,9 @@ __putarki_configured_dailycleanup() {
     for dts in *; do
 	if [ -d "$dts" ]; then
 	    dtnum=`echo $dts | cut -d : -f 2`
-            local dtl={#dtnum}
+            local dtl=${#dtnum}
 	    # if dtnum/dt non numeric, condition is not met
-	    if [ "${dtnum:0:$dtl}" -lt "$dt" ] 2>/dev/null; then
+	    if [ "$dtnum" -lt "${dt:0:$dtl}" ] 2>/dev/null; then
 		safe_rm_rf $dts
 	    fi
 	fi
