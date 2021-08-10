@@ -28,11 +28,11 @@
 ## @fn check_run()
 ## @brief Check whether a process can run.
 ## @details this function checks whether \a $NWPWAITSOLAR_RUN seconds
-## has elapsed from $\a $DATE$TIME and returns with a code 1
+## have elapsed since $\a $DATE$TIME and returns with a code 1
 ## (error) if this is not true. If any of the required variables is not
 ## set, it returns with a code 0.
 ## It is a preliminary check which does not interfere with the other 
-# functions of this module.
+## functions of this module.
 check_run() {
     local wait=
 
@@ -40,6 +40,26 @@ check_run() {
         wait=$((`date -u --date "$DATE $TIME" +%s` + $NWPWAITSOLAR_RUN))
         if [ `date -u +%s` -lt $wait ]; then
             return 1
+        fi
+    fi
+}
+
+
+## @fn wait_run()
+## @brief Wait until a process can run.
+## @details this function waits until \a $NWPWAITSOLAR_RUN seconds
+## have elapsed since $\a $DATE$TIME .
+## If any of the required variables is not set, it returns immediately
+## with a code 0.
+## It is a preliminary check which does not interfere with the other 
+## functions of this module.
+wait_run() {
+    local wait=
+
+    if [ -n "$NWPWAITSOLAR_RUN" -a -n "$DATE" -a -n "$TIME" ]; then
+        wait=$((`date -u --date "$DATE $TIME" +%s` + $NWPWAITSOLAR_RUN - `date -u +%s`))
+        if [ "$wait" -gt 0 ]; then
+            sleep $wait
         fi
     fi
 }
