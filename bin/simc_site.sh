@@ -117,11 +117,12 @@ simc_create_radar_grib() {
 # loop over radar-precipitation-rate time levels
     while [ "$fromdate" -le "$todate" ]; do
 # compute filenames for current date
-	ncmosaico=COMP_$fromdate.nc
+	ncmosaico=SURF_RATE_$fromdate.nc
 	gribmosaico=radar_SRI_$fromdate.grib1
 
 # create mosaico in netcdf format ($ncmosaico) from SIMC archives
-	$RADAR_MOSAICODIR/Mosaico.sh $RADAR_MOSAICODIR/mosaico.config -dn $fromdate -C $RADAR_MOSAICOCONF>/dev/null 2>&1
+#	$RADAR_MOSAICODIR/Mosaico.sh $RADAR_MOSAICODIR/mosaico.config -dn $fromdate -C $RADAR_MOSAICOCONF>/dev/null 2>&1
+	$RADAR_MOSAICODIR/creo_nc_lhn.bash $fromdate
 
 	if [ -f $ncmosaico ]; then 
 	    rm -f $gribmosaico
@@ -173,11 +174,12 @@ simc_create_radar_nc() {
 # loop over radar-precipitation-rate time levels
     while [ "$fromdate" -le "$todate" ]; do
 # compute filenames for current date
-	ncmosaico=COMP_$fromdate.nc
+	ncmosaico=SURF_RATE_$fromdate.nc
 	rm -f $ncmosaico
 	
 # create mosaico in netcdf format ($ncmosaico) from SIMC archives
-	$RADAR_MOSAICODIR/Mosaico.sh $RADAR_MOSAICODIR/mosaico.config -dn $fromdate -C $RADAR_MOSAICOCONF>/dev/null 2>&1
+#	$RADAR_MOSAICODIR/Mosaico.sh $RADAR_MOSAICODIR/mosaico.config -dn $fromdate -C $RADAR_MOSAICOCONF>/dev/null 2>&1
+	$RADAR_MOSAICODIR/creo_nc_lhn.bash $fromdate >/dev/null 2>&1
 
 	if [ -f $ncmosaico ]; then 
 # store successful date
@@ -205,10 +207,10 @@ simc_convert_radar_grib() {
 	return 1
     fi
 
-    for nc in ../mosaico/COMP_????????????.nc; do
+    for nc in ../mosaico/SURF_RATE_????????????.nc; do
 	if [ -f "$nc" ]; then
 	    date=${nc%.nc}
-	    date=${date#*/COMP_}
+	    date=${date#*/SURF_RATE_}
 	    $RADAR_LHNDIR/netcdf2grib1_SIMC $nc $model_template
 	    gribmosaico=radar_SRI_$date.grib1
 
