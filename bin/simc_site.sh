@@ -22,7 +22,7 @@
 simc_check_logevent() {
 
     res=`curl -s --fail \
-            "http://log.metarpa/simclog2/api/v1/checkmodel/$1/$2/?message_pattern=$3" || true`
+            "http://log.metarpa/simclog2/api/v2/entity/${1}/check_import/${2}?message_pattern=${3}" || true`
     if [ "$res" = '{"found":true}' ]; then
 	echo 1
     else
@@ -61,7 +61,7 @@ simc_wait_logevent() {
 
     while true; do
         res=`curl -s --fail \
-            "http://log.metarpa/simclog2/api/v1/checkmodel/$3/$2/?message_pattern=$1" || true`
+            "http://log.metarpa/simclog2/api/v2/entity/${3}/check_import/${2}?message_pattern=${1}" || true`
         if [ "$res" = '{"found":true}' ]; then
             return 0
         fi
