@@ -139,11 +139,50 @@ lami_make_vprof()
 lami_make_arkiruc()
 {
     log "start make_arkiruc $1"
-    # area itr (~"lama")
     $SIMC_TOOLS arki-query --data -o $2 \
 	"level:GRIB1,1 or GRIB1,2 or GRIB1,3 or GRIB1,4 or GRIB1,8 or GRIB1,102 or GRIB1,105 or GRIB1,111 or GRIB1,112;timerange:GRIB1,0,0 or GRIB1,0,1h,0h or GRIB1,0,2h,0h or GRIB1,0,3h,0h or GRIB1,0,4h,0h or GRIB1,0,5h,0h or GRIB1,0,6h,0h or GRIB1,0,7h,0h or GRIB1,0,8h,0h or GRIB1,0,9h,0h or GRIB1,0,10h,0h or GRIB1,0,11h,0h or GRIB1,0,12h,0h or GRIB1,0,13h,0h or GRIB1,0,14h,0h or GRIB1,0,15h,0h or GRIB1,0,16h,0h or GRIB1,0,17h,0h or GRIB1,0,18h,0h or GRIB1,2,0h,1h or GRIB1,2,1h,2h or GRIB1,2,2h,3h or GRIB1,2,3h,4h or GRIB1,2,4h,5h or GRIB1,2,5h,6h or GRIB1,2,6h,7h or GRIB1,2,7h,8h or GRIB1,2,8h,9h or GRIB1,2,9h,10h or GRIB1,2,10h,11h or GRIB1,2,11h,12h or GRIB1,2,12h,13h or GRIB1,2,13h,14h or GRIB1,2,14h,15h or GRIB1,2,15h,16h or GRIB1,2,16h,17h or GRIB1,2,17h,18h or GRIB1,3,0h,1h or GRIB1,3,0h,2h or GRIB1,3,0h,3h or GRIB1,3,0h,4h or GRIB1,3,0h,5h or GRIB1,3,0h,6h or GRIB1,3,0h,7h or GRIB1,3,0h,8h or GRIB1,3,0h,9h or GRIB1,3,0h,10h or GRIB1,3,0h,11h or GRIB1,3,0h,12h or GRIB1,3,0h,13h or GRIB1,3,0h,14h or GRIB1,3,0h,15h or GRIB1,3,0h,16h or GRIB1,3,0h,17h or GRIB1,3,0h,18h or GRIB1,4,0h,1h or GRIB1,4,0h,2h or GRIB1,4,0h,3h or GRIB1,4,0h,4h or GRIB1,4,0h,5h or GRIB1,4,0h,6h or GRIB1,4,0h,7h or GRIB1,4,0h,8h or GRIB1,4,0h,9h or GRIB1,4,0h,10h or GRIB1,4,0h,11h or GRIB1,4,0h,12h or GRIB1,4,0h,13h or GRIB1,4,0h,14h or GRIB1,4,0h,15h or GRIB1,4,0h,16h or GRIB1,4,0h,17h or GRIB1,4,0h,18h" grib:$1
     POSTPROC_FORMAT=grib
     log "end make_arkiruc"
+}
+
+## @fn lami_make_arki5I()
+## @brief Filter from a grib file a specified subset of variables.
+## @details Filter from the input file a subset of the available
+## variables suitable for permanent archiving, tuned for the
+## cosmo_5I dataset.
+## @param $1 input grib file
+## @param $2 output grib file
+lami_make_arki5I()
+{
+    log "start make_arki5I $1"
+    rm -f $2
+    # max/min - (near)surf
+    $SIMC_TOOLS arki-query --data \
+	"timerange:GRIB1,2,,;level:GRIB1,105;product:GRIB1,80,2,15 or GRIB1,80,2,16 or GRIB1,80,201,187" \
+	grib:$1 >>$2
+
+    # instant - (near)surf
+    $SIMC_TOOLS arki-query --data \
+	"timerange:GRIB1,0,,;level:GRIB1,1 or GRIB1,102 or GRIB1,105 or GRIB1,111;product:GRIB1,80,2,2 or GRIB1,80,2,11 or GRIB1,80,2,17 or GRIB1,80,2,33 or GRIB1,80,2,34 or GRIB1,80,2,51 or GRIB1,80,2,65 or GRIB1,80,2,71 or GRIB1,80,2,73 or GRIB1,80,2,74 or GRIB1,80,2,75 or GRIB1,80,2,85 or GRIB1,80,201,84 or GRIB1,80,201,145 or GRIB1,80,201,146 or GRIB1,80,201,197 or GRIB1,80,201,198" \
+	grib:$1 >>$2
+
+    # avg/accum - surf
+    $SIMC_TOOLS arki-query --data \
+	"timerange:GRIB1,3,, or GRIB1,4,,;level:GRIB1,1;product:GRIB1,80,2,61 or GRIB1,80,2,78 or GRIB1,80,2,79 or GRIB1,80,2,111 or GRIB1,80,2,112 or GRIB1,80,2,121 or GRIB1,80,2,122 or GRIB1,80,2,124 or GRIB1,80,2,125 or GRIB1,80,201,22 or GRIB1,80,201,23 or GRIB1,80,201,102 or GRIB1,80,201,113" \
+	grib:$1 >>$2
+
+    # instant - ml
+    $SIMC_TOOLS arki-query --data \
+	"timerange:GRIB1,0,,;level:GRIB1,110,45,46;product:GRIB1,80,2,11 or GRIB1,80,2,33 or GRIB1,80,2,34" \
+	grib:$1 >>$2
+
+    # instant - isobaric
+    $SIMC_TOOLS arki-query --data \
+	"timerange:GRIB1,0,,;level:GRIB1,100;product:GRIB1,80,2,6 or GRIB1,80,2,11 or GRIB1,80,2,33 or GRIB1,80,2,34 or GRIB1,80,2,39 or GRIB1,80,2,51 or GRIB1,80,2,52" \
+	grib:$1 >>$2
+
+    POSTPROC_FORMAT=grib
+    log "end make_arki5I"
 }
 
 # start exporting all assignments
