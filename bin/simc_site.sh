@@ -211,6 +211,8 @@ simc_convert_radar_grib() {
 	if [ -f "$nc" ]; then
 	    date=${nc%.nc}
 	    date=${date#*/SURF_RATE_}
+	    DATE=${date:0:8}
+	    TIME=${date:8:4}
 	    $RADAR_LHNDIR/netcdf2grib1_SIMC $nc $model_template
 	    gribmosaico=radar_SRI_$date.grib1
 
@@ -220,18 +222,12 @@ simc_convert_radar_grib() {
 			     $gribmosaico $gribmosaico.gp>/dev/null
 		    mv -f $gribmosaico.gp $gribmosaico
 		fi
-# archive and remember for final waiting
-		if [ -n "$ARKI_SCAN_METHOD" ]; then
-		    waitfor="$waitfor `putarki_archive grib $gribmosaico`"
-		    rm -f $gribmosaico
-		fi
+		putarki_configured_setup $MODEL_SIGNAL "reftime=$date" "signal=$MODEL_SIGNAL format=grib"
+		putarki_configured_archive $MODEL_SIGNAL $gribmosaico
+		putarki_configured_end $MODEL_SIGNAL
 	    fi
 	fi
     done
-# wait once for all to avoid useless pauses
-# disabled at the moment, improve    
-#    [ -n "$waitfor" ] && putarki_wait_for_deletion $waitfor || true
-
 }
 
 simc_clean_radar_nc() {
