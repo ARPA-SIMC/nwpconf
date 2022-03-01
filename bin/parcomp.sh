@@ -207,11 +207,11 @@ parcomp_computetopo() {
 ## @param $* additional arguments to mpirun, parallel executable and its optional arguments
 parcomp_mpirun() {
 # adapt to mpi/queuing system used
-#    if [ "$SCHED_ENV" = "slurm" ]; then
-#        srun $@
-#    else
+    if [ "$SCHED_ENV" = "slurm" ]; then
+        srun -n $NP $@
+    else
         mpirun -np $NP $@
-#    fi
+    fi
 }
 
 
