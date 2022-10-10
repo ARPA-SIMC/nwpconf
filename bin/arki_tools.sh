@@ -129,7 +129,7 @@ import_signal_imported() {
     fi
 
     case $IMPORT_SIGNAL_METHOD in
-	sqlite)
+	*sqlite*)
 	    sqltdt="${2:0:4}-${2:4:2}-${2:6:2} ${2:8:2}:${2:10:2}"
 	    if [  ${#sqltdt} = 11 ]; then
 		sqltdt="${sqltdt}00:00"
@@ -137,8 +137,8 @@ import_signal_imported() {
 		sqltdt="${sqltdt}00"
 	    fi
 	    sqlite_command "INSERT INTO imports (dataset, reftime, message, importtime) SELECT '$1', strftime('%s','$sqltdt'), '', strftime('%s','now') WHERE NOT EXISTS(SELECT 1 FROM imports WHERE dataset = '$1' AND reftime = strftime('%s','$sqldt') AND message = '$3');"
-	    ;;
-	psql)
+	    ;;&
+	*psql*)
 	    pgsql_command <<EOF
 INSERT INTO imports (dataset, reftime, message, importtime)
  SELECT '$1', '$pgdate $pgtime', '$3', 'now'
@@ -146,23 +146,28 @@ INSERT INTO imports (dataset, reftime, message, importtime)
  WHERE dataset = '$1' AND reftime = '$pgdate $pgtime' AND message = '$3');
 EOF
 # update importtime if exists?
-	    ;;
-	curl)
+	    ;;&
+	*curl*)
  	    if [ "$3" = "*" -o -z "$3" ]; then
 		url="imported/$1/$2"
 	    else
 		url="imported/$1/$2/$3"
 	    fi
 	    curl $IMPORT_SIGNAL_ARGS "$IMPORT_SIGNAL_URL/$url"
-	    ;;
-	filesystem)
+	    ;;&
+	*filesystem*)
 	    mkdir -p  "$IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/"
  	    if [ "$3" = "*" -o -z "$3" ]; then
 		touch "$IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/IMPORTED"
 	    else
 		touch "$IMPORT_SIGNAL_BASE/$1/$pgdate$pgtime/$3"
 	    fi
-	    ;;
+	    ;;&
+	*meteohub*)
+	    if [ -z "$3" ]; then # single files cannot be signaled
+		$SIMC_TOOLS $NWPCONFBINDIR/mh_signal.py $1 $pgdate$pgtime
+	    fi
+	    ;;&
     esac
 }
 

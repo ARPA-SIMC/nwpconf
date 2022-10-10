@@ -291,7 +291,7 @@ putarki_configured_model_output() {
     nwpwait_setup
     # check MODEL_SIGNAL?
     dirname=${MODEL_SIGNAL}
-    putarki_configured_setup $dirname "reftime=$DATE$TIME" "signal=$MODEL_SIGNAL"
+    putarki_configured_setup $dirname "reftime=$DATE$TIME" "signal=$MODEL_SIGNAL" "signal_method=$CONFIGURED_SIGNAL_METHOD"
 
     while true; do
 # this is done here in case the directory is removed and recreated
