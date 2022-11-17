@@ -22,6 +22,7 @@
 ## defaults.
 icon_model_init() {
 
+    READYFILE_PATTERN="*.rf"
 # for retrieving data from MARS (predefined area, open ERA-interim dataset)
 # base request (must not start with retrieve)
     MODEL_MARS_BASE=" dataset = interim,
@@ -115,7 +116,7 @@ inputmodel_name() {
 model_readyfiletoname() {
 
     # extract reftime and delta from the ready file
-    # <nomerun>_<YYYYmmddHHMM>_<tipocampo>_<tipogriglia>_+<ddHHMMSS>.grb
+    # <nomerun>_<YYYYmmddHHMM>_<tipogriglia>_<tipocampo>_+<ddHHMMSS>.grb
     # <nomerun>_<YYYYmmddHHMM>_+<ddHHMMSS>.rf
     f=${1%.rf}
     delta=${f#*_+}
@@ -323,7 +324,7 @@ cosmo_getarki_lhn() {
 set -a
 check_dep cosmo_model
 # init module
-cosmo_model_init
+icon_model_init
 # stop exporting all assignments
 set +a
 
