@@ -225,7 +225,10 @@ putarki_model_output() {
 	found=
 # loop on ready-files
 	shopt -s nullglob
-	for rfile in $READYFILE_PATTERN; do
+# this trick is required if pattern contains {*,?} because brace({,})
+# expansion is done before variable expansion
+	matchlist=`eval echo "$READYFILE_PATTERN"`
+	for rfile in $matchlist; do
 	    if [ -z "${statuslist[$rfile]}" ]; then # it is a new file
 		echo $rfile
 # process all grib files related to $rfile
@@ -299,7 +302,10 @@ putarki_configured_model_output() {
 	found=
 # loop on ready-files
 	shopt -s nullglob
-	for rfile in $READYFILE_PATTERN; do
+# this trick is required if pattern contains {*,?} because brace({,})
+# expansion is done before variable expansion
+	matchlist=`eval echo "$READYFILE_PATTERN"`
+	for rfile in $matchlist; do
 	    if [ -z "${statuslist[$rfile]}" ]; then # it is a new file
                 log "found ready-file $rfile"
 # process all grib files related to $rfile

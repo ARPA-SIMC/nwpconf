@@ -21,7 +21,7 @@
 ## sourced, it sets up the environment for COSMO model with reasonable
 ## defaults.
 cosmo_model_init() {
-    READYFILE_PATTERN="LM[ABF]_*"
+    READYFILE_PATTERN="{LMA_*,LMB_*,LMF_????0000}"
 
 # configuration for continuous run
     MODEL_SOIL_PRODUCT="GRIB1,,201,197 or GRIB1,,201,198 or GRIB1,,2,85 or GRIB1,,2,51 or GRIB1,,201,200 or \
