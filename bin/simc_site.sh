@@ -234,3 +234,50 @@ simc_clean_radar_nc() {
     rm -f ../mosaico/COMP_????????????.nc
 }
 
+
+# Important environment variables:
+# RADAR_DISCO=$HOME/prelhn/Composito
+#
+# @param $1 previous end date and time (`+%Y%m%d%H%M`, UTC)
+# @param $2 end date and time (`+%Y%m%d%H%M`, UTC)
+simc_create_radar_dpc() {
+    local fromdate todate succdate dpcmosaico Y m d H M
+
+    model_template=`conf_getfile model_radar_template.grib`
+    succdate=
+    fromdate=$1
+    todate=$2
+# increment date
+    fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
+# loop over radar-precipitation-rate time levels
+    while [ "$fromdate" -le "$todate" ]; do
+	# compute filenames for current date
+	Y=${fromdate:0:4}
+	m=${fromdate:4:2}
+	d=${fromdate:6:2}
+	H=${fromdate:8:2}
+	M=${fromdate:10:2}
+	dpcmosaico=$RADAR_DISCO/HDF_DPC/SRI/$Y/$m/$d/SRI_$d-$m-$Y-$H-$M.hdf
+
+	if [ -f $dpcmosaico ]; then
+	    rm -f radar.grib
+	    sridpc_hdf52grib2.py --lhn_grid=cosmo \
+				 --grib_template=$model_template \
+				 --input_file=$dpcmosaico \
+				 --output_file=radar.grib >/dev/null
+
+	    putarki_configured_setup $MODEL_SIGNAL "reftime=$fromdate" "signal=$MODEL_SIGNAL format=grib"
+	    putarki_configured_archive $MODEL_SIGNAL radar.grib
+	    putarki_configured_end $MODEL_SIGNAL
+	    # store successful date
+            succdate=$fromdate
+	fi
+
+
+# increment date
+	fromdate=$(date -u --date "${fromdate:0:8} ${fromdate:8:4} $RADAR_DT minutes" "+%Y%m%d%H%M")
+    done
+# output last processed date
+    echo $succdate
+}
+ 

@@ -16,6 +16,9 @@ from datetime import datetime, timedelta
 
 from eccodes import (
     codes_grib_new_from_samples,
+    codes_grib_new_from_file,
+    codes_get_double,
+    codes_get_long,
     codes_set_key_vals,
     codes_set_values,
     codes_write,
@@ -40,20 +43,59 @@ def get_args():
                          required=True, help="File di input, required" )
     parser.add_argument( "-g", "--lhn_grid", dest="griglia",
                          required=True, help="Griglia di output [icon, cosmo], required" )
+    parser.add_argument( "-t", "--grib_template", dest="gribtemplate",
+                         required=False, help="Template grib per l'output, optional" )
     parser.add_argument( "-o", "--output_file", dest="outputfile",
                          required=False, help="File di output, optional" )
     args = parser.parse_args()
 
     return args
 
+def adj_lon(lon):
+    # aggiusta la lon da grib2 a Greenwich-centrica
+    return lon - 360. if lon > 180. else lon
+
 def get_objects(name, obj):
     # Funzione per leggere le lat/lon dall'hdf del DPC
     if 'where' in name:
         return obj
         
-def radar_hdf52grib(filein, griglia, fileout=None):
+def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
+    if griglia == "icon":
+        if gribtemplate is not None:
+            gaid_template = codes_grib_new_from_file(open(gribtemplate, "r"))
+            gp = codes_get_double(gaid_template, "generatingProcessIdentifier")
+            centre = codes_get_long(gaid_template, "centre")
+        else:
+            gaid_template = codes_grib_new_from_samples("regular_ll_sfc_grib2")
+            gp = 1 # boh?
+            centre = 80
+    elif griglia == "cosmo":
+        if gribtemplate is not None:
+            gaid_template = codes_grib_new_from_file(open(gribtemplate, "r"))
+            bounds = (adj_lon(codes_get_double(gaid_template, "longitudeOfFirstGridPointInDegrees")),
+                      codes_get_double(gaid_template, "latitudeOfFirstGridPointInDegrees"),
+                      adj_lon(codes_get_double(gaid_template, "longitudeOfLastGridPointInDegrees")),
+                      codes_get_double(gaid_template, "latitudeOfLastGridPointInDegrees"))
+            width = codes_get_long(gaid_template, "Ni")
+            height = codes_get_long(gaid_template, "Nj")
+            latsp = codes_get_double(gaid_template, "latitudeOfSouthernPoleInDegrees")
+            lonsp = codes_get_double(gaid_template, "longitudeOfSouthernPoleInDegrees")
+            gp = codes_get_double(gaid_template, "generatingProcessIdentifier")
+            centre = codes_get_long(gaid_template, "centre")
+        else: # cosmo 2I
+            gaid_template = codes_grib_new_from_samples("rotated_ll_sfc_grib2")
+            bounds = (-3.8, -8.5, 7.7, 5.5)
+            width = 576
+            height = 701
+            latsp = -47.
+            lonsp = 10.
+            gp = 10
+            centre = 80
+
     try:
         datafile = os.path.basename(filein).split("_", 1)[1].split(".", 1)[0].split("-")
+
 
         # Estraggo il dataset completo dal file hdf
         ds = gdal.Open(f'HDF5:"{filein}"://dataset1/data1/data')
@@ -88,13 +130,13 @@ def radar_hdf52grib(filein, griglia, fileout=None):
                 'dstSRS': 'EPSG:4326', # EPSG di destinazione
                 'coordinateOperation': ("+proj=pipeline" # proj pipeline fatta da vari step 
                                         " +step +inv +proj=tmerc +lat_0=42.0 +lon_0=12.5 +ellps=WGS84 +units=m"  # 1) inverto la proiezione Trasverse marcator metrica del radar DPC e passo a lon/lat
-                                        " +step +proj=ob_tran +o_proj=latlon +o_lon_p=0 +o_lat_p=47 +lon_0=10"  # 2) applico traformazione obliqua per traslare sulle coordinate equatoriali della griglia COSMO
+                                        f" +step +proj=ob_tran +o_proj=latlon +o_lon_p=0 +o_lat_p={-latsp} +lon_0={lonsp}"  # 2) applico traformazione obliqua per traslare sulle coordinate equatoriali della griglia COSMO
                                         " +step +proj=unitconvert +xy_in=rad +xy_out=deg"  # 3) converto radianti in gradi
                                         " +step +proj=axisswap +order=2,1"),  # 4) scambio lon/lat -> lat/lon
     # 5) forzo la mappa risultante ad avere gli stessi limiti geografici e la stessa risoluzione della griglia COSMO (di conseguenza verrà effettuato un resampling)
-                'outputBounds': (-3.8, -8.5, 7.7, 5.5), 
-                'width': 576,
-                'height': 701,
+                'outputBounds': bounds,
+                'width': width,
+                'height': height,
                 'format': 'VRT',
                 'copyMetadata': True,
                 'srcNodata': -9999.,
@@ -143,7 +185,6 @@ def radar_hdf52grib(filein, griglia, fileout=None):
 
         # Definizione della griglia e del formato degli incrementi
         if griglia == "icon":
-            gaid_template = codes_grib_new_from_samples("regular_ll_sfc_grib2")
             iincr = abs(mesh_dx)
             jincr = abs(mesh_dy)
             # RAD_PRECIP - Radar Precipitation
@@ -151,7 +192,6 @@ def radar_hdf52grib(filein, griglia, fileout=None):
             pn = 195 # parameterNumber
             discipline = 0 # discipline
         elif griglia == "cosmo":
-            gaid_template = codes_grib_new_from_samples("rotated_ll_sfc_grib2")
             iincr = float( "{:.2f}".format( abs(mesh_dx) ) )
             jincr = float( "{:.2f}".format( abs(mesh_dy) ) )
             # TP - Total Precipitation
@@ -160,8 +200,8 @@ def radar_hdf52grib(filein, griglia, fileout=None):
             discipline = 0 # discipline
 
         key_map_grib = {
-            "generatingProcessIdentifier": 1,
-            "centre": 80,  
+            "generatingProcessIdentifier": gp,
+            "centre": centre,
             "missingValue": rmiss_grib,
             "packingType": "grid_simple",
             "bitmapPresent": 1,
@@ -207,6 +247,7 @@ def radar_hdf52grib(filein, griglia, fileout=None):
                     "longitudeOfLastGridPointInDegrees": lonLast, # xmax (loLast)
                     "latitudeOfFirstGridPointInDegrees": latFirst, # ymin (laFirst)
                     "latitudeOfLastGridPointInDegrees": latLast, # ymax (laLast)
+                    "scanningMode": 64,
                     "uvRelativeToGrid": component_flag,
                 },
             )
@@ -222,9 +263,10 @@ def radar_hdf52grib(filein, griglia, fileout=None):
                     "longitudeOfLastGridPointInDegrees": lonLast, # xmax (loLast)
                     "latitudeOfFirstGridPointInDegrees": latFirst, # ymin (laFirst)
                     "latitudeOfLastGridPointInDegrees": latLast, # ymax (laLast)
+                    "scanningMode": 64,
                     "uvRelativeToGrid": component_flag,
-                    "latitudeOfSouthernPoleInDegrees": -47,
-                    "longitudeOfSouthernPoleInDegrees": 10,
+                    "latitudeOfSouthernPoleInDegrees": latsp,
+                    "longitudeOfSouthernPoleInDegrees": lonsp,
                     "angleOfRotationInDegrees": 0,
                 },
             )
@@ -247,12 +289,8 @@ def main():
 
     inputfile = args.inputfile
     griglia = args.griglia
-    if args.outputfile:
-        outputfile = args.outputfile
-    else:
-        outputfile = None
 
-    radar_hdf52grib(inputfile, griglia, outputfile)
+    radar_hdf52grib(inputfile, griglia, args.gribtemplate, args.outputfile)
 
 
 if __name__ == "__main__":
