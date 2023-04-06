@@ -243,7 +243,7 @@ simc_clean_radar_nc() {
 simc_create_radar_dpc() {
     local fromdate todate succdate dpcmosaico Y m d H M
 
-    model_template=`conf_getfile model_radar_template.grib`
+    model_template=`conf_getfile model_radar_template.grib2`
     succdate=
     fromdate=$1
     todate=$2
@@ -257,11 +257,13 @@ simc_create_radar_dpc() {
 	d=${fromdate:6:2}
 	H=${fromdate:8:2}
 	M=${fromdate:10:2}
+	export DATE=${fromdate:0:8}
+	export TIME=${fromdate:8:4}
 	dpcmosaico=$RADAR_DISCO/HDF_DPC/SRI/$Y/$m/$d/SRI_$d-$m-$Y-$H-$M.hdf
 
 	if [ -f $dpcmosaico ]; then
 	    rm -f radar.grib
-	    sridpc_hdf52grib2.py --lhn_grid=cosmo \
+	    $NWPCONFBINDIR/sridpc_hdf52grib2.py --lhn_grid=cosmo \
 				 --grib_template=$model_template \
 				 --input_file=$dpcmosaico \
 				 --output_file=radar.grib >/dev/null
