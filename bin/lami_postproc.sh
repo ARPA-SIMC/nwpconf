@@ -67,7 +67,7 @@ lami_make_nit()
 lami_make_medl()
 {
     log "start make_medl $1"
-    local tmpfile=`dirname $2`/tmp.$$
+    local tmpfile=`dirname $2`/tmp_medl.$$
     time $SIMC_TOOLS vg6d_transform --trans-mode=s --trans-type=zoom --sub-type=index \
         --ix=1 --iy=4 --fx=1083 --fy=559 ${1} $tmpfile
     $SIMC_TOOLS vg6d_transform --trans-mode=s \
@@ -89,45 +89,95 @@ lami_make_medl()
 lami_make_vprof()
 {
      log "start make_vprof $1"
-     local tmpdir=`dirname $2`
+     local tmpfile=`dirname $2`/tmp_vprof_$1
 # almost equivalent with grib_copy (need to exclude qi)
 #    grib_copy -w indicatorOfParameter=40,indicatorOfTypeOfLevel=109 $1 ${1}_109
 #    grib_copy -w indicatorOfParameter=1/33/34/11/17/51,indicatorOfTypeOfLevel=110 $1 ${1}_110
 
     # select data on half levels
-    $SIMC_TOOLS arki-query --data -o $tmpdir/${1}_109 \
+    $SIMC_TOOLS arki-query --data -o ${tmpfile}_109 \
         'level:GRIB1,109; product:GRIB1,,2,40;' \
         grib:$1
     # select data on full levels
-    $SIMC_TOOLS arki-query --data -o $tmpdir/${1}_110 \
+    $SIMC_TOOLS arki-query --data -o ${tmpfile}_110 \
         'level:GRIB1,110; product:GRIB1,,2,33 or GRIB1,,2,34 or GRIB1,,2,11 or GRIB1,,2,17 or GRIB1,,2,51 or GRIB1,,2,1;' \
         grib:$1
-    if [ -s "$tmpdir/${1}_109" ]; then
+    if [ -s "${tmpfile}_109" ]; then
 
     # vertical interpolation to full levels
     $SIMC_TOOLS vg6d_transform --component-flag=1 --trans-type=vertint --sub-type=linear \
         --trans-level-type=105,,105,105 \
-        $tmpdir/${1}_109 $tmpdir/${1}_109_110
-    cat $tmpdir/${1}_109_110 >> $tmpdir/${1}_110
+        ${tmpfile}_109 ${tmpfile}_109_110
+    cat ${tmpfile}_109_110 >> ${tmpfile}_110
     # retrieve previously saved static data if available (improve)
-    cat $MODEL_STATIC/$MODEL_SIGNAL/last_hfl.grib >> $tmpdir/${1}_110 || true
+    cat $MODEL_STATIC/$MODEL_SIGNAL/last_hfl.grib >> ${tmpfile}_110 || true
     # destaggering of u and v and extension of height (B10007) to all
     # time levels
-    $SIMC_TOOLS vg6d_transform --a-grid --anavariable-list=B10007 $tmpdir/${1}_110 $tmpdir/${1}_destag
+    $SIMC_TOOLS vg6d_transform --a-grid --anavariable-list=B10007 ${tmpfile}_110 ${tmpfile}_destag
     # interpolation on points | computation of derived variables
     # improve management of coordinates
     $SIMC_TOOLS vg6d_getpoint --output-format=native --network=${VPROF_NETWORK:-temp} \
         --lon=7.32000,7.76600,6.96600,7.85000,9.66667,10.33333,10.91667,10.60000,11.33333,12.05000,11.58333,12.20000,12.56667,13.00000,15.00000,9.00000,13.45250,7.61300,6.95000,8.80000,16.03333,13.18333,7.65000,9.28333,11.85000,8.85000,9.93333,10.70000,11.00000,11.61667,10.38333,12.43333,17.95000,12.50000,9.06667,7.66000,8.66000,8.60000,6.81000,7.06500,8.49000,8.30000,8.53900,9.32900,8.59600,9.11500,9.50100,8.53600,9.54200,12.56700,12.25000,11.78300,11.53300,11.00000,12.21700,11.88300,9.1881263,9.6687071,10.2229390,9.0854556,10.0261350,9.3900705,9.4978501,10.7976976,9.2730143,9.1566316,9.8693336,8.8263844,9.0097,9.2169,9.3717,10.73925875,11.03701917,10.72769104,10.89391867,11.14815314,11.12163115,10.99505332,11.77270212,11.46392998,11.63576284,11.46517292,11.23720428,10.20,10.20,10.26,10.14 \
         --lat=45.73700,45.60000,45.78300,45.47000,45.02775,44.80000,44.66667,44.71667,44.48333,44.21667,44.83333,44.41667,44.06667,45.00000,43.00000,44.00000,43.29920,44.53900,46.81667,41.91667,45.81667,46.03333,45.21667,45.44442,45.40000,44.41667,44.44442,44.21108,44.02775,44.65000,43.68333,41.65000,40.65000,37.91667,39.25000,45.00000,44.90000,45.90000,44.95000,45.14000,45.49000,46.12000,40.74300,40.32500,39.90100,39.22600,40.92400,39.31100,39.88000,45.58300,45.66700,45.08700,45.55000,45.43300,46.13300,45.41700,45.4636707,45.6947359,45.5397733,45.8119642,45.1334974,45.8529825,45.3128778,45.1603653,45.5840057,45.1858767,46.1712597,45.8176046,44.9936,45.8108,46.1372,46.30954672,46.36651869,46.03791191,45.91092998,46.21847190,46.07286466,45.75644409,46.47591703,46.28929420,46.01432245,46.05516379,46.06234010,46.24,46.60,46.28,46.54 \
-        $tmpdir/${1}_destag $tmpdir/${1}_point.v7d #- |
+        ${tmpfile}_destag ${tmpfile}_point.v7d #- |
         $SIMC_TOOLS v7d_transform --input-format=native --output-format=BUFR  \
         --output-variable-list=B10007,B10004,B11001,B11002,B11003,B11004,B11006,B12101,B12102,B12103,B13001,B13003 \
-        $tmpdir/${1}_point.v7d ${2}
+        ${tmpfile}_point.v7d ${2}
     fi
-    rm -f $tmpdir/${1}_109 $tmpdir/${1}_110 $tmpdir/${1}_109_110 $tmpdir/${1}_destag $tmpdir/${1}_point.v7d
+    rm -f ${tmpfile}_*
     POSTPROC_FORMAT=bufr
     log "end make_vprof"
 }
+
+## @brief Generate vertical profiles on selected points for cross sections.
+## @details Interpolate a grib file on a fixed list of geographical
+## points in order to obtain vertical profiles of various quantities
+## as pseudo-soundings in bufr format for the purposes of drawing cross
+## sections.
+## @param $1 input grib file
+## @param $2 output bufr file
+lami_make_cross()
+{
+     log "start make_cross $1"
+     local tmpfile=`dirname $2`/tmp_cross_$1
+# almost equivalent with grib_copy (need to exclude qi)
+#    grib_copy -w indicatorOfParameter=40,indicatorOfTypeOfLevel=109 $1 ${1}_109
+#    grib_copy -w indicatorOfParameter=1/33/34/11/17/51,indicatorOfTypeOfLevel=110 $1 ${1}_110
+
+    # select data on half levels
+    $SIMC_TOOLS arki-query --data -o ${tmpfile}_109 \
+        'level:GRIB1,109; product:GRIB1,,2,40;' \
+        grib:$1
+    # select data on full levels
+    $SIMC_TOOLS arki-query --data -o ${tmpfile}_110 \
+        'level:GRIB1,110; product:GRIB1,,2,33 or GRIB1,,2,34 or GRIB1,,2,11 or GRIB1,,2,17 or GRIB1,,2,51 or GRIB1,,2,1;' \
+        grib:$1
+    if [ -s "${tmpfile}_109" ]; then
+
+    # vertical interpolation to full levels
+    $SIMC_TOOLS vg6d_transform --component-flag=1 --trans-type=vertint --sub-type=linear \
+        --trans-level-type=105,,105,105 \
+        ${tmpfile}_109 ${tmpfile}_109_110
+    cat ${tmpfile}_109_110 >> ${tmpfile}_110
+    # retrieve previously saved static data if available (improve)
+    cat $MODEL_STATIC/$MODEL_SIGNAL/last_hfl.grib >> ${tmpfile}_110 || true
+    # destaggering of u and v and extension of height (B10007) to all
+    # time levels
+    $SIMC_TOOLS vg6d_transform --a-grid --anavariable-list=B10007 ${tmpfile}_110 ${tmpfile}_destag
+    # interpolation on points | computation of derived variables
+    # improve management of coordinates
+    $SIMC_TOOLS vg6d_getpoint --output-format=native --network=${CROSS_NETWORK:-temp} \
+        --coord-format=shp --coord-file=$CROSS_COORD_FILE \
+        ${tmpfile}_destag ${tmpfile}_point.v7d #- |
+        $SIMC_TOOLS v7d_transform --input-format=native --output-format=BUFR  \
+        --output-variable-list=B10007,B10004,B11001,B11002,B11003,B11004,B11006,B12101,B12102,B12103,B13001,B13003 \
+        ${tmpfile}_point.v7d ${2}
+    fi
+    rm -f ${tmpfile}_*
+    POSTPROC_FORMAT=bufr
+    log "end make_cross"
+}
+
 
 ## @fn lami_make_arkiruc()
 ## @brief Filter from a grib file a specified subset of variables.
