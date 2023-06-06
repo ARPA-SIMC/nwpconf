@@ -420,30 +420,34 @@ min() {
 ## @fn timeout_exec()
 ## @brief Execute a command with a specified timeout.
 ## @details This function executes an arbitrary command killing it
-## when the requested time has elapsed.
+## when the requested time has elapsed. Returns 0 if timeout not
+## reached or 1 if timeout was reached and process killed somehow.
 ## @param $1 value of the timeout in seconds
 ## @param $* command to be executed and optional extra-arguments
 timeout_exec() {
     local SIG=-TERM # signal sent to the process when the timer expires
-    local interval=5 # interval between checks if the process is still alive
+    local interval=1 # interval between checks if the process is still alive
     local delay=4 # delay between posting the given signal and destroying the process (kill -KILL)
-    timeout=$1
+    local killed=0
+    local timeout=$1
     shift
+
+    "$@" &
+    local kp=$!
 
     (
 	for t in $timeout $delay; do
-	    while [ "$t" -gt "$interval" ]; do
+            while [ "$t" -gt "$interval" ]; do
 		sleep $interval
-		kill -0 $$ || exit
+		kill -0 $kp || return $killed
 		t=$(( $t - $interval ))
-	    done
-	    sleep $t
-	    kill $SIG $$ && kill -0 $$ || exit
-	    SIG=-KILL
+            done
+            sleep $t
+	    killed=1
+            kill $SIG $kp && kill -0 $kp || return $killed
+            SIG=-KILL
 	done
-    ) 2> /dev/null &
-
-    exec "$@"
+    ) 2> /dev/null
 }
 
 ## @fn nonunique_exit
