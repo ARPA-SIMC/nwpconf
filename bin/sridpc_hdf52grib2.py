@@ -94,7 +94,7 @@ def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
             centre = 80
 
     try:
-        datafile = os.path.basename(filein).split("_", 1)[1].split(".", 1)[0].split("-")
+        datafile = os.path.basename(filein).split(".", 1)[0].split("-")
 
 
         # Estraggo il dataset completo dal file hdf
