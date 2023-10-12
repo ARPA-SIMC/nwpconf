@@ -196,6 +196,7 @@ parcomp_computetopo() {
 	NPX=1
 	NPY=1
     fi
+    export NPX NPY
     NP=$(($NPX*$NPY+$NPIO))
 }
 
