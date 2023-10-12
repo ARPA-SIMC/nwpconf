@@ -45,7 +45,7 @@ arkilocal_setup() {
     ARKI_SCAN_METHOD=arki-scan
     ARKI_CONF=$ARKI_DIR/config
 
-    for typ in ASSIM FCAST FCRUC INTER RADAR; do
+    for typ in ASSIM ASSIM_INC FCAST FCRUC INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`
 	if [ -n "$gp" ]; then
 	    eval export ARKI_DS_$typ=$ARKI_DIR/$typ
@@ -76,14 +76,14 @@ arkilocal_create() {
     fi
     mkdir -p $ARKI_DIR
 # create typical model datasets
-    for typ in ASSIM FCAST INTER RADAR; do
+    for typ in ASSIM ASSIM_INC FCAST INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`
 	filt=`eval echo '$'MODEL_ARKI_TIMERANGE_${typ}`
 	if [ -n "$gp" ]; then
 	    __arkilocal_create_ds $ARKI_DIR/$typ $typ $gp "$filt"
 	fi
     done
-# create error dataset, required
+# create error dataset, required1
     __arkilocal_create_error_ds $ARKI_DIR/error
 # merge all confs
     arki-mergeconf $ARKI_DIR/*/ > $ARKI_CONF 2>/dev/null
@@ -103,7 +103,7 @@ format = grib
 name = $2
 replace = yes
 step = daily
-filter = origin:GRIB1,,,$3
+filter = origin:GRIB1,,,$3 or GRIB2,,,,,$3
 index = reftime, timerange, product, level, proddef
 unique = reftime, timerange, product, level, area, proddef
 $delage

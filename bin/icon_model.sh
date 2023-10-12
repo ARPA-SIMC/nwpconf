@@ -56,6 +56,31 @@ retrieve,
     if [ -n "$ENS_TOTAL_MEMB" -a -n "$ENS_MEMB" ]; then
 	ENS_MODE=.TRUE.
     fi
+
+# soil and surface T and W moved here???
+    MODEL_N_PARENT=10
+    if [ "$MODEL_SOIL_PARENT" = Y ]; then
+        MODEL_ARKI_FROM_PARENT="$MODEL_ARKI_FROM_PARENT or \
+$MODEL_SOIL_PRODUCT"
+        MODEL_N_PARENT=$(($MODEL_N_PARENT+8*2))
+    fi
+    if [ "$MODEL_SNOW_PARENT" = Y ]; then
+        MODEL_ARKI_FROM_PARENT="$MODEL_ARKI_FROM_PARENT or \
+$MODEL_SNOW_PRODUCT"
+        MODEL_N_PARENT=$(($MODEL_N_PARENT+4))
+    fi
+    if [ "$MODEL_LAKE" = Y ]; then
+        MODEL_ARKI_FROM_PARENT="$MODEL_ARKI_FROM_PARENT or \
+GRIB1,,202,55 or GRIB1,,201,96"
+# FR_LAKE,DEPTH_LK
+#       MODEL_N_PARENT=$(($MODEL_N_PARENT+2))
+    fi
+
+# definition of slow fields from analysis
+    MODEL_ARKI_FROM_ASSIM_SLOW1="product:GRIB2,,2,3,18 or GRIB2,,0,0,17 or GRIB2,,10,2,8 or GRIB2,,10,2,1 or GRIB2,,0,0,18 or GRIB2,,0,1,11 or GRIB2,,0,1,60 or GRIB2,,0,1,61, or GRIB2,,0,1,42 or GRIB2,,0,1,203 or GRIB2,,2,0,13 or GRIB2,,2,3,20 or GRIB2,,2,3,22 or GRIB2,,2,3,18 or GRIB2,,1,2,1 or GRIB2,,1,2,10 or GRIB2,,1,2,0 or GRIB2,,1,2,4 or GRIB2,,1,2,3"
+    MODEL_ARKI_FROM_ASSIM_SLOW2="level:GRIB2S,1; product:GRIB2,,0,0,0 or GRIB2,,0,1,0"
+    # SMI: product:GRIB2,,2,3,200
+    MODEL_N_ASSIM_SLOW=40 	# should be 45, but we round to 40
 }
 
 
