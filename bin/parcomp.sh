@@ -31,31 +31,29 @@
 ## and LoadLeveler supported). If no scheduling environment is
 ## available, the environmental variable $NPTOTAL is used as number of
 ## desired parallel tasks. If set in input, the variable $NPIO
-## indicates the number of tasks dedicated to I/O, not involved in
-## Cartesian computation. The parcomp_computetopo() function is
-## implicitly called by this function with the proper mumber of
-## computational tasks.  On output, the variables `$NPX`, `$NPY`,
-## `$NPIO` (if not set on input) and `$NP` (total number of parallel
-## tasks including I/O tasks) are set.
+## indicates the number of tasks dedicated to I/O, not involved in the
+## main parallel computation. On output, the variables `$NPC` (numbuer
+## of computational tasks), `$NPIO` (if not set on input) and `$NP`
+## (total number of parallel tasks including I/O tasks) are set.
 parcomp_init() {
     [ -n "$NPIO" ] || NPIO=0
     if [ -n "$SLURM_NTASKS" ]; then # slurm
-	parcomp_computetopo $(($SLURM_NTASKS - $NPIO))
+	NPC=$(($SLURM_NTASKS - $NPIO))
 	SCHED_ENV="slurm"
     elif [ -n "$PBS_NODEFILE" -a -f "$PBS_NODEFILE" ]; then # pbs
-	parcomp_computetopo `wc -l "$PBS_NODEFILE"`
+	NPC=`wc -l "$PBS_NODEFILE"`
 	SCHED_ENV="pbs"
     elif [ -n "$LOADL_TOTAL_TASKS" ]; then # LoadLeveler
-	parcomp_computetopo $(($LOADL_TOTAL_TASKS - $NPIO))
+	NPC=$(($LOADL_TOTAL_TASKS - $NPIO))
 	SCHED_ENV="ll"
     elif [ -n "$NPTOTAL" ]; then # generic
-	parcomp_computetopo $(($NPTOTAL - $NPIO))
+	NPC=$(($NPTOTAL - $NPIO))
 	SCHED_ENV="none"
     else
-	parcomp_computetopo 1
+	NPC=1
 	SCHED_ENV="none"
     fi
-    NP=$(($NPX*$NPY+$NPIO))
+    NP=$(($NPC+$NPIO))
 }
 
 ## @fn parcomp_computetopo()
@@ -64,139 +62,141 @@ parcomp_init() {
 ## @details This function computes a reasonable 2-D task (processor)
 ## Cartesian topology for parallel computing given the total number of
 ## computational tasks. The topology is set in the `$NPX` `$NPY`
-## environment variables.
-## @param $1 the number of computational tasks requested
+## environment variables, `$NP` is updated accordingly.
+## @param $1 the number of computational tasks requested, if not provided `$NPC` is used
 parcomp_computetopo() {
-    if [ "$1" -ge 512 ]; then
+    NPC=${1:-$NPC}
+    if [ "$NPC" -ge 512 ]; then
 	NPX=16
 	NPY=32
-    elif [ "$1" -ge 416 ]; then
+    elif [ "$NPC" -ge 416 ]; then
 	NPX=16
 	NPY=26
-    elif [ "$1" -ge 384 ]; then
+    elif [ "$NPC" -ge 384 ]; then
 	NPX=16
 	NPY=24
-    elif [ "$1" -ge 352 ]; then
+    elif [ "$NPC" -ge 352 ]; then
 	NPX=16
 	NPY=22
-    elif [ "$1" -ge 320 ]; then
+    elif [ "$NPC" -ge 320 ]; then
 	NPX=16
 	NPY=20
-    elif [ "$1" -ge 288 ]; then
+    elif [ "$NPC" -ge 288 ]; then
 	NPX=16
 	NPY=18
-    elif [ "$1" -ge 276 ]; then
+    elif [ "$NPC" -ge 276 ]; then
 	NPX=12
 	NPY=23
-    elif [ "$1" -ge 256 ]; then
+    elif [ "$NPC" -ge 256 ]; then
 	NPX=16
 	NPY=16
-    elif [ "$1" -ge 204 ]; then
+    elif [ "$NPC" -ge 204 ]; then
 	NPX=14
 	NPY=16
-    elif [ "$1" -ge 192 ]; then
+    elif [ "$NPC" -ge 192 ]; then
 	NPX=6
 	NPY=32
-    elif [ "$1" -ge 180 ]; then
+    elif [ "$NPC" -ge 180 ]; then
 	NPX=10
 	NPY=18
-    elif [ "$1" -ge 160 ]; then
+    elif [ "$NPC" -ge 160 ]; then
 	NPX=10
 	NPY=16
-    elif [ "$1" -ge 144 ]; then
+    elif [ "$NPC" -ge 144 ]; then
 	NPX=8
 	NPY=18
-    elif [ "$1" -ge 136 ]; then
+    elif [ "$NPC" -ge 136 ]; then
 	NPX=8
 	NPY=17
-    elif [ "$1" -ge 128 ]; then
+    elif [ "$NPC" -ge 128 ]; then
 	NPX=8
 	NPY=16
-    elif [ "$1" -ge 108 ]; then
+    elif [ "$NPC" -ge 108 ]; then
 	NPX=6
 	NPY=18
-    elif [ "$1" -ge 96 ]; then
+    elif [ "$NPC" -ge 96 ]; then
 	NPX=6
 	NPY=16
-    elif [ "$1" -ge 72 ]; then
+    elif [ "$NPC" -ge 72 ]; then
 	NPX=4
 	NPY=18
-    elif [ "$1" -ge 68 ]; then
+    elif [ "$NPC" -ge 68 ]; then
 	NPX=4
 	NPY=17
-    elif [ "$1" -ge 64 ]; then
+    elif [ "$NPC" -ge 64 ]; then
 	NPX=4
 	NPY=16
-    elif [ "$1" -ge 60 ]; then
+    elif [ "$NPC" -ge 60 ]; then
 	NPX=6
 	NPY=10
-    elif [ "$1" -ge 56 ]; then
+    elif [ "$NPC" -ge 56 ]; then
 	NPX=4
 	NPY=14
-    elif [ "$1" -ge 54 ]; then
+    elif [ "$NPC" -ge 54 ]; then
 	NPX=6
 	NPY=9
-    elif [ "$1" -ge 50 ]; then
+    elif [ "$NPC" -ge 50 ]; then
 	NPX=5
 	NPY=10
-    elif [ "$1" -ge 48 ]; then
+    elif [ "$NPC" -ge 48 ]; then
 	NPX=4
 	NPY=12
-    elif [ "$1" -ge 44 ]; then
+    elif [ "$NPC" -ge 44 ]; then
 	NPX=4
 	NPY=11
-    elif [ "$1" -ge 42 ]; then
+    elif [ "$NPC" -ge 42 ]; then
 	NPX=3
 	NPY=14
-    elif [ "$1" -ge 40 ]; then
+    elif [ "$NPC" -ge 40 ]; then
 	NPX=4
 	NPY=10
-    elif [ "$1" -ge 36 ]; then
+    elif [ "$NPC" -ge 36 ]; then
 	NPX=4
 	NPY=9
-    elif [ "$1" -ge 32 ]; then
+    elif [ "$NPC" -ge 32 ]; then
 	NPX=2
 	NPY=16
-    elif [ "$1" -ge 30 ]; then
+    elif [ "$NPC" -ge 30 ]; then
 	NPX=3
 	NPY=10
-    elif [ "$1" -ge 28 ]; then
+    elif [ "$NPC" -ge 28 ]; then
 	NPX=4
 	NPY=7
-    elif [ "$1" -ge 24 ]; then
+    elif [ "$NPC" -ge 24 ]; then
 	NPX=3
 	NPY=8
-    elif [ "$1" -ge 21 ]; then
+    elif [ "$NPC" -ge 21 ]; then
 	NPX=3
 	NPY=7
-    elif [ "$1" -ge 20 ]; then
+    elif [ "$NPC" -ge 20 ]; then
 	NPX=4
 	NPY=5
-    elif [ "$1" -ge 18 ]; then
+    elif [ "$NPC" -ge 18 ]; then
 	NPX=3
 	NPY=6
-    elif [ "$1" -ge 16 ]; then
+    elif [ "$NPC" -ge 16 ]; then
 	NPX=4
 	NPY=4
-    elif [ "$1" -ge 12 ]; then
+    elif [ "$NPC" -ge 12 ]; then
 	NPX=3
 	NPY=4
-    elif [ "$1" -ge 9 ]; then
+    elif [ "$NPC" -ge 9 ]; then
 	NPX=3
 	NPY=3
-    elif [ "$1" -ge 8 ]; then
+    elif [ "$NPC" -ge 8 ]; then
 	NPX=2
 	NPY=4
-    elif [ "$1" -ge 4 ]; then
+    elif [ "$NPC" -ge 4 ]; then
 	NPX=2
 	NPY=2
-    elif [ "$1" -ge 2 ]; then
+    elif [ "$NPC" -ge 2 ]; then
 	NPX=1
 	NPY=2
     else # troppo pochi
 	NPX=1
 	NPY=1
     fi
+    NP=$(($NPX*$NPY+$NPIO))
 }
 
 ## @fn parcomp_mpirun()
