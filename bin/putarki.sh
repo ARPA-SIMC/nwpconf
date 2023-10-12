@@ -120,7 +120,7 @@ putarki_archive() {
         arki-scan)
 # do a simple, local, file-based arki-scan, the user must deal with
 # concurrency problems; synchronous method
-            arki-scan --dispatch=$ARKI_CONF $tf:$file > /dev/null;;
+            $SIMC_TOOLS arki-scan --dispatch=$ARKI_CONF $tf:$file > /dev/null;;
 	configured_importer)
 	    putarki_configured_archive add_upload_dir $file
 	    ;;
