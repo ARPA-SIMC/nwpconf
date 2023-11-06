@@ -178,13 +178,6 @@ getarki_icbc() {
             [ -f "$ana" -o -h "$ana" ] || ln -s `inputmodel_name $h` $ana
         fi
 
-        # For ICON ensemble members, retrieve SST from deterministic
-        if ([ "$h" -eq "$MODEL_START_SLICE" ] && [ -n "$PARENTMODEL_ARKI_DS_SST" ] && [ $TIMES -eq "00" ]); then
-	    arki-query --data -o sst_ifs_hres.grib \
-                "reftime:=$reftime;$timerange;product:GRIB1,98,128,34" \
-                $PARENTMODEL_ARKI_DS_SST
-     	fi
-
         # if defined, increment progress meter
         type meter_increment 2>/dev/null && meter_increment || true
     done
