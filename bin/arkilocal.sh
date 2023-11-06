@@ -79,8 +79,9 @@ arkilocal_create() {
     for typ in ASSIM ASSIM_INC FCAST INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`
 	filt=`eval echo '$'MODEL_ARKI_TIMERANGE_${typ}`
+	filt_tgp=`eval echo '$'MODEL_ARKI_TGP_${typ}`
 	if [ -n "$gp" ]; then
-	    __arkilocal_create_ds $ARKI_DIR/$typ $typ $gp "$filt"
+	    __arkilocal_create_ds $ARKI_DIR/$typ $typ $gp "$filt_tgp"
 	fi
     done
 # create error dataset, required1
@@ -103,7 +104,7 @@ format = grib
 name = $2
 replace = yes
 step = daily
-filter = origin:GRIB1,,,$3 or GRIB2,,,,,$3
+filter = origin:GRIB1,,,$3 or GRIB2,,,$4,,$3
 index = reftime, timerange, product, level, proddef
 unique = reftime, timerange, product, level, area, proddef
 $delage
