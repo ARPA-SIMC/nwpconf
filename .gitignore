@@ -13,3 +13,5 @@ depcomp
 config.status
 confprofile
 confprofile.in
+*.o
+memwipe
