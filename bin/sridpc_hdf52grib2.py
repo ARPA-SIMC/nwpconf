@@ -29,7 +29,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Valori missing costanti
-rmiss_grib = 9999.
+#rmiss_grib = 9999. #-0.1 #9999.
 imiss = 255
 
 component_flag = 0  # int CONSTANT
@@ -47,6 +47,13 @@ def get_args():
                          required=False, help="Template grib per l'output, optional" )
     parser.add_argument( "-o", "--output_file", dest="outputfile",
                          required=False, help="File di output, optional" )
+    parser.add_argument( "-d", "--output_dir", dest="outputdir",
+                         required=False, help="Directory di output, optional" )
+    parser.add_argument( "-q", "--quality", dest="q_thr", type=float,
+                         required=False, help="Quality threshold for data mask, optional" )
+    parser.add_argument( "-m", "--missing", dest="rmiss", type=float, default=-0.1, 
+                         required=False, help="Missing value for grib, default = -0.1" )
+
     args = parser.parse_args()
 
     return args
@@ -60,7 +67,7 @@ def get_objects(name, obj):
     if 'where' in name:
         return obj
         
-def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
+def radar_hdf52grib(filein, griglia, rmiss_grib, gribtemplate=None, fileout=None, dirout=None, q_thr=None):
     if griglia == "icon":
         if gribtemplate is not None:
             gaid_template = codes_grib_new_from_file(open(gribtemplate, "r"))
@@ -96,17 +103,31 @@ def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
     try:
         datafile = os.path.basename(filein).split(".", 1)[0].split("-")
 
+        if q_thr is not None:
+            # Leggo gain e offset per conversione dato raw di qualità
+            f = h5py.File(filein,'r')
+            qattr = {}
+            group = f["dataset1/data1/quality1/what"]
+            for key, value in group.attrs.items():
+                qattr[key] = value
+            gain = qattr.get("gain")
+            offset = qattr.get("offset")
+            print(gain, offset)
+            f.close()
+
+            qual_ds = gdal.Open(f'HDF5:"{filein}"://dataset1/data1/quality1/data')
 
         # Estraggo il dataset completo dal file hdf
         ds = gdal.Open(f'HDF5:"{filein}"://dataset1/data1/data')
         data_arr = ds.GetVirtualMemArray()
-        
+        print(data_arr.min(), data_arr.max())
         # Estrazione dei parametri della proiezione
         prj=ds.GetProjection()
         ds_converter = osr.SpatialReference() # makes an empty spatial ref object
         ds_converter.ImportFromWkt(prj) # populates the spatial ref object with our WKT SRS
         ds_forPyProj = ds_converter.ExportToProj4()  
         #print( "Input proj = ",ds_forPyProj )
+        print(type(rmiss_grib), rmiss_grib)
 
         if griglia == "icon":
             # Genero le opzioni di input/output della proiezione
@@ -119,7 +140,19 @@ def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
                 'height': data_arr.shape[0],
                 'copyMetadata': True,
                 'srcNodata': -9999.,
-                'dstNodata': 9999.,
+                'outputType': gdal.GDT_Float64,
+                'dstNodata': rmiss_grib,
+                'resampleAlg': 'near',
+            }
+            qualityDPC_warp_options = {
+                'dstSRS': 'EPSG:4326',  # EPSG di destinazione
+                'srcSRS': ds_forPyProj, # EPSG di partenza
+                'format': 'VRT',
+                'width': data_arr.shape[1],
+                'height': data_arr.shape[0],
+                'copyMetadata': True,
+                'srcNodata': 0,
+                'dstNodata': 0,
                 'resampleAlg': 'near',
             }
         elif griglia == "cosmo":
@@ -140,12 +173,14 @@ def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
                 'format': 'VRT',
                 'copyMetadata': True,
                 'srcNodata': -9999.,
-                'dstNodata': 9999.,
+                'outputType': gdal.GDT_Float64,
+                'dstNodata': rmiss_grib,
                 'resampleAlg': 'bilinear',
             }
 
         data = gdal.Warp( '', ds,
                           options = gdal.WarpOptions(**radarDPC_warp_options) )
+
 
         # Estraggo le informazioni geografiche dal dataset riproiettato
         geotransform = data.GetGeoTransform()
@@ -156,13 +191,23 @@ def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
        
         rastr = data.ReadAsArray()
         #print(rastr.shape[0],rastr.shape[1])
-        mask = (rastr != 9999.)
+
+        if q_thr is not None:
+            qual_data = gdal.Warp( '', qual_ds,
+                                   options = gdal.WarpOptions(**qualityDPC_warp_options) )
+            qual_rastr = qual_data.ReadAsArray()*gain + offset
+            print(qual_rastr.min(), qual_rastr.max()) 
+            mask = ( qual_rastr < q_thr )
+
         prate = rastr.copy()
         # Dove il dato non è missing lo trasformo in kg m-2 s-1
         # come codificato in grib
-#        prate[ mask ] = prate[mask]/3600.
-        prate[ mask ] = prate[mask]
+        #mask = ( rastr != rmiss_grib )
+        #prate[ mask ] = prate[ mask ] / 3600.
 
+        if q_thr is not None:
+            prate[ mask ] = rmiss_grib
+            print(prate.min(), prate.max())
         # Calcolo gli estremi mancanti
         lonLast = lonFirst + (rastr.shape[1] * mesh_dx )
         latFirst = latLast + (rastr.shape[0] * mesh_dy )
@@ -176,12 +221,20 @@ def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
         """
         
         if fileout is None:
-            fileout = "radar_SRI_{}{}{}{}{}.grib2".format(datafile[2], datafile[1],
-                                                          datafile[0], datafile[3],
-                                                          datafile[4])
-            
+            if q_thr is not None:
+                fileout = "radar_SRI_{}{}{}{}{}_q{}.grib2".format( datafile[2], datafile[1],
+                                                                   datafile[0], datafile[3],
+                                                                   datafile[4], int(q_thr) )
+            else:
+                fileout = "radar_SRI_{}{}{}{}{}.grib2".format( datafile[2], datafile[1],
+                                                               datafile[0], datafile[3],
+                                                               datafile[4] )
         print("Output file = {}".format(fileout))
-        fout = open(fileout, "wb")
+
+        if dirout is None:
+            fout = open(fileout, "wb")
+        else:
+            fout = open(os.path.join(dirout, fileout), "wb")
 
         # Definizione della griglia e del formato degli incrementi
         if griglia == "icon":
@@ -273,6 +326,7 @@ def radar_hdf52grib(filein, griglia, gribtemplate=None, fileout=None):
             
         # Scrivo il precipitation rate in kg m-2 s-1
         pr_mm = np.flip(prate, 0)
+
         codes_set_values(gaid_template, pr_mm.flatten())
 
         codes_write(gaid_template, fout)
@@ -289,9 +343,12 @@ def main():
 
     inputfile = args.inputfile
     griglia = args.griglia
+    rmiss_grib = args.rmiss
 
-    radar_hdf52grib(inputfile, griglia, args.gribtemplate, args.outputfile)
+    radar_hdf52grib( inputfile, griglia, rmiss_grib, args.gribtemplate, args.outputfile, args.outputdir, args.q_thr )
 
 
 if __name__ == "__main__":
     main()
+
+    quit()
