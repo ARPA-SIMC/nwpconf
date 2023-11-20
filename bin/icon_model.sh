@@ -141,12 +141,12 @@ inputmodel_name() {
 model_readyfiletoname() {
 
     # extract reftime and delta from the ready file
-    # <nomerun>_<YYYYmmddHHMM>_<tipogriglia>_<tipocampo>_+<ddHHMMSS>.grb
+    # <nomerun>_<YYYYmmddHHMM>_<tipocampo>_<tipogriglia>_<tipopp>_+<ddHHMMSS>.grb
     # <nomerun>_<YYYYmmddHHMM>_+<ddHHMMSS>.rf
     f=${1%.rf}
     delta=${f#*_+}
     nreftime=${f%_+$delta}
-    echo ${nreftime}_*_*_+${delta}.grb
+    echo ${nreftime}_*_*_*_+${delta}.grb
 
 }
 
@@ -175,7 +175,7 @@ model_readyfiletosignal() {
 }
 
 
-## @fn cosmo_getarki_obsncdf()
+## @fn icon_getarki_obsncdf()
 ## @brief Retrieve observation data for assimilation.
 ## @details This function retrieves from the arkimet dataset specified
 ## by `$BUFR_ARKI_DS_CONV` and `$BUFR_ARKI_DS_NOCONV` (see
@@ -186,14 +186,14 @@ model_readyfiletosignal() {
 ## basis of the environment ## variables defining assimilation and 
 ## forecast time.
 ## @param $1 (optional) name of the logsim event to wait for, if empty it does not wait
-cosmo_getarki_obsncdf() {
+icon_getarki_obsncdf() {
 
 # optional wait
     [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
 #    test -n "$1" && bufr_wait_logsim $1
     type meter_increment 2>/dev/null && meter_increment || true
 # get data
-    getarki_obsbufr obs_ecmwf_conv.bufr obs_wmo_cosmo_noconv.bufr $MODEL_STOP
+    getarki_obsbufr obs_ecmwf_conv.bufr obs_wmo_cosmo_noconv.bufr 1
     type meter_increment 2>/dev/null && meter_increment || true
 
     # convert to netcdf
@@ -306,7 +306,7 @@ make_ncdf_link2() {
 }
 
 
-## @fn cosmo_getarki_lhn()
+## @fn icon_getarki_lhn()
 ## @brief Retrieve precipitation data for LHN.
 ## @details This function retrieves from the arkimet dataset specified
 ## by `$ARKI_LHN_DS` the grib files with observed gridded
@@ -315,19 +315,21 @@ make_ncdf_link2() {
 ## retrieved is computed on the basis of the environment variables
 ## defining assimilation and forecast time. The files are placed in
 ## the current directory with the name required by the model.
-cosmo_getarki_lhn() {
+icon_getarki_lhn() {
 
     local startdate enddate curdate nextdate
-# when using data every 15' for some unperscrutable reason COSMO
-# requires also the file for the previous hour
-
-    startdate=`datetime_sub $DATES $TIMES 1`
-    if [ "$DATE$TIME" = "$DATES$TIMES" ]; then # probably forecast
-	enddate=`datetime_add $DATE $TIME 3`
-    else # assimilation
-	enddate=`datetime_add $DATE $TIME 1`
+    # Set MODEL_NH_LHN
+    if [ -z ${MODEL_NH_LHN} ]; then
+        MODEL_NH_LHN=3
     fi
 
+    # Define time interval
+    startdate=`datetime_sub $DATES $TIMES 1`
+    if [ "$DATE$TIME" = "$DATES$TIMES" ]; then # probably forecast
+        enddate=`datetime_add $DATE $TIME $MODEL_NH_LHN`
+    else # assimilation
+        enddate=`datetime_add $DATE $TIME 1`
+    fi
     echo "$startdate:$enddate"
     curdate=$startdate
     while [ "$curdate" -le "$enddate" ]; do

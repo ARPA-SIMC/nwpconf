@@ -311,14 +311,18 @@ putarki_configured_model_output() {
 # process all grib files related to $rfile
 		for gfile in `model_readyfiletoname $rfile`; do
                     log "processing $gfile"
-		    putarki_configured_archive $dirname $gfile grib
-		    # create and archive postprocessed data if required
-		    for ppc in ${POSTPROC_LIST[*]}; do
-			ext=${ppc##*_}
-			$ppc $gfile ${gfile}_${ext}
-			[ -s "${gfile}_${ext}" ] && putarki_configured_archive $dirname ${gfile}_${ext} $POSTPROC_FORMAT
-			rm -f ${gfile}_${ext}
+		    if [ -n "$POSTPROC_FUNC" ]; then
+			$POSTPROC_FUNC $gfile $dirname
+		    else
+			putarki_configured_archive $dirname $gfile grib
+			# create and archive postprocessed data if required
+			for ppc in ${POSTPROC_LIST[*]}; do
+			    ext=${ppc##*_}
+			    $ppc $gfile ${gfile}_${ext}
+			    [ -s "${gfile}_${ext}" ] && putarki_configured_archive $dirname ${gfile}_${ext} $POSTPROC_FORMAT
+			    rm -f ${gfile}_${ext}
 		    done
+			fi
 		done
 # update status for $rfile
 		statuslist[$rfile]="DONE"
