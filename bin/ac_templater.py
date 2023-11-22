@@ -5,9 +5,10 @@ import os
 import re
 
 def open_include(name):
+    res = None
     confdirlist = os.getenv('confdirlist')
     if os.path.basename(name) != name or confdirlist is None:
-        return open(name)
+        res = name
     else:
 # emulate conf_getfile
         ens_memb = os.getenv('ENS_MEMB')
@@ -15,11 +16,13 @@ def open_include(name):
         for searchdir in confdirlist.split():
             tryfile = os.path.join(searchdir, name)
             if ens_memb is not None:
+                tryfile2 = tryfile+'.ens'
+                if os.path.exists(tryfile2): res = tryfile2
                 tryfile2 = tryfile+ens_memb
-                if os.path.exists(tryfile2):
-                    return open(tryfile2)
-            if os.path.exists(tryfile):
-                return open(tryfile)
+                if os.path.exists(tryfile2): res = tryfile2
+            if os.path.exists(tryfile): res = tryfile
+    if res is not None: return open(res)
+    sys.stderr.write("include file "+name+" was not found")
     return None
 
 
