@@ -22,7 +22,7 @@
 ## defaults.
 icon_model_init() {
 
-    READYFILE_PATTERN="*.rf"
+    READYFILE_PATTERN="*_${DATES}${TIMES}00_*.rf"
 # for retrieving data from MARS (predefined area, open ERA-interim dataset)
 # base request (must not start with retrieve)
     MODEL_MARS_BASE=" dataset = interim,
