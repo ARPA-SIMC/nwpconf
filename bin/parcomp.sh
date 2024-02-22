@@ -66,8 +66,14 @@ parcomp_init() {
 ## @param $1 the number of computational tasks requested, if not provided `$NPC` is used
 parcomp_computetopo() {
     NPC=${1:-$NPC}
-    if [ "$NPC" -ge 512 ]; then
+    if [ "$NPC" -ge 672 ]; then
+	NPX=24
+	NPY=28
+    elif [ "$NPC" -ge 512 ]; then
 	NPX=16
+	NPY=32
+    elif [ "$NPC" -ge 448 ]; then
+	NPX=14
 	NPY=32
     elif [ "$NPC" -ge 416 ]; then
 	NPX=16
@@ -78,6 +84,9 @@ parcomp_computetopo() {
     elif [ "$NPC" -ge 352 ]; then
 	NPX=16
 	NPY=22
+    elif [ "$NPC" -ge 336 ]; then
+	NPX=16
+	NPY=21
     elif [ "$NPC" -ge 320 ]; then
 	NPX=16
 	NPY=20
@@ -90,9 +99,12 @@ parcomp_computetopo() {
     elif [ "$NPC" -ge 256 ]; then
 	NPX=16
 	NPY=16
-    elif [ "$NPC" -ge 204 ]; then
+    elif [ "$NPC" -ge 224 ]; then
 	NPX=14
 	NPY=16
+    elif [ "$NPC" -ge 204 ]; then
+	NPX=12
+	NPY=17
     elif [ "$NPC" -ge 192 ]; then
 	NPX=6
 	NPY=32
@@ -110,6 +122,9 @@ parcomp_computetopo() {
 	NPY=17
     elif [ "$NPC" -ge 128 ]; then
 	NPX=8
+	NPY=16
+    elif [ "$NPC" -ge 112 ]; then
+	NPX=7
 	NPY=16
     elif [ "$NPC" -ge 108 ]; then
 	NPX=6
