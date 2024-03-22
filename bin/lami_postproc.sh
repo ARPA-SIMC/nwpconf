@@ -156,7 +156,7 @@ lami_make_vprofg2()
     if [ -s "${tmpfile}_109" ]; then
 
     # vertical interpolation to full levels
-    $SIMC_TOOLS vg6d_transform --component-flag=1 --trans-type=vertint --sub-type=linear \
+    $SIMC_TOOLS vg6d_transform --component-flag=0 --trans-type=vertint --sub-type=linear \
         --trans-level-type=150,,150,150 \
         ${tmpfile}_109 ${tmpfile}_109_110
     cat ${tmpfile}_109_110 >> ${tmpfile}_110
@@ -259,7 +259,7 @@ lami_make_crossg2()
     if [ -s "${tmpfile}_109" ]; then
 
     # vertical interpolation to full levels
-    $SIMC_TOOLS vg6d_transform --component-flag=1 --trans-type=vertint --sub-type=linear \
+    $SIMC_TOOLS vg6d_transform --component-flag=0 --trans-type=vertint --sub-type=linear \
         --trans-level-type=150,,150,150 \
         ${tmpfile}_109 ${tmpfile}_109_110
     cat ${tmpfile}_109_110 >> ${tmpfile}_110
