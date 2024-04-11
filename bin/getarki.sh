@@ -160,15 +160,15 @@ getarki_icbc() {
     	    arki-query --data -o $ofile \
     		"reftime:=$reftime;$timerange;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
             # if file is empty retry, otherwise exit
-    	    if [ -s "$ofile" ]; then
-    		break
-    	    fi
+	    if __check_msg_num $ofile; then
+		break
+	    fi
     	    echo "retrying arki-query"
     	    sleep 10
     	    ntry=$(($ntry - 1))
     	done
 
-    	if [ ! -s "$ofile" ]; then # file is empty or missing
+	if ! __check_msg_num $ofile; then
     	    return 1
     	fi
 
@@ -218,6 +218,22 @@ getarki_icbc() {
 
         # Remove un-necessary files
         rm lfff_ini lfff_fin $last_file
+    fi
+}
+
+
+__check_msg_num() {
+
+    if [ ! -s $1 ]; then # file is empty or missing
+	return 1
+    fi
+    if [ -n "$GET_ICBC_MINCOUNT" ]; then
+	nm=$(grib_count $1) || return 1 # file badly truncated
+#	if [ -n "$nm" ]; then
+	    if [ "$nm" -lt "$GET_ICBC_MINCOUNT" ]; then
+		return 1 # file too short
+	    fi
+#	fi
     fi
 }
 
