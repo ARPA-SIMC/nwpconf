@@ -89,8 +89,13 @@ getarki_radar_vol() {
                 "reftime:=$YYYY-$MM-$DD $hh:$mm; origin:ODIMH5,$r;" \
                 $BUFR_ARKI_DS_RADARVOL
 
-            # If file is not empty, skip to the next radar station
-            if [ -s $fname ]; then break; fi
+            # If file is not empty, check if elevations are in the EMVORADO defaults and
+            # skip to the next radar station
+            if [ -s $fname ]; then 
+                $SIMC_TOOLS $WORKDIR_BASE/nwprun/ecflow/script_python3/preproc_volumi.py \
+                    -f $fname -o $HDF5_QUARANTINE
+                break
+            fi
 
             # Go back in time
             dateobs_old=$dateobs
