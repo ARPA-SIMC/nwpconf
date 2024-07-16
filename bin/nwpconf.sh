@@ -256,7 +256,7 @@ date_add() {
     if [ "${#1}" -gt 8 ]; then
 	$DATECOM --date "${1:0:8} ${1:8:4} `signedhour_to_date $2`" '+%Y%m%d'
     else
-	$DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%Y%m%d'
+	$DATECOM --date "$1 ${2:0:2}:00 `signedhour_to_date $3`" '+%Y%m%d'
     fi
 }
 
@@ -271,7 +271,7 @@ time_add() {
     if [ "${#1}" -gt 8 ]; then
 	$DATECOM --date "${1:0:8} ${1:8:4} `signedhour_to_date $2`" '+%H'
     else
-	$DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%H'
+	$DATECOM --date "$1 ${2:0:2}:00 `signedhour_to_date $3`" '+%H'
     fi
 }
 
@@ -286,7 +286,7 @@ datetime_add() {
     if [ "${#1}" -gt 8 ]; then
 	$DATECOM --date "${1:0:8} ${1:8:4} `signedhour_to_date $2`" '+%Y%m%d%H'
     else
-	$DATECOM --date "$1 $2:00 `signedhour_to_date $3`" '+%Y%m%d%H'
+	$DATECOM --date "$1 ${2:0:2}:00 `signedhour_to_date $3`" '+%Y%m%d%H'
     fi
 }
 
@@ -301,7 +301,7 @@ date_sub() {
     if [ "${#1}" -gt 8 ]; then
 	$DATECOM --date "${1:0:8} ${1:8:4} `minus_signedhour_to_date $2`" '+%Y%m%d'
     else
-	$DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%Y%m%d'
+	$DATECOM --date "$1 ${2:0:2}:00 `minus_signedhour_to_date $3`" '+%Y%m%d'
     fi
 }
 
@@ -316,7 +316,7 @@ time_sub() {
     if [ "${#1}" -gt 8 ]; then
 	$DATECOM --date "${1:0:8} ${1:8:4} `minus_signedhour_to_date $2`" '+%H'
     else
-	$DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%H'
+	$DATECOM --date "$1 ${2:0:2}:00 `minus_signedhour_to_date $3`" '+%H'
     fi
 }
 
@@ -331,7 +331,7 @@ datetime_sub() {
     if [ "${#1}" -gt 8 ]; then
 	$DATECOM --date "${1:0:8} ${1:8:4} `minus_signedhour_to_date $2`" '+%Y%m%d%H'
     else
-	$DATECOM --date "$1 $2:00 `minus_signedhour_to_date $3`" '+%Y%m%d%H'
+	$DATECOM --date "$1 ${2:0:2}:00 `minus_signedhour_to_date $3`" '+%Y%m%d%H'
     fi
 }
 
