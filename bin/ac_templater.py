@@ -15,12 +15,12 @@ def open_include(name):
         if ens_memb is not None: ens_memb = '.'+ens_memb
         for searchdir in confdirlist.split():
             tryfile = os.path.join(searchdir, name)
+            if os.path.exists(tryfile): res = tryfile
             if ens_memb is not None:
                 tryfile2 = tryfile+'.ens'
                 if os.path.exists(tryfile2): res = tryfile2
                 tryfile2 = tryfile+ens_memb
                 if os.path.exists(tryfile2): res = tryfile2
-            if os.path.exists(tryfile): res = tryfile
     if res is not None: return open(res)
     sys.stderr.write("include file "+name+" was not found")
     return None
