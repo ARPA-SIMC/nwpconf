@@ -488,7 +488,11 @@ putarki_configured_dailycleanup() {
     dt=`date_now`
     dt=`datetime_sub ${dt}00 $(($1 * 24))`00
     if [ -n "$ARKI_IMPDIR" ]; then
-	__putarki_configured_dailycleanup $ARKI_IMPDIR/configured/ $dt
+	for dir in $ARKI_IMPDIR/configured/ $ARKI_IMPDIR/sync_*/; do
+	    if [ -d "$dir" ]; then
+		__putarki_configured_dailycleanup $dir $dt
+	    fi
+	done
     fi
     if [ -n "$ARKI_DLDIR" ]; then
 	__putarki_configured_dailycleanup $ARKI_DLDIR/configured/ $dt
