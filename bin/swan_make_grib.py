@@ -1,11 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys, os
 import collections
 import datetime
 import numpy
 from gribapi import *
-#richiede export PYTHONPATH=/usr/lib64/python2.7/site-packages/grib_api/
 
 nx = int(os.environ['SWAN_NX'])+1
 ny = int(os.environ['SWAN_NY'])+1

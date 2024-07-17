@@ -131,7 +131,7 @@ simc_create_radar_grib() {
 	    $RADAR_LHNDIR/netcdf2grib1_SIMC $ncmosaico $model_template>/dev/null 2>&1
 	    if [ -f $gribmosaico ]; then
 		if [ -n "$RADAR_LHN_GP" ]; then
-		    grib_set -s generatingProcessIdentifier=$RADAR_LHN_GP \
+		    $SIMC_TOOLS grib_set -s generatingProcessIdentifier=$RADAR_LHN_GP \
 			$gribmosaico $gribmosaico.gp>/dev/null
 		    mv -f $gribmosaico.gp $gribmosaico
 		fi
@@ -218,7 +218,7 @@ simc_convert_radar_grib() {
 
 	    if [ -f "$gribmosaico" ]; then
 		if [ -n "$RADAR_LHN_GP" ]; then
-		    grib_set -s generatingProcessIdentifier=$RADAR_LHN_GP \
+		    $SIMC_TOOLS grib_set -s generatingProcessIdentifier=$RADAR_LHN_GP \
 			     $gribmosaico $gribmosaico.gp>/dev/null
 		    mv -f $gribmosaico.gp $gribmosaico
 		fi

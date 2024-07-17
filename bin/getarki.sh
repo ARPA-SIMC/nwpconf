@@ -52,9 +52,9 @@ getarki_obsbufr() {
 
     [ -n "$WAITFUNCTION" ] && $WAITFUNCTION
 
-    arki-query --data -o $1 \
+    $SIMC_TOOLS arki-query --data -o $1 \
     "origin: BUFR; reftime:>=$ds,<=$de;" $BUFR_ARKI_DS_CONV     || true
-    arki-query --data -o $2 \
+    $SIMC_TOOLS arki-query --data -o $2 \
     "origin: BUFR; reftime:>=$ds,<=$de;" $BUFR_ARKI_DS_NOCONV   || true
 
 }
@@ -85,7 +85,7 @@ getarki_radar_vol() {
             hh=${timeobs:0:2}
             mm=${timeobs:2:2}
             fname=odim_${dateobs}${timeobs}_${r}
-            arki-query --data -o $fname \
+            $SIMC_TOOLS arki-query --data -o $fname \
                 "reftime:=$YYYY-$MM-$DD $hh:$mm; origin:ODIMH5,$r;" \
                 $BUFR_ARKI_DS_RADARVOL
 
@@ -162,7 +162,7 @@ getarki_icbc() {
     	ntry=2
 	    ofile=`inputmodel_name $h`
     	while [ "$ntry" -gt 0 ]; do
-    	    arki-query --data -o $ofile \
+    	    $SIMC_TOOLS arki-query --data -o $ofile \
     		"reftime:=$reftime;$timerange;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
             # if file is empty retry, otherwise exit
 	    if __check_msg_num $ofile; then
@@ -194,8 +194,8 @@ getarki_icbc() {
         last_file=`inputmodel_name $h`
 
         # Sort gribs to ensure that they are in the same position
-        arki-query --data --sort=minute:timerange,level,product '' grib:$first_file > ${first_file}.sort
-        arki-query --data --sort=minute:timerange,level,product '' grib:$last_file  > ${last_file}.sort
+        $SIMC_TOOLS arki-query --data --sort=minute:timerange,level,product '' grib:$first_file > ${first_file}.sort
+        $SIMC_TOOLS arki-query --data --sort=minute:timerange,level,product '' grib:$last_file  > ${last_file}.sort
 
         # Compute coefficients for linear combination
         deltat_TIMES=`expr $TIMES % $MODEL_FREQ_SLICE || true`
@@ -205,12 +205,12 @@ getarki_icbc() {
         a2=$( echo "scale=16; 1-$b2" | bc )
 
         # Temporal interpolation
-        math_grib.exe $a1 ${first_file}.sort $b1 ${last_file}.sort lfff_ini sum -check='grid'
-        math_grib.exe $a2 ${first_file}.sort $b2 ${last_file}.sort lfff_fin sum -check='grid'
+        $SIMC_TOOLS math_grib.exe $a1 ${first_file}.sort $b1 ${last_file}.sort lfff_ini sum -check='grid'
+        $SIMC_TOOLS math_grib.exe $a2 ${first_file}.sort $b2 ${last_file}.sort lfff_fin sum -check='grid'
 
         # Update stepRange of new files
-        grib_set -s stepRange=$MODEL_DELTABD_SLICE lfff_ini lfff_ini_mod
-        grib_set -s stepRange=$((${MODEL_DELTABD_SLICE}+${MODEL_STOP})) lfff_fin lfff_fin_mod
+        $SIMC_TOOLS grib_set -s stepRange=$MODEL_DELTABD_SLICE lfff_ini lfff_ini_mod
+        $SIMC_TOOLS grib_set -s stepRange=$((${MODEL_DELTABD_SLICE}+${MODEL_STOP})) lfff_fin lfff_fin_mod
 
         # Rename files
         mv lfff_ini_mod $first_file
@@ -233,7 +233,7 @@ __check_msg_num() {
 	return 1
     fi
     if [ -n "$GET_ICBC_MINCOUNT" ]; then
-	nm=$(grib_count $1) || return 1 # file badly truncated
+	nm=$($SIMC_TOOLS grib_count $1) || return 1 # file badly truncated
 #	if [ -n "$nm" ]; then
 	    if [ "$nm" -lt "$GET_ICBC_MINCOUNT" ]; then
 		return 1 # file too short
@@ -271,7 +271,7 @@ getarki_static() {
     ntry=2
     ofile=$1
     while [ "$ntry" -gt 0 ]; do
-	arki-query --data -o $ofile \
+	$SIMC_TOOLS arki-query --data -o $ofile \
 	  "reftime:=$reftime;$timerange;$MODEL_ARKI_PARENT_STATIC;$MODEL_ARKI_PARAM" $PARENTMODEL_ARKI_DS
 # if file is empty retry, otherwise exit
 	if [ -s "$ofile" ]; then

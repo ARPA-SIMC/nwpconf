@@ -117,7 +117,7 @@ inputmodel_name() {
 ## @param $1 name of the grib file in input
 swan_compute_scanning_mode() {
 
-    flag=(`grib_get -p iScansNegatively,jScansPositively,jPointsAreConsecutive $1|head -1`)
+    flag=(`$SIMC_TOOLS grib_get -p iScansNegatively,jScansPositively,jPointsAreConsecutive $1|head -1`)
     if [ "${flag[0]}" = "0" ]; then
 	if [ "${flag[1]}" = "0" -a "${flag[2]}" = "0" ]; then
 	    echo "2"
@@ -161,13 +161,13 @@ swan_create_wind_input() {
     local tmpout
     tmpout=wind_out.tmp
 # --extrap to avoid missing values at the borders, use with care
-    vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
+    $SIMC_TOOLS vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
 	--x-min=$SWAN_XMIN --y-min=$SWAN_YMIN --x-max=$SWAN_XMAX --y-max=$SWAN_YMAX \
 	--nx=$(($SWAN_NX+1)) --ny=$(($SWAN_NY+1)) --component-flag=0 \
 	$1 $tmpout
 # consider to add:
 # -F format, C style format for values. Default is "%.10e"
-    grib_get_data -w shortName=10u/10v -m -99999. $tmpout > $2
+    $SIMC_TOOLS grib_get_data -w shortName=10u/10v -m -99999. $tmpout > $2
     rm -f $tmpout
     export SWAN_WIND_SCMODE=`swan_compute_scanning_mode $1`
 
@@ -212,16 +212,16 @@ swan_create_bathymetry() {
     tmp2=bathy2.tmp
 
 # interpolate from original bathymetry
-    vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
+    $SIMC_TOOLS vg6d_transform --type=regular_ll --trans-type=inter --sub-type=bilin \
 	--x-min=$SWAN_XMIN --y-min=$SWAN_YMIN --x-max=$SWAN_XMAX --y-max=$SWAN_YMAX \
 	--nx=$(($SWAN_NX+1)) --ny=$(($SWAN_NY+1)) $1 $tmp1
 # set "land" >-0.1m to missing
-    vg6d_transform --trans-type=metamorphosis --sub-type=maskvalid \
+    $SIMC_TOOLS vg6d_transform --trans-type=metamorphosis --sub-type=maskvalid \
 	--maskbounds=-12000.,-0.1 --coord-file=$tmp1 --coord-format=grib_api $tmp1 $tmp2
 
 # consider to add:
 # -F format, C style format for values. Default is "%.10e"
-    grib_get_data -m -99999. $tmp2 > $2
+    $SIMC_TOOLS grib_get_data -m -99999. $tmp2 > $2
     rm -f $tmp1 $tmp2
     export SWAN_BATHY_SCMODE=`swan_compute_scanning_mode $1`
 
@@ -244,8 +244,6 @@ swan_create_bathymetry() {
 ## @param $n name of output grib file
 swan_make_grib() {
 
-# PYTHONPATH is ARPA/Fedora 20 specific setting
-    PYTHONPATH=/usr/lib64/python2.7/site-packages/grib_api \
 	$NWPCONFBINDIR/swan_make_grib.py "$@"
 
 }
