@@ -312,7 +312,7 @@ putarki_configured_model_output() {
 		for gfile in `model_readyfiletoname $rfile`; do
                     log "processing $gfile"
 		    if [ -n "$POSTPROC_FUNC" ]; then
-			$POSTPROC_FUNC $gfile $dirname
+			$POSTPROC_FUNC $gfile $dirname &
 		    else
 			putarki_configured_archive $dirname $gfile grib
 			# create and archive postprocessed data if required
@@ -321,9 +321,10 @@ putarki_configured_model_output() {
 			    $ppc $gfile ${gfile}_${ext}
 			    [ -s "${gfile}_${ext}" ] && putarki_configured_archive $dirname ${gfile}_${ext} $POSTPROC_FORMAT
 			    rm -f ${gfile}_${ext}
-		    done
-			fi
+			done
+		    fi
 		done
+		wait # for the $POSTPROC_FUNC case
 # update status for $rfile
 		statuslist[$rfile]="DONE"
 # if defined, increment progress meter
