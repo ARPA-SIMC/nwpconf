@@ -17,7 +17,7 @@
 ## @brief Modules with functions for archiving the model result to a configured Arkimet dataset.
 ## @details This module provides functions for archiving files,
 ## tipically model output in GRIB format, into a desired dataset of an
-## [Arkimet archive](http://arkimet.sourceforge.net/).
+## [Arkimet archive](https://github.com/ARPA-SIMC/arkimet/).
 ## 
 ## It is an optional module and it has to be sourced after the
 ## _nwptime.sh_ module.
@@ -56,37 +56,20 @@ putarki_archive_and_wait() {
 
 ## @fn putarki_archive()
 ## @brief Archive one or more files.
-## @details This function archives the files passed as arguments to
-## the configured dataset. The files are archived according to the
-## value of `$ARKI_SCAN_METHOD`:
-## 
-## - `arki_importer`: assuming that a consumer process is active, the
-##   files are copied to the directory `$ARKI_IMPDIR` configured in
-##   the consumer, the function exits suddendly without waiting for
-##   the termination of the archiving; this method is advantageous
-##   because it allows concurrent processes to simultaneously send
-##   data to the same dataset
-## - `remote_arki_importer`: it is similar to the previous method, but
-##   it assumes that the consumer process is active on a different
-##   host, in this case the variable `$ARKI_IMPSSH` indicates the
-##   credentials for accessing the remote import server by ssh/scp in
-##   the form `user@host` and `$ARKI_IMPDIR` indicate the import
-##   directory configured on the remote server; paswordless ssh access
-##   to the remote server must be set up; this method allows
-##   concurrency as well, but it is less performant due to the access
-##   to a remote server through ssh.
-## - `arki-scan`: an arki-scan is performed with configuration file
-##   `$ARKI_CONF`, in this case the function exits when the archival
-##   has finished; this approach does not require a consumer process,
-##   but concurrent attempts to archive in the same dataset may fail
-##   because of locking issues.
-## 
-## When using the arki_importer approach, the function prints to
-## stdout the list of temporary files created in `$ARKI_IMPDIR` that
-## are being imported and whose deletion indicates that the archiving
-## has finished. Regardless of the archiving method, it is safe to
-## remove the original file at function return since a copy (or hard
-## link if possible) is made in case of asynchronous archiving.
+
+## @details This function displatches the files passed as arguments to
+## the configured destinations. The files are dispatched to three
+## possible destinations: according to the _configured import__
+## protocol:
+##  * temporary directory defined by the variable `$ARKI_IMPDIR` and
+##    by the optional variable `$IMPORT_THREAD` for successive import
+##    into a local arkimet by an instance of
+##    `threaded_multi_importer.sh` process
+##  * temporary directory(ies) defined by the `$ARKI_SYNCDIR` array
+##    for successive syncing to remote destination(s) by instance(s)
+##    of `threaded_multi_importer.sh` process
+##  * long-term storage directory defined by the `$ARKI_DLDIR`
+##    variable for exposing files in a download area
 ## @param $1 the type of file being archived, either `grib` or `bufr`
 ## @param $* the files to be archived
 putarki_archive() {
@@ -96,184 +79,8 @@ putarki_archive() {
     tf=$1
     shift
     for file in $@; do
-    case "$ARKI_SCAN_METHOD" in
-        arki_importer)
-# Best method, it avoids concurrency problems but it requires a
-# consumer process to be active, typically running under the same user
-# id (see script arki_importer.sh); warning, it is an asynchronous
-# method, in order to be sure that the file has been completely
-# imported, archive_and_wait_grib1 function has to be used instead
-            cd $ARKI_IMPDIR
-            dest=`mktemp .XXXXXXXX.$DATE$TIME.$tf`
-            cd - 1>/dev/null
-            ddest=${dest#.}
-# try with a hard link, avoiding copy
-            cp -f -l $file $ARKI_IMPDIR/$dest || cp -f $file $ARKI_IMPDIR/$dest
-            mv -f $ARKI_IMPDIR/$dest $ARKI_IMPDIR/$ddest
-# print file name on stdout, to be used by archive_and_wait_grib1
-            echo $ARKI_IMPDIR/$ddest;;
-        remote_arki_importer)
-	    dest=${file##*/}
-	    scp $file $ARKI_IMPSSH:$ARKI_IMPDIR/.$dest.$$.$DATE$TIME.$tf
-	    ssh $ARKI_IMPSSH mv -f $ARKI_IMPDIR/.$dest.$$.$DATE$TIME.$tf $ARKI_IMPDIR/$dest.$$.$DATE$TIME.$tf
-            echo $ARKI_IMPDIR/$dest.$$.$DATE$TIME.$tf;;
-        arki-scan)
-# do a simple, local, file-based arki-scan, the user must deal with
-# concurrency problems; synchronous method
-            $SIMC_TOOLS arki-scan --dispatch=$ARKI_CONF $tf:$file > /dev/null;;
-	configured_importer)
-	    putarki_configured_archive add_upload_dir $file
-	    ;;
-    esac
+	putarki_configured_archive add_upload_dir $file
     done
-}
-
-
-## @fn putarki_wait_for_deletion()
-## @brief Wait until the requested files have been deleted.
-## @details This function waits until the files passed as arguments
-## (which should reside in `$ARKI_IMPDIR`) have been deleted, meaning
-## that their archiving has completed. If configured by the
-## environment assignment `ARKI_USE_INOTIFY=Y`, the function uses
-## the command `inotifywait` to speedup the detection of the deletion
-## process, otherwise a series of check and sleep is performed. All
-## the operations, regardless of the use of inotify, have a timeout of
-## `$PUTARKI_WAITDEL` seconds. It is a function specific to the
-## putarki_archive() function, it should not be used as a generic file
-## deletion checking function.
-## @param $* the files to be deleted
-putarki_wait_for_deletion() {
-
-    case "$ARKI_SCAN_METHOD" in
-        configured_importer) # no wait by definition in this case
-	    return
-	    ;;
-    esac
-
-    local waitlist=("$@")
-    while true; do
-        for i in ${!waitlist[*]}; do
-	    case "$ARKI_SCAN_METHOD" in
-		arki_importer)
-		    if [ ! -f ${waitlist[$i]} ]; then
-			unset waitlist[$i]
-		    fi
-		    ;;
-		remote_arki_importer)
-		    if ! ssh $ARKI_IMPSSH test -f ${waitlist[$i]}; then
-			unset waitlist[$i]
-		    fi
-		    ;;
-	    esac
-        done
-# check if there are still files to wait for
-        if [ ${#waitlist[*]} -eq 0 ]; then
-            return
-        fi
-# make a break
-        if [ "$ARKI_SCAN_METHOD" = arki_importer -a "$ARKI_USE_INOTIFY" = Y ]; then
-            inotifywait --timeout $PUTARKI_WAITDEL --event delete $ARKI_IMPDIR >/dev/null 2>&1 || true
-        else
-            sleep $PUTARKI_WAITDEL
-        fi
-    done
-        
-}
-
-
-## @fn putarki_model_output()
-## @brief Archive the output of a model run while it is being produced.
-## @details This function waits for the appearing of model ouput files
-## and archives them as soon as possible in the configured Arkimet
-## dataset with the putarki_archive() function. It relies on the
-## creation, in the current directory, of ready-files with name
-## matching `$READYFILE_PATTERN` and on the existance of a
-## model-specific function model_readyfiletoname() taking as argument
-## the name of a specific ready-file and printing to stdout the name
-## of all the output files related to that ready-file. If the
-## `$PUTARKI_WAITTOTAL` variable is defined, the function will exit after that
-## number of seconds. even if the work is not finished. For an example
-## of model-specific setup, see the documentation of the
-## _cosmo_module.sh_ module.
-## @param $1 the number of ready files to wait for before exiting
-## @param $2 optional, if equal to `-w` tells the function to wait for the archiving to complete before exiting
-putarki_model_output() {
-
-# initialisations
-    local workdir=$PWD
-    local nrfiles=$1
-    local wait=
-    [ "$2" = "-w" ] && wait=Y
-    local rfile
-    declare -a waitlist
-    declare -a siglist
-    declare -A statuslist
-    statuslist=()
-    if [ "$ARKI_USE_INOTIFY" = Y ]; then
-	NWPWAITWAIT=
-    else
-	NWPWAITWAIT=$PUTARKI_WAITSTART
-    fi
-    NWPWAITSOLAR=
-    nwpwait_setup
-
-    while true; do
-# this is done here in case the directory is removed and recreated
-	cd $workdir
-	waitlist=()
-	siglist=()
-	found=
-# loop on ready-files
-	shopt -s nullglob
-# this trick is required if pattern contains {*,?} because brace({,})
-# expansion is done before variable expansion
-	matchlist=`eval echo "$READYFILE_PATTERN"`
-	for rfile in $matchlist; do
-	    if [ -z "${statuslist[$rfile]}" ]; then # it is a new file
-		echo $rfile
-# process all grib files related to $rfile
-		for gfile in `model_readyfiletoname $rfile`; do
-		    echo $gfile
-		    waitlist[${#waitlist[*]}]=`putarki_archive grib $gfile`
-		done
-# update status for $rfile
-		statuslist[$rfile]="DONE"
-		if [ -n "$MODEL_SIGNAL" ]; then
-		    siglist[${#siglist[*]}]=`model_readyfiletosignal $rfile`
-		fi
-# if defined, increment progress meter
-		type meter_increment 2>/dev/null && meter_increment || true
-		found=Y
-	    fi
-	done
-	shopt -u nullglob
-
-	if [ -n "$found" ]; then # something new has been found
-	    if [ ${#waitlist[*]} -gt 0 -a -n "$wait" ]; then
-		putarki_wait_for_deletion ${waitlist[*]}
-	    fi
-	    if [ -n "$MODEL_SIGNAL" ]; then
-		for sig in ${siglist[*]}; do
-		    if [ -n "$sig" ]; then
-			import_signal_imported $MODEL_SIGNAL $sig
-		    fi
-		done
-	    fi
-	else # nothing new has been found
-# end of task condition
-#	    if [ "${statuslist[$1]}" = "DONE" ]; then
-	    if [ ${#statuslist[*]} -eq $nrfiles ]; then 
-		return
-	    fi
-# check end of time and wait if necessary (i.e. if not using inotify)
-	    nwpwait_wait
-# wait for some event
-	    if [ "$ARKI_USE_INOTIFY" = Y ]; then
-		inotifywait --timeout $PUTARKI_WAITSTART --event close --exclude '^\.\/l.*' ./ || true
-	    fi
-	fi
-    done
-
 }
 
 
@@ -285,11 +92,7 @@ putarki_configured_model_output() {
     local rfile
     declare -A statuslist
     statuslist=()
-    if [ "$ARKI_USE_INOTIFY" = Y ]; then
-	NWPWAITWAIT=
-    else
-	NWPWAITWAIT=$PUTARKI_WAITSTART
-    fi
+    NWPWAITWAIT=$PUTARKI_WAITSTART
     NWPWAITSOLAR=
     nwpwait_setup
     # check MODEL_SIGNAL?
@@ -370,10 +173,10 @@ putarki_configured_setup() {
     local putdir
     shift
     if [ -n "$ARKI_IMPDIR" ]; then
-	__putarki_configured_setup $ARKI_IMPDIR/configured/$dir.$$ $@
+	__putarki_configured_setup $ARKI_IMPDIR/configured${IMPORT_THREAD:+.$IMPORT_THREAD}/$dir.$$ $@
     fi
     if [ -n "$ARKI_SYNCDIR" ]; then
-	for putdir in ${ARKI_SYNCDIR[*]}; do
+	for putdir in "${ARKI_SYNCDIR[@]}"; do
 	    __putarki_configured_setup $putdir/$dir.$$ $@
 	done
     fi
@@ -390,7 +193,7 @@ __putarki_configured_setup() {
     if [ -d "$dir" ]; then
 	safe_rm_rf $dir
     fi
-    mkdir $dir || return 1
+    mkdir -p $dir || return 1
     rm -f $dir/.start.sh $dir/start.sh
     for var in "$@"; do
 	echo $var >> $dir/.start.sh
@@ -413,10 +216,10 @@ putarki_configured_archive() {
     local dir=$1:$DATE$TIME:$ENS_MEMB:
     local putdir
     if [ -n "$ARKI_IMPDIR" ]; then
-	__putarki_configured_archive $ARKI_IMPDIR/configured/$dir.$$ $2 $3
+	__putarki_configured_archive $ARKI_IMPDIR/configured${IMPORT_THREAD:+.$IMPORT_THREAD}/$dir.$$ $2 $3
     fi
     if [ -n "$ARKI_SYNCDIR" ]; then
-	for putdir in ${ARKI_SYNCDIR[*]}; do
+	for putdir in "${ARKI_SYNCDIR[@]}"; do
 	    __putarki_configured_archive $putdir/$dir.$$ $2 $3
 	done
     fi
@@ -455,10 +258,10 @@ putarki_configured_end() {
     local dir=$1:$DATE$TIME:$ENS_MEMB:
     local putdir
     if [ -n "$ARKI_IMPDIR" ]; then
-	__putarki_configured_end $ARKI_IMPDIR/configured/$dir.$$
+	__putarki_configured_end $ARKI_IMPDIR/configured${IMPORT_THREAD:+.$IMPORT_THREAD}/$dir.$$
     fi
     if [ -n "$ARKI_SYNCDIR" ]; then
-	for putdir in ${ARKI_SYNCDIR[*]}; do
+	for putdir in "${ARKI_SYNCDIR[@]}"; do
 	    __putarki_configured_end $putdir/$dir.$$
 	done
     fi
@@ -489,7 +292,7 @@ putarki_configured_dailycleanup() {
     dt=`date_now`
     dt=`datetime_sub ${dt}00 $(($1 * 24))`00
     if [ -n "$ARKI_IMPDIR" ]; then
-	for dir in $ARKI_IMPDIR/configured/ $ARKI_IMPDIR/sync_*/; do
+	for dir in $ARKI_IMPDIR/configured.*/ $ARKI_IMPDIR/sync.*/; do # $IMPORT_THREAD?
 	    if [ -d "$dir" ]; then
 		__putarki_configured_dailycleanup $dir $dt
 	    fi
@@ -523,7 +326,6 @@ __putarki_configured_dailycleanup() {
 # start exporting all assignments
 set -a
 check_dep putarki
-check_defined ARKI_SCAN_METHOD
 # default time to wait before starting processing output files during model run (s)
 PUTARKI_WAITSTART=30
 # default maximum time to wait between checks when no events happen (s)
