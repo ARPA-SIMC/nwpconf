@@ -31,18 +31,14 @@
 
 
 ## @fn arkilocal_setup()
-## @brief Creates a local file-based arkimet dataset.
-## @details This function creates the directory tree and the basic
-
 ## @brief Initialise the environment for using a local file-based arkimet dataset.
 ## @details This function is implicitly called when the module is
-## sourced, it sets the variables `$ARKI_SCAN_METHOD`, `$ARKI_CONF`
+## sourced, it sets the variables `$ARKI_CONF`
 ## and `$ARKI_DS_*` internally used by the dataset creation function
 ## and by the archiving and retrieving functions.
 arkilocal_setup() {
     local typ gp
 # automatically set some variables
-    ARKI_SCAN_METHOD=arki-scan
     ARKI_CONF=$ARKI_DIR/config
 
     for typ in ASSIM ASSIM_INC FCAST FCRUC INTER RADAR; do
@@ -65,7 +61,7 @@ arkilocal_setup() {
 ## with the proper generating process in each configuration. It
 ## creates also the error dataset, required by arkimet, and merges all
 ## the config files into a single configuration file. It also sets the
-## variable `$ARKI_SCAN_METHOD` to `arki-scan` and `$ARKI_CONF` to the
+## variable `$ARKI_CONF` to the
 ## required value (see putarki.sh::putarki_archive() ) and exports the
 ## `$ARKI_DS_<TYPE>` variables pointing to the proper dataset.
 ## @param $1 -c for cleaning the contents of a previous dataset (erases `$ARKI_DIR` directory!)
