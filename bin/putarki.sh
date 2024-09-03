@@ -41,23 +41,10 @@
 ## environment variables can be changed after sourcing the module.
 
 
-## @fn putarki_archive_and_wait()
-## @brief Archive one or more files and wait for the completion of the operation.
-## @details This function archives the files passed as arguments to
-## the configured dataset and waits until the files have been
-## archived. It combines the putarki_archive() function for archiving
-## and the putarki_wait_for_deletion() function for waiting.
-## @param $1 the type of file being archived, either `grib` or `bufr`
-## @param $* the files to be archived
-putarki_archive_and_wait() {
-    putarki_wait_for_deletion `putarki_archive $@`
-}
-
-
 ## @fn putarki_archive()
 ## @brief Archive one or more files.
 
-## @details This function displatches the files passed as arguments to
+## @details This function dispatches the files passed as arguments to
 ## the configured destinations. The files are dispatched to three
 ## possible destinations: according to the _configured import__
 ## protocol:
@@ -79,7 +66,7 @@ putarki_archive() {
     tf=$1
     shift
     for file in $@; do
-	putarki_configured_archive add_upload_dir $file
+	$SIMC_TOOLS arki-scan --dispatch=$ARKI_CONF $tf:$file > /dev/null
     done
 }
 
@@ -162,9 +149,8 @@ putarki_configured_model_output() {
 ## @brief Start a session of configured archiving.
 ## @details This function starts a session of configured archiving
 ## creating the archiving directory (local or remote) below
-## $ARKI_IMPDIR/configured and populating it with the configuration
-## file for the importer `start.sh`. This method should replace the
-## legacy putarki* methods of this module.
+## `$ARKI_IMPDIR/configured` and `$ARKI_DLDIR` and populating it with
+## the configuration file for the importer `start.sh`.
 ## @param $1 the (unique) name of the directory to be created relative to $ARKI_IMPDIR/configured
 ## @param $* the parameters to be set in the configuration file in form `key=val`
 putarki_configured_setup() {
@@ -203,11 +189,23 @@ __putarki_configured_setup() {
 
 
 ## @fn putarki_configured_archive()
-## @brief Archives one or more file in a configured archiving directory.
-## @details This function uploads the listed data files in the
-## specified configured directory for successive archiving.  The
-## directory must have been created with the putarki_configured_setup
-## function.
+## @brief Archives one file in the set of configured destinations.
+## @details This function dispatches the files passed as arguments to
+## the configured destinations. The files are dispatched to three
+## possible destinations: according to the __configured import__
+## protocol:
+##  * temporary directory defined by the variable `$ARKI_IMPDIR` and
+##    by the optional variable `$IMPORT_THREAD` for successive import
+##    into a local arkimet archive by an instance of
+##    `threaded_multi_importer.sh` process
+##  * temporary directory(ies) defined by the `$ARKI_SYNCDIR` array
+##    for successive syncing to remote destination(s) by instance(s)
+##    of `threaded_multi_importer.sh` process
+##  * long-term storage directory defined by the `$ARKI_DLDIR`
+##    variable for exposing files in a download area
+##
+## The destination directories must have been created with the
+## `putarki_configured_setup function`.
 ## @param $1 the (unique) name of the upload directory as specified in putarki_configured_setup
 ## @param $2 data file to be uploaded for archiving
 ## @param $3 (optional) suffix to be appended to the file to indicate its format, without dot character (e.g. \a grib)
@@ -248,7 +246,7 @@ __putarki_configured_archive() {
 ## @fn putarki_configured_end()
 ## @brief Closes a configured archiving session.
 ## @details This function closes a configured archiving session by
-## uploding a conventiona `end.sh` file. After this operation no more
+## creating a conventional `end.sh` file. After this operation no more
 ## files can be added for archiving. The calling process does not need
 ## to perform any other operation, the archiving daemon will take care
 ## of archiving the files and signalling the completion if requested.

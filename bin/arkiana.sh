@@ -91,7 +91,7 @@ arkiana_archive() {
 	# parent model (FROM_PARENT) and archive it
 	$SIMC_TOOLS arki-query --data -o $parentclim "$reftime;$MODEL_ARKI_FROM_PARENT;" \
 	    $parentana.arkimet
-	putarki_archive_and_wait grib $parentclim
+	putarki_archive grib $parentclim
 	rm -f $parentclim
     else
 	parentana=
@@ -115,7 +115,7 @@ arkiana_archive() {
 		$SIMC_TOOLS grib_set -s dataDate=$DATES,dataTime=${TIMES}00 \
 		    $parentslow $parentslow.update
 		mv $parentslow.update $parentslow
-		putarki_archive_and_wait grib $parentslow
+		putarki_archive grib $parentslow
             fi
 	    break
 	fi
@@ -153,7 +153,7 @@ arkiana_archive() {
 	    # set generating process as if they came from assimilation
 	    $SIMC_TOOLS grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP,timeRangeIndicator=13 \
 		$anasurft $anasurft.gp
-	    putarki_archive_and_wait grib $anasurft.gp
+	    putarki_archive grib $anasurft.gp
 	fi # else print warning?
 	rm -f $anasurft $parentsurft $parentlsm $tmp1 $tmp2 $anasurft.gp
 
@@ -166,7 +166,7 @@ arkiana_archive() {
 	    # set generating process as if they came from assimilation
 	    $SIMC_TOOLS grib_set -s generatingProcessIdentifier=$MODEL_ASSIM_GP,timeRangeIndicator=13 \
 		$parentbbc $parentbbc.gp
-	    putarki_archive_and_wait grib $parentbbc.gp
+	    putarki_archive grib $parentbbc.gp
 	    rm -f $parentbbc $parentbbc.gp
 	fi
 
