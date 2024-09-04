@@ -138,7 +138,7 @@ simc_create_radar_grib() {
 #		if [ -n "$ARKI_SCAN_METHOD" ]; then
 #		    putarki_archive grib $gribmosaico
 #		    rm -f $gribmosaico
-		fi
+#		fi
 	    fi
 	    rm -f $ncmosaico
 # store successful date
