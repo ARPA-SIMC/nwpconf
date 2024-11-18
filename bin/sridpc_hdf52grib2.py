@@ -101,7 +101,7 @@ def radar_hdf52grib(filein, griglia, rmiss_grib, gribtemplate=None, fileout=None
             centre = 80
 
     try:
-        datafile = os.path.basename(filein).split(".", 1)[0].split("-")
+        datafile = os.path.basename(filein).replace("SRI_", "").split(".", 1)[0].split("-")
 
         if q_thr is not None:
             # Leggo gain e offset per conversione dato raw di qualità
