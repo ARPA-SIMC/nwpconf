@@ -32,13 +32,7 @@
 ## the appearance of new output files, `$PUTARKI_WAITMAX` is the
 ## maximum wait time between checks when no events happen,
 ## `$PUTARKI_WAITDEL` is the wait time between checks of file
-## disappearance after archiving, all wait times are in seconds. If
-## `$ARKI_USE_INOTIFY` has the value of `Y`, then the `sleep`'s between
-## file checks are replaced by the `inotifywait` command, so that the
-## reaction to changes in filesystem are immediate, in that case the
-## aforementiond wait times are used as a timeout to inotifywait, to
-## account for malfunctions of the inotify process. The value of these
-## environment variables can be changed after sourcing the module.
+## disappearance after archiving, all wait times are in seconds.
 
 
 ## @fn putarki_archive()
@@ -74,21 +68,42 @@ putarki_archive() {
 putarki_configured_model_output() {
 
 # initialisations
-    local workdir=$PWD
-    local nrfiles=$1
-    local rfile
-    declare -A statuslist
+    declare -Ag statuslist
     statuslist=()
     NWPWAITWAIT=$PUTARKI_WAITSTART
     NWPWAITSOLAR=
     nwpwait_setup
-    # check MODEL_SIGNAL?
-    dirname=${MODEL_SIGNAL}
-    putarki_configured_setup $dirname "reftime=$DATE$TIME" "signal=$MODEL_SIGNAL" "signal_method=$CONFIGURED_SIGNAL_METHOD"
+    putarki_configured_setup $MODEL_SIGNAL "reftime=$DATE$TIME" "signal=$MODEL_SIGNAL" "signal_method=$CONFIGURED_SIGNAL_METHOD"
+
+    while true; do
+	putarki_configured_model_output_get_one	$1 $PWD $PWD
+        if [ "$retval" = 0 ]; then
+	    break
+	fi
+	nwpwait_wait
+    done
+    putarki_configured_end $MODEL_SIGNAL
+    return
+
+}
+
+
+putarki_configured_model_output_get_one() {
+    trap "retval=1; return 0" ERR
+    # propagate the error trap to called functions
+    set -o errtrace
+    retval=0 # default return status: finished
+    local rfile found
+    local nrfiles=$1
 
     while true; do
 # this is done here in case the directory is removed and recreated
-	cd $workdir
+	if [ -n " $2" ]; then # remove if
+	    if [ ! -d "$2" ]; then
+		false # the run has probably been interrupted, return and wait for a restart
+	    fi
+            cd $2
+	fi
 	found=
 # loop on ready-files
 	shopt -s nullglob
@@ -102,15 +117,16 @@ putarki_configured_model_output() {
 		for gfile in `model_readyfiletoname $rfile`; do
                     log "processing $gfile"
 		    if [ -n "$POSTPROC_FUNC" ]; then
-			$POSTPROC_FUNC $gfile $dirname &
+			$POSTPROC_FUNC $gfile $MODEL_SIGNAL &
 		    else
-			putarki_configured_archive $dirname $gfile grib
+			putarki_configured_archive $MODEL_SIGNAL $gfile grib
 			# create and archive postprocessed data if required
 			for ppc in ${POSTPROC_LIST[*]}; do
 			    ext=${ppc##*_}
-			    $ppc $gfile ${gfile}_${ext}
-			    [ -s "${gfile}_${ext}" ] && putarki_configured_archive $dirname ${gfile}_${ext} $POSTPROC_FORMAT
-			    rm -f ${gfile}_${ext}
+			    $ppc $gfile $3/${gfile}_${ext}
+			    [ "$retval" = "0" ] || false
+			    [ -s "$3/${gfile}_${ext}" ] && putarki_configured_archive $MODEL_SIGNAL $3/${gfile}_${ext} $POSTPROC_FORMAT
+			    rm -f $3/${gfile}_${ext}
 			done
 		    fi
 		done
@@ -124,21 +140,13 @@ putarki_configured_model_output() {
 	done
 	shopt -u nullglob
 
-	if [ -n "$found" ]; then # something new has been found
-	    :
-	else # nothing new has been found
-# end of task condition
-#	    if [ "${statuslist[$1]}" = "DONE" ]; then
-	    if [ ${#statuslist[*]} -eq $nrfiles ]; then 
-		putarki_configured_end $dirname
+	if [ -z "$found" ]; then # nothing new has been found
+            if [ ${#statuslist[*]} -eq $nrfiles ]; then
+		retval=0 # end of run, consider not to set retval=0, in case some function has failed silently
 		return
-	    fi
-# check end of time and wait if necessary (i.e. if not using inotify)
-	    nwpwait_wait
-# wait for some event
-	    if [ "$ARKI_USE_INOTIFY" = Y ]; then
-		inotifywait --timeout $PUTARKI_WAITSTART --event close --exclude '^\.\/l.*' ./ || true
-	    fi
+            else
+		false
+            fi
 	fi
     done
 
