@@ -22,39 +22,24 @@
 ## It is an optional module and it has to be sourced after the
 ## _nwptime.sh_ module.
 ## 
-## When sourcing the module, the following default assignments are made:
+## When sourcing the module, the following default assignment is made:
 ## 
 ##     PUTARKI_WAITSTART=30
-##     PUTARKI_WAITMAX=300
-##     PUTARKI_WAITDEL=5
 ## 
 ## `$PUTARKI_WAITSTART` is the initial wait time between checks for
-## the appearance of new output files, `$PUTARKI_WAITMAX` is the
-## maximum wait time between checks when no events happen,
-## `$PUTARKI_WAITDEL` is the wait time between checks of file
-## disappearance after archiving, all wait times are in seconds.
+## the appearance of new output files in seconds.
 
 
 ## @fn putarki_archive()
 ## @brief Archive one or more files.
-
 ## @details This function dispatches the files passed as arguments to
-## the configured destinations. The files are dispatched to three
-## possible destinations: according to the _configured import__
-## protocol:
-##  * temporary directory defined by the variable `$ARKI_IMPDIR` and
-##    by the optional variable `$IMPORT_THREAD` for successive import
-##    into a local arkimet by an instance of
-##    `threaded_multi_importer.sh` process
-##  * temporary directory(ies) defined by the `$ARKI_SYNCDIR` array
-##    for successive syncing to remote destination(s) by instance(s)
-##    of `threaded_multi_importer.sh` process
-##  * long-term storage directory defined by the `$ARKI_DLDIR`
-##    variable for exposing files in a download area
+## the dataset or collection of datasets indicated by the `$ARKI_CONF`
+## variable. It is a syncronous method, i.e. the files are guaranteed
+## to be archived at function return, however it should be used in
+## limited cases, preferring the `putarki_configured*` framework.
 ## @param $1 the type of file being archived, either `grib` or `bufr`
 ## @param $* the files to be archived
 putarki_archive() {
-
     local file
     local tf
     tf=$1
@@ -64,9 +49,21 @@ putarki_archive() {
     done
 }
 
-
+## @fn putarki_configured_model_output()
+## @brief Archive the output of a full model run.
+## @details This function archives the output of a full model
+## simulation, waiting for the appearance of new files, up to a
+## configured number. It requires the load of a specific model module
+## in order to recognize the ready-files and the corresponding output
+## files. The files are postprocessed according to the configured
+## variables (`$POSTPROC_LIST` and `$POSTPROC_FUNC`) and dispatched to
+## the configured destinations through the `putarki_configured*`
+## framework. The base name of the destination is deduced from the
+## `$MODEL_SIGNAL` variable.  It calls internally the
+## `putarki_configured_model_output_get_one` function for performing
+## the job.
+## @param $1 number of time levels in the model output, e.g. `$(($MODEL_STOP + 1))` for hourly output
 putarki_configured_model_output() {
-
 # initialisations
     declare -Ag statuslist
     statuslist=()
@@ -88,6 +85,30 @@ putarki_configured_model_output() {
 }
 
 
+## @fn putarki_configured_model_output_get_one()
+## @brief Partially archive the output of a full model run.
+## @details This function archives the currently available output of a
+## full model simulation then exits when there are no new files. thus
+## it has to be called inside a loop. The calling function must
+## declare an empty array with the instructions `declare -Ag
+## statuslist; statuslist=()` before the first call. The function
+## always returns a zero error code, its real return code is in the
+## variable `$retval` which has the value of `0` when all the files
+## have been processed, `1` if there are still files to process or
+## some error happens (thus the caller function has to wait for a
+## while and call again `putarki_configured_model_output_get_one` or
+## give up if it thinks it's too late). It requires the load of a
+## specific model module in order to recognize the ready-files and the
+## corresponding output files. The files are postprocessed according
+## to the configured variables (`$POSTPROC_LIST` and `$POSTPROC_FUNC`)
+## and dispatched to the configured destinations through the
+## `putarki_configured*` framework. The base name of the destination
+## is deduced from the `$MODEL_SIGNAL` variable. The caller function
+## has to take care of calling `putarki_configure_setup` and
+## `putarki_configured_end` functions.
+## @param $1 number of time levels in the model output, e.g. `$(($MODEL_STOP + 1))` for hourly output
+## @param $2 the directory where the model output is created
+## @param $3 the directory where the postprocessed output should be stored (it may coincide with the previous)
 putarki_configured_model_output_get_one() {
     trap "retval=1; return 0" ERR
     # propagate the error trap to called functions
@@ -334,9 +355,5 @@ set -a
 check_dep putarki
 # default time to wait before starting processing output files during model run (s)
 PUTARKI_WAITSTART=30
-# default maximum time to wait between checks when no events happen (s)
-PUTARKI_WAITMAX=300
-# default time to wait between checks for files to be archived (s)
-PUTARKI_WAITDEL=5
 # stop exporting all assignments
 set +a
