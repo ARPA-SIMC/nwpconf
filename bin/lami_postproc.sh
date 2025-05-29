@@ -113,7 +113,7 @@ lami_make_vprof()
     cat $MODEL_STATIC/$MODEL_SIGNAL/last_hfl.grib >> ${tmpfile}_110 || true
     # destaggering of u and v and extension of height (B10007) to all
     # time levels
-    $SIMC_TOOLS vg6d_transform --a-grid --anavariable-list=B10007 ${tmpfile}_110 ${tmpfile}_destag
+    $SIMC_TOOLS vg6d_transform --a-grid --anavariable-list=B10007,B29192 ${tmpfile}_110 ${tmpfile}_destag
     # interpolation on points | computation of derived variables
     # improve management of coordinates
     $SIMC_TOOLS vg6d_getpoint --output-format=native --network=${VPROF_NETWORK:-temp} \
@@ -164,7 +164,7 @@ lami_make_vprofg2()
     cat $MODEL_STATIC/$MODEL_SIGNAL/last_hfl.grib >> ${tmpfile}_110 || true
     # (destaggering of u and v and) extension of height (B10007) to all
     # time levels
-    $SIMC_TOOLS vg6d_transform --anavariable-list=B10007 ${tmpfile}_110 ${tmpfile}_destag
+    $SIMC_TOOLS vg6d_transform --anavariable-list=B10007,B29192 ${tmpfile}_110 ${tmpfile}_destag
     # interpolation on points | computation of derived variables
     # improve management of coordinates
     $SIMC_TOOLS vg6d_getpoint --output-format=native --network=${VPROF_NETWORK:-temp} \
@@ -216,7 +216,7 @@ lami_make_cross()
     cat $MODEL_STATIC/$MODEL_SIGNAL/last_hfl.grib >> ${tmpfile}_110 || true
     # destaggering of u and v and extension of height (B10007) to all
     # time levels
-    $SIMC_TOOLS vg6d_transform --a-grid --anavariable-list=B10007 ${tmpfile}_110 ${tmpfile}_destag
+    $SIMC_TOOLS vg6d_transform --a-grid --anavariable-list=B10007,B29192 ${tmpfile}_110 ${tmpfile}_destag
     # interpolation on points | computation of derived variables
     # improve management of coordinates
     $SIMC_TOOLS vg6d_getpoint --output-format=native --network=${CROSS_NETWORK:-temp} \
@@ -267,7 +267,7 @@ lami_make_crossg2()
     cat $MODEL_STATIC/$MODEL_SIGNAL/last_hfl.grib >> ${tmpfile}_110 || true
     # (destaggering of u and v and) extension of height (B10007) to all
     # time levels
-    $SIMC_TOOLS vg6d_transform --anavariable-list=B10007 ${tmpfile}_110 ${tmpfile}_destag
+    $SIMC_TOOLS vg6d_transform --anavariable-list=B10007,B29192 ${tmpfile}_110 ${tmpfile}_destag
     # interpolation on points | computation of derived variables
     # improve management of coordinates
     $SIMC_TOOLS vg6d_getpoint --output-format=native --network=${CROSS_NETWORK:-temp} \
