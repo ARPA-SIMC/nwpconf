@@ -205,8 +205,8 @@ getarki_icbc() {
         a2=$( echo "scale=16; 1-$b2" | bc )
 
         # Temporal interpolation
-        $SIMC_TOOLS math_grib.exe $a1 ${first_file}.sort $b1 ${last_file}.sort lfff_ini sum -check='grid'
-        $SIMC_TOOLS math_grib.exe $a2 ${first_file}.sort $b2 ${last_file}.sort lfff_fin sum -check='grid'
+        $SIMC_TOOLS /usr/libexec/ma_utils/math_grib.exe $a1 ${first_file}.sort $b1 ${last_file}.sort lfff_ini sum -check='lev,var'
+        $SIMC_TOOLS /usr/libexec/ma_utils/math_grib.exe $a2 ${first_file}.sort $b2 ${last_file}.sort lfff_fin sum -check='lev,var'
 
         # Update stepRange of new files
         $SIMC_TOOLS grib_set -s stepRange=$MODEL_DELTABD_SLICE lfff_ini lfff_ini_mod
@@ -223,6 +223,10 @@ getarki_icbc() {
 
         # Remove un-necessary files
         rm lfff_ini lfff_fin $last_file
+
+	# temptative rewrite using function
+#	interp_grib_t $first_file.sort $last_file.sort $first_file $deltat_TIMES $MODEL_FREQ_SLICE $MODEL_DELTABD_SLICE
+#	interp_grib_t $first_file.sort $last_file.sort $newfile $(($deltat_TIMES+$MODEL_STOP)) $MODEL_FREQ_SLICE $((${MODEL_DELTABD_SLICE}+${MODEL_STOP}))
     fi
 }
 
@@ -234,12 +238,54 @@ __check_msg_num() {
     fi
     if [ -n "$GET_ICBC_MINCOUNT" ]; then
 	nm=$($SIMC_TOOLS grib_count $1) || return 1 # file badly truncated
-#	if [ -n "$nm" ]; then
-	    if [ "$nm" -lt "$GET_ICBC_MINCOUNT" ]; then
-		return 1 # file too short
-	    fi
-#	fi
+	if [ "$nm" -lt "$GET_ICBC_MINCOUNT" ]; then
+	    return 1 # file too short
+	fi
     fi
+}
+
+
+## @interp_grib_t()
+## @brief Interpolate linearly in time two grib files.
+## @details This function takes two grib files with matching fields
+## and vertical levels, each at a different time level and generates a
+## third file which contains all messages from the two files with data
+## interpolated linearly in time at a required time level included in
+## the interval. The forecast step of the messages in the interpolated
+## file is set to the correct value. Only instantaneous fields are
+## correctly managed.
+## @param the grib file corresponding to the initial time level of the interval
+## @param the grib file corresponding to the final time level of the interval
+## @param the name of the output (interpolated) grib file
+## @param the difference between the output time level and the initial time level (arbitrary units)
+## @param the difference between the final time level and the initial time level (arbitrary units)
+## @param the absolute stepRange (eccodes key) to be set in the output grib message, if not provided it is autocomputed
+interp_grib_t() {
+
+        # Compute coefficients for linear combination
+#        deltat_TIMES=`expr $TIMES % $MODEL_FREQ_SLICE || true`
+
+        w2=$(echo "scale=16; $4/$5" | bc)
+        w1=$(echo "scale=16; 1-$w2" | bc)
+#        b2=$( echo "scale=16; ($deltat_TIMES+$MODEL_STOP)/$MODEL_FREQ_SLICE" | bc )
+#        a2=$( echo "scale=16; 1-$b2" | bc )
+
+	if [ -n "$6" ]; then
+	    step=$6
+	else
+	    sr1=$(grib_get -p stepRange -w count=1 $1)
+	    sr2=$(grib_get -p stepRange -w count=1 $2)
+	    step=$(echo "scale=16; $w1*$sr1+$w2*$sr2" | bc)
+	fi
+	rm -f interp_grib_t.$$
+        # Temporal interpolation
+        $SIMC_TOOLS /usr/libexec/ma_utils/math_grib.exe $w1 $1 $w2 $2 interp_grib_t.$$ sum -check='lev,var'
+
+        # Update stepRange of new files
+        $SIMC_TOOLS grib_set -s stepRange=$step interp_grib_t.$$ $3
+	#        $SIMC_TOOLS grib_set -s stepRange=$((${MODEL_DELTABD_SLICE}+${MODEL_STOP})) lfff_fin lfff_fin_mod
+	rm -f interp_grib_t.$$
+
 }
 
 

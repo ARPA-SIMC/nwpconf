@@ -134,6 +134,11 @@ putarki_configured_model_output_get_one() {
 	for rfile in $matchlist; do
 	    if [ -z "${statuslist[$rfile]}" ]; then # it is a new file
                 log "found ready-file $rfile"
+		if [ -n "$READY_FILE_DELAY" ]; then
+		    sync
+		    sleep $READY_FILE_DELAY
+		    log "finished security wait"
+		fi
 # process all grib files related to $rfile
 		for gfile in `model_readyfiletoname $rfile`; do
                     log "processing $gfile"
