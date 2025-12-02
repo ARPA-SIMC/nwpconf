@@ -338,7 +338,7 @@ set_import_signal_method() {
 
 if [[ "$1" =~ http://arkimet.metarpa:8090/ ]]; then
     export IMPORT_SIGNAL_METHOD=simc
-elif [[ "$1" =~ https?://[^/]*/ ]]; then
+elif [[ "$1" =~ https?://[^/]*ext\.cineca\.it[^/]*/ ]]; then
     export IMPORT_SIGNAL_METHOD=curl
 else
     export IMPORT_SIGNAL_METHOD=filesystem

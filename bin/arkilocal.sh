@@ -21,7 +21,7 @@
 ## based on an arkimet server, but all the archiving and retrieving
 ## procedures can work almost transparently. It is useful mainly for
 ## using the functions designed for continuous assimilation defined in
-## the arkiana.sh module. The environment variable `$ARKI_DIR` must be
+## the arkiana.sh module. The environment variable `$ARKI_LOCALDIR` must be
 ## exported before sourcing the module, it indicates the root
 ## directory of the archive, moreover at least one of the
 ## `$MODEL_ASSIM_GP`, `$MODEL_FCAST_GP`, `$MODEL_INTER_GP`,
@@ -39,12 +39,12 @@
 arkilocal_setup() {
     local typ gp
 # automatically set some variables
-    ARKI_CONF=$ARKI_DIR/config
+    ARKI_CONF=$ARKI_LOCALDIR/config
 
     for typ in ASSIM ASSIM_INC FCAST FCRUC INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`
 	if [ -n "$gp" ]; then
-	    eval export ARKI_DS_$typ=$ARKI_DIR/$typ
+	    eval export ARKI_DS_$typ=$ARKI_LOCALDIR/$typ
 	fi
     done
 }
@@ -55,7 +55,7 @@ arkilocal_setup() {
 ## @details This function creates the directory tree and the basic
 ## configuration files required for working with a local file-based
 ## and serverless arkimet archive rooted in the directory specified by
-## `$ARKI_DIR` (which must contain only a local path
+## `$ARKI_LOCALDIR` (which must contain only a local path
 ## specification). It creates the datasets `<TYPE>` based on the
 ## settings of the variables `$MODEL_<TYPE>_GP` inserting a filter
 ## with the proper generating process in each configuration. It
@@ -64,26 +64,26 @@ arkilocal_setup() {
 ## variable `$ARKI_CONF` to the
 ## required value (see putarki.sh::putarki_archive() ) and exports the
 ## `$ARKI_DS_<TYPE>` variables pointing to the proper dataset.
-## @param $1 -c for cleaning the contents of a previous dataset (erases `$ARKI_DIR` directory!)
+## @param $1 -c for cleaning the contents of a previous dataset (erases `$ARKI_LOCALDIR` directory!)
 arkilocal_create() {
 
     if [ "$1" = "-c" ]; then
-	safe_rm_rf $ARKI_DIR/*
+	safe_rm_rf $ARKI_LOCALDIR/*
     fi
-    mkdir -p $ARKI_DIR
+    mkdir -p $ARKI_LOCALDIR
 # create typical model datasets
     for typ in ASSIM ASSIM_INC FCAST INTER RADAR; do
 	gp=`eval echo '$'MODEL_${typ}_GP`
 	filt=`eval echo '$'MODEL_ARKI_TIMERANGE_${typ}`
 	filt_tgp=`eval echo '$'MODEL_ARKI_TGP_${typ}`
 	if [ -n "$gp" ]; then
-	    __arkilocal_create_ds $ARKI_DIR/$typ $typ $gp "$filt_tgp"
+	    __arkilocal_create_ds $ARKI_LOCALDIR/$typ $typ $gp "$filt_tgp"
 	fi
     done
 # create error dataset, required1
-    __arkilocal_create_error_ds $ARKI_DIR/error
+    __arkilocal_create_error_ds $ARKI_LOCALDIR/error
 # merge all confs
-    $SIMC_TOOLS arki-mergeconf $ARKI_DIR/*/config > $ARKI_CONF 2>/dev/null
+    $SIMC_TOOLS arki-mergeconf $ARKI_LOCALDIR/*/config > $ARKI_CONF 2>/dev/null
 }
 
 __arkilocal_create_ds() {
@@ -128,7 +128,7 @@ EOF
 ## long-living files. The content is not touched.
 arkilocal_drop_from_cache() {
 
-    find $ARKI_DIR -name \*.grib -type f \
+    find $ARKI_LOCALDIR -name \*.grib -type f \
 	-exec dd of=\{\} oflag=nocache conv=notrunc,fdatasync count=0 \;
 
 }
@@ -138,6 +138,6 @@ arkilocal_drop_from_cache() {
 set -a
 # checks
 check_dep arkilocal
-#check_defined ARKI_DIR
+check_defined ARKI_LOCALDIR
 # stop exporting all assignments
 set +a
