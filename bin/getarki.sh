@@ -273,8 +273,8 @@ interp_grib_t() {
 	if [ -n "$6" ]; then
 	    step=$6
 	else
-	    sr1=$(grib_get -p stepRange -w count=1 $1)
-	    sr2=$(grib_get -p stepRange -w count=1 $2)
+	    sr1=$($SIMC_TOOLS grib_get -p stepRange -w count=1 $1)
+	    sr2=$($SIMC_TOOLS grib_get -p stepRange -w count=1 $2)
 	    step=$(echo "scale=16; $w1*$sr1+$w2*$sr2" | bc)
 	fi
 	rm -f interp_grib_t.$$
